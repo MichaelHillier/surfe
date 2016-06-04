@@ -23,14 +23,14 @@ bool Single_Surface::_get_polynomial_matrix_block(std::vector< std::vector <doub
 	if ((int)poly_matrix.size() != b_parameters.n_poly_terms ) return false;
 	// for interface points ...
 	for (int j = 0; j < nl; j++ ){
-		p_basis->set_point(b_input.interface[j]);
+		p_basis->set_point(b_input.interface->at(j));
 		std::vector<double> b = p_basis->basis();
 		if ((int)b.size() != b_parameters.n_poly_terms ) return false;
 		for (int k = 0; k < (int)b.size(); k++ ) poly_matrix[k][j] = b[k];
 	}
 	// for planar points ...
 	for (int j = 0; j < n_p; j++ ){
-		p_basis->set_point(b_input.planar[j]);
+		p_basis->set_point(b_input.planar->at(j));
 		std::vector<double> bx = p_basis->dx();
 		std::vector<double> by = p_basis->dy();
 		std::vector<double> bz = p_basis->dz();
@@ -43,13 +43,13 @@ bool Single_Surface::_get_polynomial_matrix_block(std::vector< std::vector <doub
 	}
 	// for tangent points ...
 	for (int j = 0; j < n_t; j++ ){
-		p_basis->set_point(b_input.tangent[j]);
+		p_basis->set_point(b_input.tangent->at(j));
 		std::vector<double> bx = p_basis->dx();
 		std::vector<double> by = p_basis->dy();
 		std::vector<double> bz = p_basis->dz();
 		if ((int)bx.size() != b_parameters.n_poly_terms ) return false;
 		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_matrix[k][nl + 3*n_p + j] = b_input.tangent[j].tx()*bx[k] + b_input.tangent[j].ty()*by[k] + b_input.tangent[j].tz()*bz[k];
+			poly_matrix[k][nl + 3 * n_p + j] = b_input.tangent->at(j).tx()*bx[k] + b_input.tangent->at(j).ty()*by[k] + b_input.tangent->at(j).tz()*bz[k];
 		}
 	}
 
@@ -69,14 +69,14 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix( c
 	// start with P
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix[j].size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][k] = poly_matrix[j][k];
-			interpolation_matrix[k][n_ie + n_i + 3.0*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][k];
+			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k] = poly_matrix[j][k];
+			interpolation_matrix[k][n_ie + n_i + 3*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k];
 		}
 	}
 
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix.size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][n_ie + n_i + 3.0*n_p + n_t + k] = 0;
+			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][n_ie + n_i + 3*n_p + n_t + k] = 0;
 		}
 	}
 
@@ -101,14 +101,14 @@ Polynomial_Basis * Single_Surface::create_polynomial_basis( const int &poly_orde
 bool Single_Surface::get_method_parameters()
 {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = (int)b_input.interface.size();
-	b_parameters.n_inequality = (int)b_input.inequality.size();
-	b_parameters.n_planar = (int)b_input.planar.size();
-	b_parameters.n_tangent = (int)b_input.tangent.size();
+	b_parameters.n_interface = (int)b_input.interface->size();
+	b_parameters.n_inequality = (int)b_input.inequality->size();
+	b_parameters.n_planar = (int)b_input.planar->size();
+	b_parameters.n_tangent = (int)b_input.tangent->size();
 	// Total number of constraints ...
-	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
 	if (b_parameters.n_inequality == 0)
@@ -182,7 +182,8 @@ bool Single_Surface::setup_system_solver()
 // 			a_ev_pt.set_c(b_input.planar[j].c());
 // 			grad_pts.push_back(a_ev_pt);
 // 		}
-// 		eval_vector_interpolant_at_points(grad_pts);
+// 		eval_vector_interpolant_at_points(grad_pts);
+
 	}
 
 	return true;
@@ -195,24 +196,24 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 	// if poly order = 1 find 4 interface points nicely sampling the volume 
 	// if poly order = 2 find 6 interface points nicely sampling the volume
 	std::vector < Interface > extremal_interace_pts;
-	std::vector < Point > pts(b_input.interface.begin(),b_input.interface.end()); 
+	std::vector < Point > pts(b_input.interface->begin(),b_input.interface->end()); 
 	std::vector < int > interface_indices = get_extremal_point_data_indices_from_points(pts);
-	if ( (int)interface_indices.size() < b_parameters.n_poly_terms) return false;
-	for (int j = 0; j < b_parameters.n_inequality; j++ ) excluded_input.inequality.push_back(b_input.inequality[j]);
-	for (int j = 0; j < b_parameters.n_interface;  j++ ){
+	if ( (int)interface_indices.size() < (int)b_parameters.n_poly_terms) return false;
+	for (int j = 0; j < (int)b_parameters.n_inequality; j++ ) excluded_input.inequality->push_back(b_input.inequality->at(j));
+	for (int j = 0; j < (int)b_parameters.n_interface;  j++ ){
 		bool exclude_index = true;
 		for (int k = 0; k < (int)interface_indices.size(); k++ ){
 			if (interface_indices[k] == j )
 			{
 				exclude_index = false;
-				greedy_input.interface.push_back(b_input.interface[interface_indices[k]]);
+				greedy_input.interface->push_back(b_input.interface->at(interface_indices[k]));
 				break;
 			}
 		}
-		if ( exclude_index ) excluded_input.interface.push_back(b_input.interface[j]);
+		if (exclude_index) excluded_input.interface->push_back(b_input.interface->at(j));
 	}
-	greedy_input.planar.push_back(b_input.planar[0]);
-	for (int j = 1; j < b_parameters.n_planar; j++ ) excluded_input.planar.push_back(b_input.planar[j]);
+	greedy_input.planar->push_back(b_input.planar->at(0));
+	for (int j = 1; j < b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
 	//for (int j = 0; j < b_parameters.n_poly_terms; j++ ) extremal_interace_pts.push_back(b_input.interface[interface_indices[j]]);
 
 	// get one planar point that is the furthest from extremal_interface_pts[] 
@@ -233,53 +234,53 @@ bool Single_Surface::measure_residuals(Basic_input &input)
 	if (solver == NULL) return false;
 
 	// inequalities points
-	for (int j = 0; j < (int)input.inequality.size(); j++ ){
-		eval_scalar_interpolant_at_point(input.inequality[j]);
-		if (input.inequality[j].level() >= 0)
+	for (int j = 0; j < (int)input.inequality->size(); j++ ){
+		eval_scalar_interpolant_at_point(input.inequality->at(j));
+		if (input.inequality->at(j).level() >= 0)
 		{
-			if ( input.inequality[j].scalar_field() >= 0 ) input.inequality[j].setResidual(true);
-			else input.inequality[j].setResidual(false);
+			if (input.inequality->at(j).scalar_field() >= 0) input.inequality->at(j).setResidual(true);
+			else input.inequality->at(j).setResidual(false);
 		}
 		else
 		{
-			if ( input.inequality[j].scalar_field() < 0 ) input.inequality[j].setResidual(true);
-			else input.inequality[j].setResidual(false);
+			if (input.inequality->at(j).scalar_field() < 0) input.inequality->at(j).setResidual(true);
+			else input.inequality->at(j).setResidual(false);
 		}
 	}
 	// interface points
-	for (int j = 0; j < (int)input.interface.size(); j++ ){
-		eval_scalar_interpolant_at_point(input.interface[j]);
-		input.interface[j].setResidual(abs(input.interface[j].scalar_field()));
+	for (int j = 0; j < (int)input.interface->size(); j++ ){
+		eval_scalar_interpolant_at_point(input.interface->at(j));
+		input.interface->at(j).setResidual(abs(input.interface->at(j).scalar_field()));
 	}
 	// planar points
-	for (int j = 0; j < (int)input.planar.size(); j++ ){
-		eval_vector_interpolant_at_point(input.planar[j]);
+	for (int j = 0; j < (int)input.planar->size(); j++ ){
+		eval_vector_interpolant_at_point(input.planar->at(j));
 		double angle = 0.0;
 		std::vector<double> v1;
 		std::vector<double> v2;
-		v1.push_back(input.planar[j].nx());
-		v1.push_back(input.planar[j].ny());
-		v1.push_back(input.planar[j].nz());
-		v2.push_back(input.planar[j].nx_interp());
-		v2.push_back(input.planar[j].ny_interp());
-		v2.push_back(input.planar[j].nz_interp());
+		v1.push_back(input.planar->at(j).nx());
+		v1.push_back(input.planar->at(j).ny());
+		v1.push_back(input.planar->at(j).nz());
+		v2.push_back(input.planar->at(j).nx_interp());
+		v2.push_back(input.planar->at(j).ny_interp());
+		v2.push_back(input.planar->at(j).nz_interp());
 		Math_methods::angle_btw_2_vectors(v1,v2,angle);
-		input.planar[j].setResidual( angle);
+		input.planar->at(j).setResidual(angle);
 	}
 	// tangent points
-	for (int j = 0; j < (int)input.tangent.size(); j++ ){
-		eval_vector_interpolant_at_point(input.tangent[j]);
+	for (int j = 0; j < (int)input.tangent->size(); j++ ){
+		eval_vector_interpolant_at_point(input.tangent->at(j));
 		double angle = 0.0;
 		std::vector<double> v1;
 		std::vector<double> v2;
-		v1.push_back(input.tangent[j].tx());
-		v1.push_back(input.tangent[j].ty());
-		v1.push_back(input.tangent[j].tz());
-		v2.push_back(input.tangent[j].nx_interp());
-		v2.push_back(input.tangent[j].ny_interp());
-		v2.push_back(input.tangent[j].nz_interp());
+		v1.push_back(input.tangent->at(j).tx());
+		v1.push_back(input.tangent->at(j).ty());
+		v1.push_back(input.tangent->at(j).tz());
+		v2.push_back(input.tangent->at(j).nx_interp());
+		v2.push_back(input.tangent->at(j).ny_interp());
+		v2.push_back(input.tangent->at(j).nz_interp());
 		Math_methods::angle_btw_2_vectors<double>(v1,v2,angle);
-		input.planar[j].setResidual( angle);
+		input.planar->at(j).setResidual(angle);
 	}
 
 	return true;
@@ -294,8 +295,8 @@ bool Single_Surface::append_greedy_input(const Basic_input &input)
 	// PLANAR Observations
 	std::vector < double > large_planar_residuals;
 	std::vector < int > large_planar_residuals_indices;
-	for (int j = 0; j < (int)input.planar.size(); j++ ){
-		double grad_err = input.planar[j].residual()*r2d;
+	for (int j = 0; j < (int)input.planar->size(); j++ ){
+		double grad_err = input.planar->at(j).residual()*r2d;
 		if ( grad_err > m_parameters.gradient_slack )
 		{
 			large_planar_residuals.push_back( grad_err );
@@ -305,22 +306,22 @@ bool Single_Surface::append_greedy_input(const Basic_input &input)
 	if ( large_planar_residuals.size() != 0)
 	{
 		Math_methods::sort_vector_w_index(large_planar_residuals,large_planar_residuals_indices);
-		this->b_input.planar.push_back(input.planar[large_planar_residuals_indices[large_planar_residuals.size() - 1]]);
+		this->b_input.planar->push_back(input.planar->at(large_planar_residuals_indices[large_planar_residuals.size() - 1]));
 		return true;
 	}
 	// TANGENT Observations
-	for (int j = 0; j < (int)input.tangent.size(); j++){
-		if ( input.tangent[j].residual()*r2d > m_parameters.gradient_slack )
+	for (int j = 0; j < (int)input.tangent->size(); j++){
+		if (input.tangent->at(j).residual()*r2d > m_parameters.gradient_slack)
 		{
-			this->b_input.tangent.push_back(input.tangent[j]);
+			this->b_input.tangent->push_back(input.tangent->at(j));
 			return true;
 		}
 	}
 	// INTERFACE Observations
 	std::vector < double > large_interface_residuals;
 	std::vector < int > large_interface_residuals_indices;
-	for (int j = 0; j < (int)input.interface.size(); j++ ){
-		double interface_err = input.interface[j].residual();
+	for (int j = 0; j < (int)input.interface->size(); j++ ){
+		double interface_err = input.interface->at(j).residual();
 		if ( interface_err > m_parameters.interface_slack )
 		{
 			large_interface_residuals.push_back(interface_err);
@@ -330,14 +331,14 @@ bool Single_Surface::append_greedy_input(const Basic_input &input)
 	if ( large_interface_residuals.size() != 0)
 	{
 		Math_methods::sort_vector_w_index(large_interface_residuals,large_interface_residuals_indices);
-		this->b_input.interface.push_back(input.interface[large_interface_residuals_indices[large_interface_residuals.size() - 1]]);
+		this->b_input.interface->push_back(input.interface->at(large_interface_residuals_indices[large_interface_residuals.size() - 1]));
 		return true;
 	}
 	// INEQUALITIES Observations
-	for (int j = 0; j < (int)input.inequality.size(); j++ ){
-		if ( !input.inequality[j].residual() )
+	for (int j = 0; j < (int)input.inequality->size(); j++ ){
+		if (!input.inequality->at(j).residual())
 		{
-			this->b_input.inequality.push_back(input.inequality[j]);
+			this->b_input.inequality->push_back(input.inequality->at(j));
 			return true;
 		}
 	}
@@ -359,21 +360,21 @@ void Single_Surface::eval_scalar_interpolant_at_point( Point &p )
 	double elemsum_4 = 0.0;
 	double poly = 0.0;
 	for (int k = 0; k < n_ie; k++ ){
-		kernel_j->set_points(p,b_input.inequality[k]);
+		kernel_j->set_points(p, b_input.inequality->at(k));
 		elemsum_1 += solver->weights[k] * kernel_j->basis_pt_pt();
 	}
 	for (int k = 0; k < n_i; k++ ){
-		kernel_j->set_points(p,b_input.interface[k]);
+		kernel_j->set_points(p, b_input.interface->at(k));
 		elemsum_2 += solver->weights[n_ie + k] * kernel_j->basis_pt_pt();
 	}
 	for (int k = 0; k < n_p; k++ ){
-		kernel_j->set_points(p,b_input.planar[k]);
+		kernel_j->set_points(p, b_input.planar->at(k));
 		elemsum_3 += solver->weights[n_ie + n_i + 3*k] * kernel_j->basis_pt_planar_x();
 		elemsum_3 += solver->weights[n_ie + n_i + 3*k + 1] * kernel_j->basis_pt_planar_y();
 		elemsum_3 += solver->weights[n_ie + n_i + 3*k + 2] * kernel_j->basis_pt_planar_z();
 	}
 	for (int k = 0; k < n_t; k++ ){
-		kernel_j->set_points(p,b_input.tangent[k]);
+		kernel_j->set_points(p, b_input.tangent->at(k));
 		elemsum_4 += solver->weights[n_ie + n_i + 3*n_p + k] * kernel_j->basis_pt_tangent();
 	}
 	if (b_parameters.poly_term)
@@ -410,21 +411,21 @@ void Single_Surface::eval_vector_interpolant_at_point( Point &p )
 	double poly_z = 0.0;
 	// inequality constraints
 	for (int k = 0; k < n_ie; k++ ){
-		kernel->set_points(p,b_input.inequality[k]);
+		kernel->set_points(p, b_input.inequality->at(k));
 		elemsum_1_x += solver->weights[k] * kernel->basis_planar_x_pt();
 		elemsum_1_y += solver->weights[k] * kernel->basis_planar_y_pt();
 		elemsum_1_z += solver->weights[k] * kernel->basis_planar_z_pt();
 	}
 	// interface constraints 
 	for (int k = 0; k < n_i; k++ ){
-		kernel->set_points(p,b_input.interface[k]);
+		kernel->set_points(p, b_input.interface->at(k));
 		elemsum_1_x += solver->weights[n_ie + k] * kernel->basis_planar_x_pt();
 		elemsum_1_y += solver->weights[n_ie + k] * kernel->basis_planar_y_pt();
 		elemsum_1_z += solver->weights[n_ie + k] * kernel->basis_planar_z_pt();
 	}
 	// normal constraints
 	for (int k = 0; k < n_p; k++ ){
-		kernel->set_points(p,b_input.planar[k]);
+		kernel->set_points(p, b_input.planar->at(k));
 		elemsum_2_x += solver->weights[n_ie + n_i + 0 + 3*k] * kernel->basis_planar_planar(Parameter_Types::DXDX);
 		elemsum_2_x += solver->weights[n_ie + n_i + 1 + 3*k] * kernel->basis_planar_planar(Parameter_Types::DXDY);
 		elemsum_2_x += solver->weights[n_ie + n_i + 2 + 3*k] * kernel->basis_planar_planar(Parameter_Types::DXDZ);
@@ -437,7 +438,7 @@ void Single_Surface::eval_vector_interpolant_at_point( Point &p )
 	}
 	// tangent constraints
 	for (int k = 0; k < n_t; k++ ){
-		kernel->set_points(p,b_input.tangent[k]);
+		kernel->set_points(p, b_input.tangent->at(k));
 		elemsum_3_x += solver->weights[n_ie + n_i + 3*n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DX);
 		elemsum_3_y += solver->weights[n_ie + n_i + 3*n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DY);
 		elemsum_3_z += solver->weights[n_ie + n_i + 3*n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DZ);
@@ -465,18 +466,18 @@ void Single_Surface::eval_vector_interpolant_at_point( Point &p )
 
 bool Single_Surface::get_equality_values( std::vector<double> &equality_values )
 {
-	for (int j = 0; j < (int)b_input.interface.size(); j++){
+	for (int j = 0; j < (int)b_input.interface->size(); j++){
 		equality_values.push_back(0); // A*x >= (e_l + b)  e_l = -interfac_slack, b=0;
 		//equality_values.push_back(-m_parameters.interface_slack); //-A*x >= -(e_u + b
 	}
-	for (int j = 0; j < (int)b_input.planar.size(); j++){
-		equality_values.push_back(b_input.planar[j].nx());
-		equality_values.push_back(b_input.planar[j].ny());
-		equality_values.push_back(b_input.planar[j].nz());
+	for (int j = 0; j < (int)b_input.planar->size(); j++){
+		equality_values.push_back(b_input.planar->at(j).nx());
+		equality_values.push_back(b_input.planar->at(j).ny());
+		equality_values.push_back(b_input.planar->at(j).nz());
 		double error_mat[3][2];
 		//b_input.planar[j].getNormalError(error_mat);
 	}
-	for (int j = 0; j < (int)b_input.tangent.size(); j++) equality_values.push_back(0.0);
+	for (int j = 0; j < (int)b_input.tangent->size(); j++) equality_values.push_back(0.0);
 	if (b_parameters.poly_term) for (int j = 0; j < b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
 
 	return true;
@@ -486,10 +487,10 @@ bool Single_Surface::get_inequality_matrix( const std::vector< std::vector <doub
 {
 	if ((int)inequality_matrix.size() == 0 || (int)inequality_matrix.size() > (int)interpolation_matrix.size() || (int)inequality_matrix[0].size() != (int)interpolation_matrix[0].size()) return false;
 
-	if ((int)inequality_matrix.size() != (int)b_input.inequality.size()) return false;
+	if ((int)inequality_matrix.size() != (int)b_input.inequality->size()) return false;
 	for (int j = 0; j < (int)inequality_matrix.size(); j++ ){
 		for (int k = 0; k < (int)inequality_matrix[j].size(); k++ ){
-			if (b_input.inequality[j].level() > 0 ) inequality_matrix[j][k] = interpolation_matrix[j][k];
+			if (b_input.inequality->at(j).level() > 0) inequality_matrix[j][k] = interpolation_matrix[j][k];
 			else inequality_matrix[j][k] = -interpolation_matrix[j][k];
 		}
 	}
@@ -502,13 +503,13 @@ bool Single_Surface::get_inequality_matrix( const std::vector< std::vector <doub
 
 bool Single_Surface::get_inequality_values( std::vector<double> &inequality_values )
 {
-	for (int j = 0; j < (int)b_input.inequality.size(); j++ ) inequality_values.push_back(0.0);
+	for (int j = 0; j < (int)b_input.inequality->size(); j++ ) inequality_values.push_back(0.0);
 	return true;
 }
 
 bool Single_Surface::process_input_data()
 {
-	if ((int)b_input.interface.size() == 0) return false;
+	if ((int)b_input.interface->size() == 0) return false;
 	else
 	{
 		if (!b_input.get_interface_data()) return false;
@@ -537,24 +538,24 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 	for (int j = 0; j < n_ie; j++ ){
 		// Row:inequality/Column:inequality block
 		for (int k = 0; k < n_ie; k++ ){
-			kernel->set_points(b_input.inequality[j],b_input.inequality[k]);
+			kernel->set_points(b_input.inequality->at(j), b_input.inequality->at(k));
 			interpolation_matrix[j][k] = kernel->basis_pt_pt();
 		}
 		// Row:inequality/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.inequality[j],b_input.interface[k]);
+			kernel->set_points(b_input.inequality->at(j), b_input.interface->at(k));
 			interpolation_matrix[j][k + n_ie] = kernel->basis_pt_pt();
 		}
 		// Row:inequality/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
-			kernel->set_points(b_input.inequality[j],b_input.planar[k]);
+			kernel->set_points(b_input.inequality->at(j), b_input.planar->at(k));
 			interpolation_matrix[j][3*k + n_ie + n_i] = kernel->basis_pt_planar_x();
 			interpolation_matrix[j][3*k + n_ie + n_i + 1] = kernel->basis_pt_planar_y();
 			interpolation_matrix[j][3*k + n_ie + n_i + 2] = kernel->basis_pt_planar_z();
 		}
 		// Row:inequality/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
-			kernel->set_points(b_input.inequality[j],b_input.tangent[k]);
+			kernel->set_points(b_input.inequality->at(j), b_input.tangent->at(k));
 			interpolation_matrix[j][n_ie + n_i + 3*n_p + k] = kernel->basis_pt_tangent();
 		}
 	}
@@ -562,24 +563,24 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 	for (int j = 0; j < n_i; j++ ){
 		// Row:interface/Column:inequality block
 		for (int k = 0; k < n_ie; k++ ){
-			kernel->set_points(b_input.interface[j],b_input.inequality[k]);
+			kernel->set_points(b_input.interface->at(j), b_input.inequality->at(k));
 			interpolation_matrix[j + n_ie][k] = kernel->basis_pt_pt();
 		}
 		// Row:interface/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.interface[j],b_input.interface[k]);
+			kernel->set_points(b_input.interface->at(j), b_input.interface->at(k));
 			interpolation_matrix[j + n_ie][k + n_ie] = kernel->basis_pt_pt();
 		}
 		// Row:interface/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
-			kernel->set_points(b_input.interface[j],b_input.planar[k]);
+			kernel->set_points(b_input.interface->at(j), b_input.planar->at(k));
 			interpolation_matrix[j + n_ie][3*k + n_ie + n_i] = kernel->basis_pt_planar_x();
 			interpolation_matrix[j + n_ie][3*k + n_ie + n_i + 1] = kernel->basis_pt_planar_y();
 			interpolation_matrix[j + n_ie][3*k + n_ie + n_i + 2] = kernel->basis_pt_planar_z();
 		}
 		// Row:interface/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
-			kernel->set_points(b_input.interface[j],b_input.tangent[k]);
+			kernel->set_points(b_input.interface->at(j), b_input.tangent->at(k));
 			interpolation_matrix[j + n_ie][n_ie + n_i + 3*n_p + k] = kernel->basis_pt_tangent();
 		}
 	}
@@ -587,21 +588,21 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 	for (int j = 0; j < n_p; j++ ){
 		// Row:planar/Column:inequality block
 		for (int k = 0; k < n_ie; k++ ){
-			kernel->set_points(b_input.planar[j],b_input.inequality[k]);
+			kernel->set_points(b_input.planar->at(j), b_input.inequality->at(k));
 			interpolation_matrix[3*j + n_ie + n_i][k] = kernel->basis_planar_x_pt();
 			interpolation_matrix[3*j + n_ie + n_i + 1][k] = kernel->basis_planar_y_pt();
 			interpolation_matrix[3*j + n_ie + n_i + 2][k] = kernel->basis_planar_z_pt();
 		}
 		// Row:planar/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.planar[j],b_input.interface[k]);
+			kernel->set_points(b_input.planar->at(j), b_input.interface->at(k));
 			interpolation_matrix[3*j + n_ie + n_i][k + n_ie] = kernel->basis_planar_x_pt();
 			interpolation_matrix[3*j + n_ie + n_i + 1][k + n_ie] = kernel->basis_planar_y_pt();
 			interpolation_matrix[3*j + n_ie + n_i + 2][k + n_ie] = kernel->basis_planar_z_pt();
 		}
 		// Row:planar/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
-			kernel->set_points(b_input.planar[j],b_input.planar[k]);
+			kernel->set_points(b_input.planar->at(j), b_input.planar->at(k));
 			interpolation_matrix[3*j + n_ie + n_i][3*k + n_ie + n_i] = kernel->basis_planar_planar(Parameter_Types::DXDX);
 			interpolation_matrix[3*j + n_ie + n_i][3*k + n_ie + n_i + 1] = kernel->basis_planar_planar(Parameter_Types::DXDY);
 			interpolation_matrix[3*j + n_ie + n_i][3*k + n_ie + n_i + 2] = kernel->basis_planar_planar(Parameter_Types::DXDZ);
@@ -614,7 +615,7 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 		}
 		// Row:planar/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
-			kernel->set_points(b_input.planar[j],b_input.tangent[k]);
+			kernel->set_points(b_input.planar->at(j), b_input.tangent->at(k));
 			interpolation_matrix[3*j + n_ie + n_i][n_ie + n_i + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DX);
 			interpolation_matrix[3*j + n_ie + n_i + 1][n_ie + n_i + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DY);
 			interpolation_matrix[3*j + n_ie + n_i + 2][n_ie + n_i + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DZ);
@@ -624,24 +625,24 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 	for (int j = 0; j < n_t; j++ ){
 		// Row:tangent/Column:inequality block
 		for (int k = 0; k < n_ie; k++ ){
-			kernel->set_points(b_input.tangent[j],b_input.inequality[k]);
+			kernel->set_points(b_input.tangent->at(j), b_input.inequality->at(k));
 			interpolation_matrix[j + n_ie + n_i + 3*n_p][k] = kernel->basis_tangent_pt();
 		}
 		// Row:tangent/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.tangent[j],b_input.interface[k]);
+			kernel->set_points(b_input.tangent->at(j), b_input.interface->at(k));
 			interpolation_matrix[j + n_ie + n_i + 3*n_p][k + n_ie] = kernel->basis_tangent_pt();
 		}
 		// Row:tangent/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
-			kernel->set_points(b_input.tangent[j],b_input.planar[k]);
+			kernel->set_points(b_input.tangent->at(j), b_input.planar->at(k));
 			interpolation_matrix[j + n_ie + n_i + 3*n_p][3*k + n_ie + n_i] = kernel->basis_tangent_planar(Parameter_Types::DX);
 			interpolation_matrix[j + n_ie + n_i + 3*n_p][3*k + n_ie + n_i + 1] = kernel->basis_tangent_planar(Parameter_Types::DY);
 			interpolation_matrix[j + n_ie + n_i + 3*n_p][3*k + n_ie + n_i + 2] = kernel->basis_tangent_planar(Parameter_Types::DZ);
 		}
 		// Row:tangent/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
-			kernel->set_points(b_input.tangent[j],b_input.tangent[k]);
+			kernel->set_points(b_input.tangent->at(j), b_input.tangent->at(k));
 			interpolation_matrix[j + n_ie + n_i + 3*n_p][n_ie + n_i + 3*n_p + k] = kernel->basis_tangent_tangent();
 		}
 	}

@@ -27,10 +27,10 @@ public:
 	virtual ~GRBF_Modelling_Methods(){}
 	// Methods
 	RBFKernel *create_rbf_kernel(const Parameter_Types::RBF &rbf_type, const bool &anisotropy);
-	std::vector<Evaluation_Point> get_evaluation_points_output() const { return b_input.evaluation_pts; }
-	std::vector<Interface> get_interface_points_ouput() const { return b_input.interface; }
+	std::vector<Evaluation_Point> *get_evaluation_points_output() const { return b_input.evaluation_pts; }
+	std::vector<Interface> *get_interface_points_ouput() const { return b_input.interface; }
 	Basic_input get_b_input() const { return b_input; }
-	std::vector<double> get_interface_iso_values() const { return b_input.interface_iso_values; }
+	std::vector<double> *get_interface_iso_values() const { return b_input.interface_iso_values; }
 	bool setup_basis_functions();
 	bool evaluate_scalar_interpolant();
 	bool evaluate_vector_interpolant();
