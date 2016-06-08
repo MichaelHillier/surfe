@@ -69,14 +69,14 @@ bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matr
 	// start with P
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix[j].size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][k] = poly_matrix[j][k];
-			interpolation_matrix[k][n_ie + n_i + 3.0*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][k];
+			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k] = poly_matrix[j][k];
+			interpolation_matrix[k][n_ie + n_i + 3*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k];
 		}
 	}
 
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix.size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][n_ie + n_i + 3.0*n_p + n_t + k] = 0;
+			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][n_ie + n_i + 3*n_p + n_t + k] = 0;
 		}
 	}
 
@@ -106,9 +106,9 @@ bool Continuous_Property::get_method_parameters()
 	b_parameters.n_planar = 0;
 	b_parameters.n_tangent = 0;
 	// Total number of constraints ...
-	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
 	if (b_parameters.n_inequality == 0)
@@ -394,7 +394,7 @@ bool Continuous_Property::get_equality_values( std::vector<double> &equality_val
 		equality_values.push_back(b_input.planar[j].nz());
 	}
 	for (int j = 0; j < (int)b_input.tangent.size(); j++) equality_values.push_back(0.0);
-	if (b_parameters.poly_term) for (int j = 0; j < b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
+	if (b_parameters.poly_term) for (int j = 0; j < (int)b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
 
 	//for (int j = 0; j < (int)b_input.interface.size(); j++) b_input.interface[j].set_c(0);
 	return true;

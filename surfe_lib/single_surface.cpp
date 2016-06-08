@@ -69,14 +69,14 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix( c
 	// start with P
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix[j].size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][k] = poly_matrix[j][k];
-			interpolation_matrix[k][n_ie + n_i + 3.0*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][k];
+			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k] = poly_matrix[j][k];
+			interpolation_matrix[k][n_ie + n_i + 3*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k];
 		}
 	}
 
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix.size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3.0*n_p + n_t + j][n_ie + n_i + 3.0*n_p + n_t + k] = 0;
+			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][n_ie + n_i + 3*n_p + n_t + k] = 0;
 		}
 	}
 
@@ -106,9 +106,9 @@ bool Single_Surface::get_method_parameters()
 	b_parameters.n_planar = (int)b_input.planar.size();
 	b_parameters.n_tangent = (int)b_input.tangent.size();
 	// Total number of constraints ...
-	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
 	if (b_parameters.n_inequality == 0)
@@ -197,9 +197,9 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 	std::vector < Interface > extremal_interace_pts;
 	std::vector < Point > pts(b_input.interface.begin(),b_input.interface.end()); 
 	std::vector < int > interface_indices = get_extremal_point_data_indices_from_points(pts);
-	if ( (int)interface_indices.size() < b_parameters.n_poly_terms) return false;
-	for (int j = 0; j < b_parameters.n_inequality; j++ ) excluded_input.inequality.push_back(b_input.inequality[j]);
-	for (int j = 0; j < b_parameters.n_interface;  j++ ){
+	if ( (int)interface_indices.size() < (int)b_parameters.n_poly_terms) return false;
+	for (int j = 0; j < (int)b_parameters.n_inequality; j++ ) excluded_input.inequality.push_back(b_input.inequality[j]);
+	for (int j = 0; j < (int)b_parameters.n_interface;  j++ ){
 		bool exclude_index = true;
 		for (int k = 0; k < (int)interface_indices.size(); k++ ){
 			if (interface_indices[k] == j )
@@ -473,8 +473,6 @@ bool Single_Surface::get_equality_values( std::vector<double> &equality_values )
 		equality_values.push_back(b_input.planar[j].nx());
 		equality_values.push_back(b_input.planar[j].ny());
 		equality_values.push_back(b_input.planar[j].nz());
-		double error_mat[3][2];
-		//b_input.planar[j].getNormalError(error_mat);
 	}
 	for (int j = 0; j < (int)b_input.tangent.size(); j++) equality_values.push_back(0.0);
 	if (b_parameters.poly_term) for (int j = 0; j < b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);

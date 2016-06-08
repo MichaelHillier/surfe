@@ -18,9 +18,9 @@ bool Vector_Field::get_method_parameters()
 	b_parameters.n_planar = (int)b_input.planar.size();
 	b_parameters.n_tangent = 0;
 	// Total number of constraints ...
-	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
 

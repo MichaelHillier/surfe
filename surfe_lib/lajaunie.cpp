@@ -70,14 +70,14 @@ bool Lajaunie_Approach::_insert_polynomial_matrix_blocks_in_interpolation_matrix
 	// start with P
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix[j].size(); k++ ){
-			interpolation_matrix[n_ip + 3.0*n_p + n_t + j][k] = poly_matrix[j][k];
-			interpolation_matrix[k][n_ip + 3.0*n_p + n_t + j] = interpolation_matrix[n_ip + 3.0*n_p + n_t + j][k];
+			interpolation_matrix[n_ip + 3*n_p + n_t + j][k] = poly_matrix[j][k];
+			interpolation_matrix[k][n_ip + 3*n_p + n_t + j] = interpolation_matrix[n_ip + 3*n_p + n_t + j][k];
 		}
 	}
 
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix.size(); k++ ){
-			interpolation_matrix[n_ip + 3.0*n_p + n_t + j][n_ip + 3.0*n_p + n_t + k] = 0;
+			interpolation_matrix[n_ip + 3*n_p + n_t + j][n_ip + 3*n_p + n_t + k] = 0;
 		}
 	}
 
@@ -117,9 +117,9 @@ bool Lajaunie_Approach::get_method_parameters()
 	b_parameters.n_planar = (int)b_input.planar.size();
 	b_parameters.n_tangent = (int)b_input.tangent.size();
 	// Total number of constraints ...
-	b_parameters.n_constraints = _n_increment_pair + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_constraints = _n_increment_pair + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = _n_increment_pair + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_equality = _n_increment_pair + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
 	b_parameters.poly_term = true; // NOTE: May want to have this as an option when using SPD functions
@@ -169,7 +169,7 @@ bool Lajaunie_Approach::get_equality_values( std::vector<double> &equality_value
 		equality_values.push_back(b_input.planar[j].nz());
 	}
 	for (int j = 0; j < (int)b_input.tangent.size(); j++) equality_values.push_back(0.0);
-	if (b_parameters.poly_term) for (int j = 0; j < b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
+	if (b_parameters.poly_term) for (int j = 0; j < (int)b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
 
 	return true;
 }

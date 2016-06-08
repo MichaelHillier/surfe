@@ -136,9 +136,9 @@ bool Stratigraphic_Surfaces::get_method_parameters()
 	b_parameters.n_planar = (int)b_input.planar.size();
 	b_parameters.n_tangent = (int)b_input.tangent.size();
 	// Total number of constraints ...
-	b_parameters.n_constraints = _n_increment_pairs + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_constraints = _n_increment_pairs + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = _n_interface_pairs + 3.0*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.n_equality = _n_interface_pairs + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	b_parameters.n_inequality = _n_sequenced_interface_pairs + _n_sequenced_inequality_pairs;
 
 	// polynomial parameters ...
