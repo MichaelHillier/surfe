@@ -39,7 +39,7 @@ void Basic_input::_get_distinct_interface_iso_values()
 	// sort the vector (largest to smallest) - done for convience and for functional reasons 
 	std::sort(iso_values.begin(), iso_values.end(), std::greater<double>());
 
-	interface_iso_values = &iso_values;
+	for (int j = 0; j <(int)iso_values.size(); j++ ) interface_iso_values->push_back(iso_values[j]);
 }
 
 void Basic_input::_get_interface_points()
@@ -53,7 +53,7 @@ void Basic_input::_get_interface_points()
 			if (interface->at(k).level() == interface_iso_values->at(j) )
 			{
 				// add to 2D vector 
-				interface_point_lists[j].push_back(interface[k]);
+				interface_point_lists->at(j).push_back(interface->at(k));
 			}
 		}
 	}

@@ -213,7 +213,7 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 		if (exclude_index) excluded_input.interface->push_back(b_input.interface->at(j));
 	}
 	greedy_input.planar->push_back(b_input.planar->at(0));
-	for (int j = 1; j < b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
+	for (int j = 1; j < (int)b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
 	//for (int j = 0; j < b_parameters.n_poly_terms; j++ ) extremal_interace_pts.push_back(b_input.interface[interface_indices[j]]);
 
 	// get one planar point that is the furthest from extremal_interface_pts[] 
@@ -476,7 +476,7 @@ bool Single_Surface::get_equality_values( std::vector<double> &equality_values )
 		equality_values.push_back(b_input.planar->at(j).nz());
 	}
 	for (int j = 0; j < (int)b_input.tangent->size(); j++) equality_values.push_back(0.0);
-	if (b_parameters.poly_term) for (int j = 0; j < b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
+	if (b_parameters.poly_term) for (int j = 0; j < (int)b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
 
 	return true;
 }
