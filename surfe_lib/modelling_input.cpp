@@ -11,7 +11,7 @@ using namespace std;
 
 bool Basic_input::get_interface_data()
 {
-	if ((int)interface.size() < 2) return false;
+	if ((int)interface->size() < 2) return false;
 
 	_get_distinct_interface_iso_values();
 	_get_interface_points();
@@ -22,24 +22,24 @@ bool Basic_input::get_interface_data()
 void Basic_input::_get_distinct_interface_iso_values()
 {
 	std::vector <double> iso_values;
-	iso_values.push_back(interface[0].level());
-	for (int j = 1; j <(int)interface.size(); j++){
+	iso_values.push_back(interface->at(0).level());
+	for (int j = 1; j <(int)interface->size(); j++){
 		// search existing list of iso values
 		int add = 0;
 		for (int k = 0; k < (int)iso_values.size(); k++ ){
-			if (interface[j].level() != iso_values[k]) add++;
+			if (interface->at(j).level() != iso_values[k]) add++;
 		}
 		if (add == (int)iso_values.size()) // this is a iso value not in the list yet
 		{
 			// add new iso value to list
-			iso_values.push_back(interface[j].level());
+			iso_values.push_back(interface->at(j).level());
 		}
 	}
 
 	// sort the vector (largest to smallest) - done for convience and for functional reasons 
 	std::sort(iso_values.begin(), iso_values.end(), std::greater<double>());
 
-	interface_iso_values = iso_values;
+	interface_iso_values = &iso_values;
 }
 
 void Basic_input::_get_interface_points()
@@ -47,10 +47,10 @@ void Basic_input::_get_interface_points()
 	// interface[0][0,1,2,3,....] points 0,1,2,3,.... belong to the 0th interface 
 	// ...
 	// interface[m = interface_iso_values.size()][76,45,43,4,.....] points 76,45,43,4,..... belong to the mth interface
-	interface_point_lists.resize((int)interface_iso_values.size());
-	for (int j = 0; j < (int)interface_iso_values.size(); j++ ){
-		for (int k = 0; k < (int)interface.size(); k++ ){
-			if (interface[k].level() == interface_iso_values[j])
+	interface_point_lists->resize((int)interface_iso_values->size());
+	for (int j = 0; j < (int)interface_iso_values->size(); j++ ){
+		for (int k = 0; k < (int)interface->size(); k++ ){
+			if (interface->at(k).level() == interface_iso_values->at(j) )
 			{
 				// add to 2D vector 
 				interface_point_lists[j].push_back(interface[k]);
@@ -58,14 +58,14 @@ void Basic_input::_get_interface_points()
 		}
 	}
 
-	for (int j = 0; j < (int)interface_point_lists.size(); j++ ){
+	for (int j = 0; j < (int)interface_point_lists->size(); j++ ){
 		// set the test_interface_points 
-		interface_test_points.push_back(interface_point_lists[j][0]);
-		if ((int)interface_point_lists[j].size() == 1)
+		interface_test_points->push_back(interface_point_lists->at(j)[0]);
+		if ((int)interface_point_lists->at(j).size() == 1)
 		{
 			// need to have at least 2 points per interface
 			// remove this interface from the list
-			interface_point_lists.erase(interface_point_lists.begin() + j);
+			interface_point_lists->erase(interface_point_lists->begin() + j);
 			j--;
 		}
 	}
@@ -557,18 +557,18 @@ bool find_fill_distance( const Basic_input &input, double &fill_distance )
 	// put all inputted constraints into a vector of Points
 	std::vector < Point > points;
 
-	for (int j = 0; j < (int)input.inequality.size(); j++ ) points.push_back(input.inequality[j]);
-	for (int j = 0; j < (int)input.interface.size();  j++ ) points.push_back( input.interface[j]);
-	for (int j = 0; j < (int)input.planar.size();     j++ ) points.push_back(    input.planar[j]);
-	for (int j = 0; j < (int)input.tangent.size();    j++ ) points.push_back(   input.tangent[j]);
+	for (int j = 0; j < (int)input.inequality->size(); j++ ) points.push_back(input.inequality->at(j));
+	for (int j = 0; j < (int)input.interface->size(); j++) points.push_back(input.interface->at(j));
+	for (int j = 0; j < (int)input.planar->size(); j++) points.push_back(input.planar->at(j));
+	for (int j = 0; j < (int)input.tangent->size(); j++) points.push_back(input.tangent->at(j));
 
-	if (points.size() == 0 || input.evaluation_pts.size() == 0) return false;
+	if (points.size() == 0 || input.evaluation_pts->size() == 0) return false;
 
-	for (int j = 0; j < (int)input.evaluation_pts.size(); j++ ){
+	for (int j = 0; j < (int)input.evaluation_pts->size(); j++ ){
 		// find closest point in points[] to evaluation_pts[j]
-		unsigned int index = nearest_neighbour_index(input.evaluation_pts[j], points);
+		unsigned int index = nearest_neighbour_index(input.evaluation_pts->at(j), points);
 		// compute nearest neighbour distance and push into ndist_j
-		ndist_j.push_back(distance_btw_pts(input.evaluation_pts[j],points[index]));
+		ndist_j.push_back(distance_btw_pts(input.evaluation_pts->at(j), points[index]));
 	}
 
 	// find largest element in ndist_j

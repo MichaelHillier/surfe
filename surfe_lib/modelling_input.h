@@ -45,7 +45,6 @@ public:
 		: Point(x_coord,y_coord,z_coord,c_coord)
 	{ 
 	} 
-	std::vector<double> field; // temporary possibly. could provide structure for u,v,t fields though
 };
 
 class SURFE_LIB_EXPORT Interface : public Point {
@@ -170,19 +169,43 @@ private:
 	bool _interface_points_are_coplanar(){ return true; } // Not implemented yet. should be tested when 2nd order polynomials are used. Also when unisolvent points are used this should be called.
 
 public:
+	Basic_input()
+	{
+		inequality = new std::vector<Inequality>();
+		interface = new std::vector<Interface>();
+		planar = new std::vector<Planar>();
+		tangent = new std::vector<Tangent>();
+
+		evaluation_pts = new std::vector<Evaluation_Point>();
+
+		interface_iso_values = new std::vector<double>();
+		interface_point_lists = new std::vector< std::vector < Interface > >();
+		interface_test_points = new std::vector< Interface >();
+	}
+	~Basic_input()
+	{
+		delete inequality;
+		delete interface;
+		delete planar;
+		delete tangent;
+		delete evaluation_pts;
+		delete interface_iso_values;
+		delete interface_point_lists;
+		delete interface_test_points;
+	}
 	// input data 
-	std::vector< Inequality > inequality;
-	std::vector< Interface > interface;
-	std::vector< Planar > planar;
-	std::vector< Tangent > tangent;
+	std::vector< Inequality > *inequality;
+	std::vector< Interface > *interface;
+	std::vector< Planar > *planar;
+	std::vector< Tangent > *tangent;
 
 	// evaluation sites in grid
-	std::vector< Evaluation_Point > evaluation_pts;
+	std::vector< Evaluation_Point > *evaluation_pts;
 
 	// for interface data
-	std::vector < double > interface_iso_values;
-	std::vector < std::vector < Interface > > interface_point_lists;
-	std::vector < Interface > interface_test_points;
+	std::vector < double > *interface_iso_values;
+	std::vector < std::vector < Interface > > *interface_point_lists;
+	std::vector < Interface > *interface_test_points;
 	bool get_interface_data();
 
 };

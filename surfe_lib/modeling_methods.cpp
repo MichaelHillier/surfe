@@ -21,25 +21,25 @@ bool GRBF_Modelling_Methods::_update_interface_iso_values()
 	// at a interface point (in b_input.interface_test_points) for each interace. Then we
 	// will know the right scalar field value for each interface to complete an iso-surface extraction.
 
-	if ((int)b_input.interface_test_points.size() == 0) return false;
+	if ((int)b_input.interface_test_points->size() == 0) return false;
 
 	// create evaluation point list from interface_test_points
 	std::vector< Evaluation_Point > list;
-	for (int j = 0; j < (int)b_input.interface_test_points.size(); j++){
-		Evaluation_Point eval_pt(b_input.interface_test_points[j].x(),b_input.interface_test_points[j].y(),b_input.interface_test_points[j].z());
+	for (int j = 0; j < (int)b_input.interface_test_points->size(); j++){
+		Evaluation_Point eval_pt(b_input.interface_test_points->at(j).x(), b_input.interface_test_points->at(j).y(), b_input.interface_test_points->at(j).z());
 		list.push_back(eval_pt);
 	}
 
 	// evaluate the interpolant at these test points 
 	if (solver != NULL) // check if we have a valid interpolant first
 	{
-		for (int j = 0; j < (int)b_input.interface_test_points.size(); j++) eval_scalar_interpolant_at_point(b_input.interface_test_points[j]);
+		for (int j = 0; j < (int)b_input.interface_test_points->size(); j++) eval_scalar_interpolant_at_point(b_input.interface_test_points->at(j));
 	}
 	else return false;
 
-	if ((int)b_input.interface_iso_values.size() != (int)b_input.interface_test_points.size()) return false;
+	if ((int)b_input.interface_iso_values->size() != (int)b_input.interface_test_points->size()) return false;
 	// update interface_iso_values to computed scalar field values
-	for (int j = 0; j < (int) b_input.interface_iso_values.size(); j++ ) b_input.interface_iso_values[j] = b_input.interface_test_points[j].scalar_field();
+	for (int j = 0; j < (int)b_input.interface_iso_values->size(); j++) b_input.interface_iso_values->at(j) = b_input.interface_test_points->at(j).scalar_field();
 
 	return true;
 }
@@ -52,14 +52,11 @@ bool GRBF_Modelling_Methods::_output_greedy_debug_objects()
 		if ((int)solver->weights.size() == 0) return false;
 		else
 		{
-			if ((int)b_input.evaluation_pts.size()!= 0)	evaluate_scalar_interpolant();
+			if ((int)b_input.evaluation_pts->size()!= 0)	evaluate_scalar_interpolant();
 			else return false;
 		}
 	}
 
-	for (int j = 0; j < (int)b_input.evaluation_pts.size();j++ ){
-		b_input.evaluation_pts[j].field.push_back(b_input.evaluation_pts[j].scalar_field());
-	}
 	return true;
 }
 
@@ -70,7 +67,7 @@ bool GRBF_Modelling_Methods::setup_basis_functions()
 	if (rbf_kernel == NULL) return false;
 	if (b_parameters.modified_basis)
 	{
-		if ((int)b_input.interface_point_lists.size() != 0) kernel = new Modified_Kernel(rbf_kernel, b_input.interface_point_lists);
+		if ((int)b_input.interface_point_lists->size() != 0) kernel = new Modified_Kernel(rbf_kernel, *b_input.interface_point_lists);
 		else return false;
 	}
 	else kernel = rbf_kernel;
@@ -86,10 +83,10 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 		if ((int)solver->weights.size() == 0) return false;
 		else
 		{
-			int N = (int)b_input.evaluation_pts.size();
+			int N = (int)b_input.evaluation_pts->size();
 			#pragma omp parallel for schedule(dynamic)
 			for (int j = 0; j < N; j++ ){
-				eval_scalar_interpolant_at_point(b_input.evaluation_pts[j]);
+				eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
 			}
 		}
 	}
@@ -170,12 +167,12 @@ RBFKernel * GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF
 {
 	if (anisotropy)
 	{
-		if (rbf_type == Parameter_Types::Cubic) return new ACubic(b_input.planar);
-		else if (rbf_type == Parameter_Types::Gaussian) return new AGaussian(m_parameters.shape_parameter,b_input.planar);
-		else if (rbf_type == Parameter_Types::IMQ) return new AIMQ(m_parameters.shape_parameter, b_input.planar);
-		else if (rbf_type == Parameter_Types::MQ) return new AMQ(m_parameters.shape_parameter, b_input.planar);
-		else if (rbf_type == Parameter_Types::R) return new AR(b_input.planar);
-		else return new ATPS(b_input.planar);
+		if (rbf_type == Parameter_Types::Cubic) return new ACubic(*b_input.planar);
+		else if (rbf_type == Parameter_Types::Gaussian) return new AGaussian(m_parameters.shape_parameter,*b_input.planar);
+		else if (rbf_type == Parameter_Types::IMQ) return new AIMQ(m_parameters.shape_parameter, *b_input.planar);
+		else if (rbf_type == Parameter_Types::MQ) return new AMQ(m_parameters.shape_parameter, *b_input.planar);
+		else if (rbf_type == Parameter_Types::R) return new AR(*b_input.planar);
+		else return new ATPS(*b_input.planar);
 	}
 	else
 	{

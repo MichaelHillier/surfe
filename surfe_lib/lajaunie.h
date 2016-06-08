@@ -10,7 +10,7 @@ private:
 	int _n_increment_pair;
 	bool _get_polynomial_matrix_block(std::vector< std::vector <double> > &poly_matrix);
 	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const std::vector< std::vector <double> > &poly_matrix, std::vector< std::vector <double> > &interpolation_matrix);
-	std::vector < std::vector < Point > > _increment_pairs;
+	std::vector < std::vector < Point > > *_increment_pairs;
 	bool _get_increment_pairs();
 public:
 	// Constructor/Destructor

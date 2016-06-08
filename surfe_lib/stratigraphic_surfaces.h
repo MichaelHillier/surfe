@@ -17,7 +17,7 @@ private:
 	int _n_sequenced_interface_pairs;
 	int _n_sequenced_inequality_pairs;
 	int _n_interface_pairs;
-	std::vector < std::vector < Point > > _increment_pairs;
+	std::vector < std::vector < Point > > *_increment_pairs;
 public:
 	// Constructor/Destructor
 	Stratigraphic_Surfaces(const model_parameters& m_p, const Basic_input& basic_i);
