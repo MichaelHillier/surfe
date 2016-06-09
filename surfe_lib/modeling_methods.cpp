@@ -8,6 +8,12 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <time.h>
+
+double round(double d)
+{
+	return floor(d + 0.5);
+}
 
 bool GRBF_Modelling_Methods::_update_interface_iso_values()
 {
@@ -60,6 +66,27 @@ bool GRBF_Modelling_Methods::_output_greedy_debug_objects()
 	return true;
 }
 
+void GRBF_Modelling_Methods::_Progress( char message[], const int &step, const int &total )
+{
+	//progress width
+	const int pwidth = 72;
+
+	//minus label len
+	int width = pwidth - strlen(message);
+	int pos = (step * width) / total;
+	int percent = (step * 100) / total;
+
+	printf("%s[", message);
+
+	//fill progress bar with =
+	for (int i = 0; i < pos; i++)  printf("%c", '=');
+
+	//fill progress bar with spaces
+	printf("% *c", width - pos + 1, ']');
+	printf(" %3d%%\r", percent);
+
+}
+
 bool GRBF_Modelling_Methods::setup_basis_functions()
 {
 	rbf_kernel = this->create_rbf_kernel(m_parameters.basis_type,m_parameters.model_global_anisotropy);
@@ -84,10 +111,23 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 		else
 		{
 			int N = (int)b_input.evaluation_pts->size();
+			int add = 0;
+			int vv = round((double)N / 72.0); // 72.0 is the width of the progress bar 
+			double factor = (100.0*(double)vv) / (double)N;
+
 			#pragma omp parallel for schedule(dynamic)
 			for (int j = 0; j < N; j++ ){
 				eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
+				if ( j % vv == 0 )
+				{
+#pragma omp atomic
+					add++;
+					int step = factor * add;
+#pragma omp critical
+					_Progress(" Computing Scalar field: ", step, 100 );
+				}
 			}
+			cout<<endl;
 		}
 	}
 	return true;
@@ -95,11 +135,14 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 
 bool GRBF_Modelling_Methods::run_algorithm()
 {
+	clock_t tstart=clock();
+	cout<<" Starting SURFE algorithm "<<endl;
 	if ( !process_input_data()    ) return false;
 	if ( !get_method_parameters() ) return false;
 	if ( !setup_basis_functions() ) return false;
 	if ( !setup_system_solver()   ) return false;
 	if ( !evaluate_scalar_interpolant()  ) return false;
+	cout<<" Total computation time = "<<((double)clock()-tstart)/CLOCKS_PER_SEC<<endl;
 
 	return true;
 }

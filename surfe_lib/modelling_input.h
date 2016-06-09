@@ -172,7 +172,7 @@ public:
 	Basic_input()
 	{
 		inequality = new std::vector<Inequality>();
-		interface = new std::vector<Interface>();
+		itrface = new std::vector<Interface>();
 		planar = new std::vector<Planar>();
 		tangent = new std::vector<Tangent>();
 
@@ -185,7 +185,7 @@ public:
 	~Basic_input()
 	{
 		delete inequality;
-		delete interface;
+		delete itrface;
 		delete planar;
 		delete tangent;
 		delete evaluation_pts;
@@ -195,7 +195,7 @@ public:
 	}
 	// input data 
 	std::vector< Inequality > *inequality;
-	std::vector< Interface > *interface;
+	std::vector< Interface > *itrface;
 	std::vector< Planar > *planar;
 	std::vector< Tangent > *tangent;
 

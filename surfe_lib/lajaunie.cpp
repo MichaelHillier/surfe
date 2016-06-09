@@ -114,7 +114,7 @@ Lajaunie_Approach::Lajaunie_Approach(const model_parameters& m_p, const Basic_in
 bool Lajaunie_Approach::get_method_parameters()
 {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = (int)b_input.interface->size();
+	b_parameters.n_interface = (int)b_input.itrface->size();
 	b_parameters.n_inequality = 0; // no support for inequality. if there is inequalities use the stratigraphic horizon method
 	b_parameters.n_planar = (int)b_input.planar->size();
 	b_parameters.n_tangent = (int)b_input.tangent->size();
@@ -136,7 +136,7 @@ bool Lajaunie_Approach::get_method_parameters()
 
 bool Lajaunie_Approach::process_input_data()
 {
-	if ((int)b_input.interface->size() == 0) return false;
+	if ((int)b_input.itrface->size() == 0) return false;
 	else
 	{
 		if (!b_input.get_interface_data()) return false;

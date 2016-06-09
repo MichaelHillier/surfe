@@ -11,7 +11,7 @@ using namespace std;
 
 bool Basic_input::get_interface_data()
 {
-	if ((int)interface->size() < 2) return false;
+	if ((int)itrface->size() < 2) return false;
 
 	_get_distinct_interface_iso_values();
 	_get_interface_points();
@@ -22,17 +22,17 @@ bool Basic_input::get_interface_data()
 void Basic_input::_get_distinct_interface_iso_values()
 {
 	std::vector <double> iso_values;
-	iso_values.push_back(interface->at(0).level());
-	for (int j = 1; j <(int)interface->size(); j++){
+	iso_values.push_back(itrface->at(0).level());
+	for (int j = 1; j <(int)itrface->size(); j++){
 		// search existing list of iso values
 		int add = 0;
 		for (int k = 0; k < (int)iso_values.size(); k++ ){
-			if (interface->at(j).level() != iso_values[k]) add++;
+			if (itrface->at(j).level() != iso_values[k]) add++;
 		}
 		if (add == (int)iso_values.size()) // this is a iso value not in the list yet
 		{
 			// add new iso value to list
-			iso_values.push_back(interface->at(j).level());
+			iso_values.push_back(itrface->at(j).level());
 		}
 	}
 
@@ -49,11 +49,11 @@ void Basic_input::_get_interface_points()
 	// interface[m = interface_iso_values.size()][76,45,43,4,.....] points 76,45,43,4,..... belong to the mth interface
 	interface_point_lists->resize((int)interface_iso_values->size());
 	for (int j = 0; j < (int)interface_iso_values->size(); j++ ){
-		for (int k = 0; k < (int)interface->size(); k++ ){
-			if (interface->at(k).level() == interface_iso_values->at(j) )
+		for (int k = 0; k < (int)itrface->size(); k++ ){
+			if (itrface->at(k).level() == interface_iso_values->at(j) )
 			{
 				// add to 2D vector 
-				interface_point_lists->at(j).push_back(interface->at(k));
+				interface_point_lists->at(j).push_back(itrface->at(k));
 			}
 		}
 	}
@@ -558,7 +558,7 @@ bool find_fill_distance( const Basic_input &input, double &fill_distance )
 	std::vector < Point > points;
 
 	for (int j = 0; j < (int)input.inequality->size(); j++ ) points.push_back(input.inequality->at(j));
-	for (int j = 0; j < (int)input.interface->size(); j++) points.push_back(input.interface->at(j));
+	for (int j = 0; j < (int)input.itrface->size(); j++) points.push_back(input.itrface->at(j));
 	for (int j = 0; j < (int)input.planar->size(); j++) points.push_back(input.planar->at(j));
 	for (int j = 0; j < (int)input.tangent->size(); j++) points.push_back(input.tangent->at(j));
 

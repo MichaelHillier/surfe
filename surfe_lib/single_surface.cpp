@@ -23,7 +23,7 @@ bool Single_Surface::_get_polynomial_matrix_block(std::vector< std::vector <doub
 	if ((int)poly_matrix.size() != b_parameters.n_poly_terms ) return false;
 	// for interface points ...
 	for (int j = 0; j < nl; j++ ){
-		p_basis->set_point(b_input.interface->at(j));
+		p_basis->set_point(b_input.itrface->at(j));
 		std::vector<double> b = p_basis->basis();
 		if ((int)b.size() != b_parameters.n_poly_terms ) return false;
 		for (int k = 0; k < (int)b.size(); k++ ) poly_matrix[k][j] = b[k];
@@ -101,7 +101,7 @@ Polynomial_Basis * Single_Surface::create_polynomial_basis( const int &poly_orde
 bool Single_Surface::get_method_parameters()
 {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = (int)b_input.interface->size();
+	b_parameters.n_interface = (int)b_input.itrface->size();
 	b_parameters.n_inequality = (int)b_input.inequality->size();
 	b_parameters.n_planar = (int)b_input.planar->size();
 	b_parameters.n_tangent = (int)b_input.tangent->size();
@@ -196,7 +196,7 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 	// if poly order = 1 find 4 interface points nicely sampling the volume 
 	// if poly order = 2 find 6 interface points nicely sampling the volume
 	std::vector < Interface > extremal_interace_pts;
-	std::vector < Point > pts(b_input.interface->begin(),b_input.interface->end()); 
+	std::vector < Point > pts(b_input.itrface->begin(),b_input.itrface->end()); 
 	std::vector < int > interface_indices = get_extremal_point_data_indices_from_points(pts);
 	if ( (int)interface_indices.size() < (int)b_parameters.n_poly_terms) return false;
 	for (int j = 0; j < (int)b_parameters.n_inequality; j++ ) excluded_input.inequality->push_back(b_input.inequality->at(j));
@@ -206,11 +206,11 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 			if (interface_indices[k] == j )
 			{
 				exclude_index = false;
-				greedy_input.interface->push_back(b_input.interface->at(interface_indices[k]));
+				greedy_input.itrface->push_back(b_input.itrface->at(interface_indices[k]));
 				break;
 			}
 		}
-		if (exclude_index) excluded_input.interface->push_back(b_input.interface->at(j));
+		if (exclude_index) excluded_input.itrface->push_back(b_input.itrface->at(j));
 	}
 	greedy_input.planar->push_back(b_input.planar->at(0));
 	for (int j = 1; j < (int)b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
@@ -248,9 +248,9 @@ bool Single_Surface::measure_residuals(Basic_input &input)
 		}
 	}
 	// interface points
-	for (int j = 0; j < (int)input.interface->size(); j++ ){
-		eval_scalar_interpolant_at_point(input.interface->at(j));
-		input.interface->at(j).setResidual(abs(input.interface->at(j).scalar_field()));
+	for (int j = 0; j < (int)input.itrface->size(); j++ ){
+		eval_scalar_interpolant_at_point(input.itrface->at(j));
+		input.itrface->at(j).setResidual(abs(input.itrface->at(j).scalar_field()));
 	}
 	// planar points
 	for (int j = 0; j < (int)input.planar->size(); j++ ){
@@ -320,8 +320,8 @@ bool Single_Surface::append_greedy_input(const Basic_input &input)
 	// INTERFACE Observations
 	std::vector < double > large_interface_residuals;
 	std::vector < int > large_interface_residuals_indices;
-	for (int j = 0; j < (int)input.interface->size(); j++ ){
-		double interface_err = input.interface->at(j).residual();
+	for (int j = 0; j < (int)input.itrface->size(); j++ ){
+		double interface_err = input.itrface->at(j).residual();
 		if ( interface_err > m_parameters.interface_slack )
 		{
 			large_interface_residuals.push_back(interface_err);
@@ -331,7 +331,7 @@ bool Single_Surface::append_greedy_input(const Basic_input &input)
 	if ( large_interface_residuals.size() != 0)
 	{
 		Math_methods::sort_vector_w_index(large_interface_residuals,large_interface_residuals_indices);
-		this->b_input.interface->push_back(input.interface->at(large_interface_residuals_indices[large_interface_residuals.size() - 1]));
+		this->b_input.itrface->push_back(input.itrface->at(large_interface_residuals_indices[large_interface_residuals.size() - 1]));
 		return true;
 	}
 	// INEQUALITIES Observations
@@ -364,7 +364,7 @@ void Single_Surface::eval_scalar_interpolant_at_point( Point &p )
 		elemsum_1 += solver->weights[k] * kernel_j->basis_pt_pt();
 	}
 	for (int k = 0; k < n_i; k++ ){
-		kernel_j->set_points(p, b_input.interface->at(k));
+		kernel_j->set_points(p, b_input.itrface->at(k));
 		elemsum_2 += solver->weights[n_ie + k] * kernel_j->basis_pt_pt();
 	}
 	for (int k = 0; k < n_p; k++ ){
@@ -418,7 +418,7 @@ void Single_Surface::eval_vector_interpolant_at_point( Point &p )
 	}
 	// interface constraints 
 	for (int k = 0; k < n_i; k++ ){
-		kernel->set_points(p, b_input.interface->at(k));
+		kernel->set_points(p, b_input.itrface->at(k));
 		elemsum_1_x += solver->weights[n_ie + k] * kernel->basis_planar_x_pt();
 		elemsum_1_y += solver->weights[n_ie + k] * kernel->basis_planar_y_pt();
 		elemsum_1_z += solver->weights[n_ie + k] * kernel->basis_planar_z_pt();
@@ -466,7 +466,7 @@ void Single_Surface::eval_vector_interpolant_at_point( Point &p )
 
 bool Single_Surface::get_equality_values( std::vector<double> &equality_values )
 {
-	for (int j = 0; j < (int)b_input.interface->size(); j++){
+	for (int j = 0; j < (int)b_input.itrface->size(); j++){
 		equality_values.push_back(0); // A*x >= (e_l + b)  e_l = -interfac_slack, b=0;
 		//equality_values.push_back(-m_parameters.interface_slack); //-A*x >= -(e_u + b
 	}
@@ -507,7 +507,7 @@ bool Single_Surface::get_inequality_values( std::vector<double> &inequality_valu
 
 bool Single_Surface::process_input_data()
 {
-	if ((int)b_input.interface->size() == 0) return false;
+	if ((int)b_input.itrface->size() == 0) return false;
 	else
 	{
 		if (!b_input.get_interface_data()) return false;
@@ -541,7 +541,7 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 		}
 		// Row:inequality/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.inequality->at(j), b_input.interface->at(k));
+			kernel->set_points(b_input.inequality->at(j), b_input.itrface->at(k));
 			interpolation_matrix[j][k + n_ie] = kernel->basis_pt_pt();
 		}
 		// Row:inequality/Column:planar block
@@ -561,24 +561,24 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 	for (int j = 0; j < n_i; j++ ){
 		// Row:interface/Column:inequality block
 		for (int k = 0; k < n_ie; k++ ){
-			kernel->set_points(b_input.interface->at(j), b_input.inequality->at(k));
+			kernel->set_points(b_input.itrface->at(j), b_input.inequality->at(k));
 			interpolation_matrix[j + n_ie][k] = kernel->basis_pt_pt();
 		}
 		// Row:interface/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.interface->at(j), b_input.interface->at(k));
+			kernel->set_points(b_input.itrface->at(j), b_input.itrface->at(k));
 			interpolation_matrix[j + n_ie][k + n_ie] = kernel->basis_pt_pt();
 		}
 		// Row:interface/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
-			kernel->set_points(b_input.interface->at(j), b_input.planar->at(k));
+			kernel->set_points(b_input.itrface->at(j), b_input.planar->at(k));
 			interpolation_matrix[j + n_ie][3*k + n_ie + n_i] = kernel->basis_pt_planar_x();
 			interpolation_matrix[j + n_ie][3*k + n_ie + n_i + 1] = kernel->basis_pt_planar_y();
 			interpolation_matrix[j + n_ie][3*k + n_ie + n_i + 2] = kernel->basis_pt_planar_z();
 		}
 		// Row:interface/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
-			kernel->set_points(b_input.interface->at(j), b_input.tangent->at(k));
+			kernel->set_points(b_input.itrface->at(j), b_input.tangent->at(k));
 			interpolation_matrix[j + n_ie][n_ie + n_i + 3*n_p + k] = kernel->basis_pt_tangent();
 		}
 	}
@@ -593,7 +593,7 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 		}
 		// Row:planar/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.planar->at(j), b_input.interface->at(k));
+			kernel->set_points(b_input.planar->at(j), b_input.itrface->at(k));
 			interpolation_matrix[3*j + n_ie + n_i][k + n_ie] = kernel->basis_planar_x_pt();
 			interpolation_matrix[3*j + n_ie + n_i + 1][k + n_ie] = kernel->basis_planar_y_pt();
 			interpolation_matrix[3*j + n_ie + n_i + 2][k + n_ie] = kernel->basis_planar_z_pt();
@@ -628,7 +628,7 @@ bool Single_Surface::get_interpolation_matrix( std::vector< std::vector <double>
 		}
 		// Row:tangent/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
-			kernel->set_points(b_input.tangent->at(j), b_input.interface->at(k));
+			kernel->set_points(b_input.tangent->at(j), b_input.itrface->at(k));
 			interpolation_matrix[j + n_ie + n_i + 3*n_p][k + n_ie] = kernel->basis_tangent_pt();
 		}
 		// Row:tangent/Column:planar block
