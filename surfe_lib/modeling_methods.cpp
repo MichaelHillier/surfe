@@ -87,6 +87,74 @@ void GRBF_Modelling_Methods::_Progress( char message[], const int &step, const i
 
 }
 
+void GRBF_Modelling_Methods::_Compute_Avg_NN_Dist_Data()
+{
+	int n_ie = b_parameters.n_inequality;
+	int n_i = b_parameters.n_interface;
+	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
+
+	// for inequality points
+	for (int j = 0; j < n_ie; j++ ){
+		double min_dist = 10000000000000.0;
+		for (int k = 0; k < n_ie; k++){
+			if ( k != j )
+			{
+				double dist = distance_btw_pts(b_input.inequality->at(j),b_input.inequality->at(k));
+				if ( dist < min_dist ) min_dist = dist;
+			}
+		}
+		if ( n_ie == 1 ) min_dist = 0; // trap this edge case
+		_avg_nn_dist_ie += min_dist;
+	}
+	if (n_ie != 0) _avg_nn_dist_ie /= n_ie;
+
+	// for interface points
+	for (int j = 0; j < n_i; j++ ){
+		double min_dist = 10000000000000.0;
+		for (int k = 0; k < n_i; k++){
+			if ( k != j )
+			{
+				double dist = distance_btw_pts(b_input.itrface->at(j),b_input.itrface->at(k));
+				if ( dist < min_dist ) min_dist = dist;
+			}
+		}
+		if ( n_i == 1 ) min_dist = 0; // trap this edge case
+		_avg_nn_dist_itr += min_dist;
+	}
+	if (n_i != 0) _avg_nn_dist_itr /= n_i;
+
+	// for planar points
+	for (int j = 0; j < n_p; j++ ){
+		double min_dist = 10000000000000.0;
+		for (int k = 0; k < n_p; k++){
+			if ( k != j )
+			{
+				double dist = distance_btw_pts(b_input.planar->at(j),b_input.planar->at(k));
+				if ( dist < min_dist ) min_dist = dist;
+			}
+		}
+		if ( n_p == 1 ) min_dist = 0; // trap this edge case
+		_avg_nn_dist_p += min_dist;
+	}
+	if (n_p != 0) _avg_nn_dist_p /= n_p;
+
+	// for tangent points
+	for (int j = 0; j < n_t; j++ ){
+		double min_dist = 10000000000000.0;
+		for (int k = 0; k < n_t; k++){
+			if ( k != j )
+			{
+				double dist = distance_btw_pts(b_input.tangent->at(j),b_input.tangent->at(k));
+				if ( dist < min_dist ) min_dist = dist;
+			}
+		}
+		if ( n_t == 1 ) min_dist = 0; // trap this edge case
+		_avg_nn_dist_t += min_dist;
+	}
+	if (n_t != 0) _avg_nn_dist_t /= n_t;
+}
+
 bool GRBF_Modelling_Methods::setup_basis_functions()
 {
 	rbf_kernel = this->create_rbf_kernel(m_parameters.basis_type,m_parameters.model_global_anisotropy);
@@ -153,7 +221,7 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm()
 	if (m_parameters.interface_slack == 0 && m_parameters.gradient_slack == 0) return false;
 	GRBF_Modelling_Methods *greedy_method = this->clone();
 
-	// remap from 3-space to 4-space
+	greedy_method->_Compute_Avg_NN_Dist_Data();
 
 	Basic_input greedy_input, excluded_input;
 	// initialize starting data
@@ -172,7 +240,7 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm()
 		if ( !greedy_method->setup_system_solver()     ) return false;
 
 		// measure residuals
-		if ( !greedy_method->measure_residuals(b_input)) return false;
+		if ( !greedy_method->measure_residuals(excluded_input)) return false;
 
 		// debug: should output intermediate input constraints and modelled surface using those constraints
 		// if ( !greedy_method->_output_greedy_debug_objects()) return false;
@@ -180,7 +248,7 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm()
 		// check topology : FUTURE
 
 		// add appropriate data based on residuals
-		if ( !greedy_method->append_greedy_input(b_input)) converged = true; // if no input is added convergence is assumed
+		if ( !greedy_method->append_greedy_input(excluded_input)) converged = true; // if no input is added convergence is assumed
 		//iter++;
 	}
 

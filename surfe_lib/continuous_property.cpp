@@ -220,7 +220,7 @@ bool Continuous_Property::measure_residuals( Basic_input &input )
 	return true;
 }
 
-bool Continuous_Property::append_greedy_input( const Basic_input &input )
+bool Continuous_Property::append_greedy_input(Basic_input &input )
 {
 	// planar > tangent > interface > inequalities
 

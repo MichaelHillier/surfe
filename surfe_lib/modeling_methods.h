@@ -19,10 +19,15 @@ protected:
 	basic_parameters b_parameters;
 	// algorithm input
 	Basic_input b_input;
+	double _avg_nn_dist_ie;
+	double _avg_nn_dist_itr;
+	double _avg_nn_dist_p;
+	double _avg_nn_dist_t;
 	// Methods
 	bool _update_interface_iso_values(); // this is to prep for output. Is the computed scalar field value using the interpolant @ interface_test_points for iso surface extraction
 	bool _output_greedy_debug_objects();
 	void _Progress(char message[], const int &step, const int &total);
+	void _Compute_Avg_NN_Dist_Data();
 public:
 	// Destructor
 	virtual ~GRBF_Modelling_Methods(){}
@@ -47,7 +52,7 @@ public:
 	virtual bool setup_system_solver() = 0;
 	virtual bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) = 0;
 	virtual bool measure_residuals(Basic_input &input) = 0;
-	virtual bool append_greedy_input(const Basic_input &input) = 0;
+	virtual bool append_greedy_input(Basic_input &input) = 0;
 	virtual GRBF_Modelling_Methods *clone() = 0;
 	// Attributes
 	System_Solver *solver;

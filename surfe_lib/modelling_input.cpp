@@ -578,3 +578,259 @@ bool find_fill_distance( const Basic_input &input, double &fill_distance )
 	fill_distance = largest;
 	return true;
 }
+
+std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals( const std::vector<Inequality> *inequality, const double &avg_nn_distance )
+{
+	// Function will intelligently* get the indices within the STL vector of Inequality points that have large residuals
+	// Intelligently* : Doesn't blindly capture all points with large residuals 
+	//                 - Considers the distance to other large residual points
+	//               These are a bit special
+	std::vector<int> inequality_indices_to_include; // what we are going to function on function exit
+
+	double Large_distance = 1000000000;
+
+	std::vector < int > inequality_residuals_indices;
+	for (int j = 0; j < (int)inequality->size(); j++ ){
+		if ( !inequality->at(j).residual() ) inequality_residuals_indices.push_back(j);
+	}
+	if ( inequality_residuals_indices.size() != 0)
+	{
+		// Will always accept the first residual over the threshold 
+		inequality_indices_to_include.push_back(inequality_residuals_indices[0]);
+		inequality_residuals_indices.pop_back();
+
+		for (int j = 0; j < (int)inequality_residuals_indices.size(); j++ ){
+			// current index being analyzed (next residual in list): 
+			int index = inequality_residuals_indices[j];
+			// find closest point currently in inequality_indices_to_include[] to index
+			double nn_dist = Large_distance;
+			int nn_index = -1; // should always be overwritten. Will get a seg fault if this isn't the case
+			for (int k = 0; k < (int)inequality_indices_to_include.size(); k++ ){
+				double dist = distance_btw_pts(inequality->at(index),inequality->at(inequality_indices_to_include[k]));
+				if ( dist < nn_dist )
+				{
+					nn_dist = dist;
+					nn_index = inequality_indices_to_include[k];
+				}
+			}
+			// Distance to other Large Residual Points Condition
+			if ( nn_dist  > avg_nn_distance) inequality_indices_to_include.push_back(index);
+		}
+	}
+
+	return inequality_indices_to_include;
+}
+
+std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals( 
+	const std::vector<Interface> *itrface, 
+	const double &itrface_uncertainty, 
+	const double &avg_nn_distance  )
+{
+	// Function will intelligently* get the indices within the STL vector of Interface points that have large residuals
+	// Intelligently* : Doesn't blindly capture all points with large residuals 
+	//                 - Considers the magnitude of the residuals
+	//                 - Considers the distance to other large residual points
+	//                 - Considers the variability with close large residual points
+
+	std::vector<int> itrface_indices_to_include; // what we are going to function on function exit
+
+	double Large_distance = 1000000000;
+
+	std::vector < double > large_itrface_residuals;
+	std::vector < int > large_itrface_residuals_indices;
+	for (int j = 0; j < (int)itrface->size(); j++ ){
+		double error = itrface->at(j).residual();
+		if ( error > itrface_uncertainty )
+		{
+			large_itrface_residuals.push_back(error);
+			large_itrface_residuals_indices.push_back(j);
+		}
+	}
+	if ( large_itrface_residuals.size() != 0)
+	{
+		// Residual Magnitude Condition
+		// sort all residuals over the threshold(angular_uncertainty) in smallest to largest - along with linked indices
+		Math_methods::sort_vector_w_index(large_itrface_residuals,large_itrface_residuals_indices);
+		// Will always accept largest residual over the threshold 
+		itrface_indices_to_include.push_back(large_itrface_residuals_indices[(int)large_itrface_residuals_indices.size() - 1]);
+		large_itrface_residuals.pop_back(); // probably don't need to do this since we never use it again
+		large_itrface_residuals_indices.pop_back();
+
+		for (int j = 0; j < (int)large_itrface_residuals_indices.size(); j++ ){
+			// current index being analyzed (next largest residual in list): 
+			int index = large_itrface_residuals_indices[(int)large_itrface_residuals_indices.size()- j - 1];
+			// find closest point currently in itrface_indices_to_include[] to index
+			double nn_dist = Large_distance;
+			int nn_index = -1; // should always be overwritten. Will get a seg fault if this isn't the case
+			for (int k = 0; k < (int)itrface_indices_to_include.size(); k++ ){
+				double dist = distance_btw_pts(itrface->at(index),itrface->at(itrface_indices_to_include[k]));
+				if ( dist < nn_dist )
+				{
+					nn_dist = dist;
+					nn_index = itrface_indices_to_include[k];
+				}
+			}
+			// Distance to other Large Residual Points Condition
+			if ( nn_dist  > avg_nn_distance) itrface_indices_to_include.push_back(index);
+			else
+			{
+				// Variability Condition
+				// sometimes there are points closely together that exhibit a large amount of variability 
+				// determine if that is the care - if so, include point
+				// compare measurement of index to nn_index
+				// using the measurement of the scalar_field() - this assumes that GRBF_Modelling_Methods->measure_residuals()
+				// has been called already 
+				double variability = abs(itrface->at(index).scalar_field() - itrface->at(nn_index).scalar_field() );
+				if ( variability > itrface_uncertainty ) itrface_indices_to_include.push_back(index);
+ 			}
+		}
+	}
+
+	return itrface_indices_to_include;
+}
+
+std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals( const std::vector<Planar> *planar, const double &angular_uncertainty, const double &avg_nn_distance )
+{
+	// Function will intelligently* get the indices within the STL vector of Planar points that have large residuals
+	// Intelligently* : Doesn't blindly capture all points with large residuals 
+	//                 - Considers the magnitude of the residuals
+	//                 - Considers the distance to other large residual points
+	//                 - Considers the variability with close large residual points
+
+	std::vector<int> planar_indices_to_include; // what we are going to function on function exit
+
+	double r2d = 57.29577951308232;
+	double Large_distance = 1000000000;
+
+	std::vector < double > large_planar_residuals;
+	std::vector < int > large_planar_residuals_indices;
+	for (int j = 0; j < (int)planar->size(); j++ ){
+		double grad_err = planar->at(j).residual()*r2d;
+		if ( grad_err > angular_uncertainty )
+		{
+			large_planar_residuals.push_back(grad_err);
+			large_planar_residuals_indices.push_back(j);
+		}
+	}
+	if ( large_planar_residuals.size() != 0)
+	{
+		// Residual Magnitude Condition
+		// sort all residuals over the threshold(angular_uncertainty) in smallest to largest - along with linked indices
+		Math_methods::sort_vector_w_index(large_planar_residuals,large_planar_residuals_indices);
+		// Will always accept largest residual over the threshold 
+		planar_indices_to_include.push_back(large_planar_residuals_indices[(int)large_planar_residuals_indices.size() - 1]);
+		large_planar_residuals.pop_back(); // probably don't need to do this since we never use it again
+		large_planar_residuals_indices.pop_back();
+
+		for (int j = 0; j < (int)large_planar_residuals_indices.size(); j++ ){
+			// current index being analyzed (next largest residual in list): 
+			int index = large_planar_residuals_indices[(int)large_planar_residuals_indices.size()- j - 1];
+			// find closest point currently in planar_indices_to_include[] to index
+			double nn_dist = Large_distance;
+			int nn_index = -1; // should always be overwritten. Will get a seg fault if this isn't the case
+			for (int k = 0; k < (int)planar_indices_to_include.size(); k++ ){
+				double dist = distance_btw_pts(planar->at(index),planar->at(planar_indices_to_include[k]));
+				if ( dist < nn_dist )
+				{
+					nn_dist = dist;
+					nn_index = planar_indices_to_include[k];
+				}
+			}
+			// Distance to other Large Residual Points Condition
+			if ( nn_dist  > avg_nn_distance) planar_indices_to_include.push_back(index);
+			else
+			{
+				// Variability Condition
+				// sometimes there are points closely together that exhibit a large amount of variability 
+				// determine if that is the care - if so, include point
+				// compare measurement of index to nn_index
+				double angle = 0.0;
+				std::vector<double> v1;
+				std::vector<double> v2;
+				v1.push_back(planar->at(index).nx());
+				v1.push_back(planar->at(index).ny());
+				v1.push_back(planar->at(index).nz());
+				v2.push_back(planar->at(nn_index).nx());
+				v2.push_back(planar->at(nn_index).ny());
+				v2.push_back(planar->at(nn_index).nz());
+				Math_methods::angle_btw_2_vectors(v1,v2,angle);
+				if ( (angle*r2d) > angular_uncertainty ) planar_indices_to_include.push_back(index);
+			}
+		}
+	}
+
+	return planar_indices_to_include;
+}
+
+std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals( const std::vector<Tangent> *tangent, const double &angular_uncertainty, const double &avg_nn_distance )
+{
+	// Function will intelligently* get the indices within the STL vector of tangent points that have large residuals
+	// Intelligently* : Doesn't blindly capture all points with large residuals 
+	//                 - Considers the magnitude of the residuals
+	//                 - Considers the distance to other large residual points
+	//                 - Considers the variability with close large residual points
+
+	std::vector<int> tangent_indices_to_include; // what we are going to function on function exit
+
+	double r2d = 57.29577951308232;
+	double Large_distance = 1000000000;
+
+	std::vector < double > large_tangent_residuals;
+	std::vector < int > large_tangent_residuals_indices;
+	for (int j = 0; j < (int)tangent->size(); j++ ){
+		double grad_err = tangent->at(j).residual()*r2d;
+		if ( grad_err > angular_uncertainty )
+		{
+			large_tangent_residuals.push_back(grad_err);
+			large_tangent_residuals_indices.push_back(j);
+		}
+	}
+	if ( large_tangent_residuals.size() != 0)
+	{
+		// Residual Magnitude Condition
+		// sort all residuals over the threshold(angular_uncertainty) in smallest to largest - along with linked indices
+		Math_methods::sort_vector_w_index(large_tangent_residuals,large_tangent_residuals_indices);
+		// Will always accept largest residual over the threshold 
+		tangent_indices_to_include.push_back(large_tangent_residuals_indices[(int)large_tangent_residuals_indices.size() - 1]);
+		large_tangent_residuals.pop_back(); // probably don't need to do this since we never use it again
+		large_tangent_residuals_indices.pop_back();
+
+		for (int j = 0; j < (int)large_tangent_residuals_indices.size(); j++ ){
+			// current index being analyzed (next largest residual in list): 
+			int index = large_tangent_residuals_indices[(int)large_tangent_residuals_indices.size()- j - 1];
+			// find closest point currently in tangent_indices_to_include[] to index
+			double nn_dist = Large_distance;
+			int nn_index = -1; // should always be overwritten. Will get a seg fault if this isn't the case
+			for (int k = 0; k < (int)tangent_indices_to_include.size(); k++ ){
+				double dist = distance_btw_pts(tangent->at(index),tangent->at(tangent_indices_to_include[k]));
+				if ( dist < nn_dist )
+				{
+					nn_dist = dist;
+					nn_index = tangent_indices_to_include[k];
+				}
+			}
+			// Distance to other Large Residual Points Condition
+			if ( nn_dist  > avg_nn_distance) tangent_indices_to_include.push_back(index);
+			else
+			{
+				// Variability Condition
+				// sometimes there are points closely together that exhibit a large amount of variability 
+				// determine if that is the care - if so, include point
+				// compare measurement of index to nn_index
+				double angle = 0.0;
+				std::vector<double> v1;
+				std::vector<double> v2;
+				v1.push_back(tangent->at(index).tx());
+				v1.push_back(tangent->at(index).ty());
+				v1.push_back(tangent->at(index).tz());
+				v2.push_back(tangent->at(nn_index).tx());
+				v2.push_back(tangent->at(nn_index).ty());
+				v2.push_back(tangent->at(nn_index).tz());
+				Math_methods::angle_btw_2_vectors(v1,v2,angle);
+				if ( (angle*r2d) > angular_uncertainty ) tangent_indices_to_include.push_back(index);
+			}
+		}
+	}
+
+	return tangent_indices_to_include;
+}

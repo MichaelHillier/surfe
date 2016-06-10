@@ -24,7 +24,7 @@ public:
 	bool setup_system_solver();
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) {return true;}
 	bool measure_residuals(Basic_input &input);
-	bool append_greedy_input(const Basic_input &input);
+	bool append_greedy_input(Basic_input &input);
 	GRBF_Modelling_Methods *clone() {return new Continuous_Property(*this);}
 	// Attributes
 	Polynomial_Basis *p_basis;
