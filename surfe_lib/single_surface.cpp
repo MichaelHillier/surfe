@@ -88,6 +88,12 @@ Single_Surface::Single_Surface(const model_parameters& m_p, const Basic_input& b
 	// set GUI parameters and basic input (inequality, interface, planar, tangent) data members to class
 	m_parameters = m_p;
 	b_input = basic_i;
+
+	_avg_nn_dist_ie = 0;
+	_avg_nn_dist_p = 0;
+	_avg_nn_dist_itr = 0;
+	_avg_nn_dist_t = 0;
+	_iteration = 0;
 }
 
 
@@ -222,54 +228,69 @@ bool Single_Surface::measure_residuals(Basic_input &input)
 {
 	if (solver == NULL) return false;
 
-	// inequalities points
-	for (int j = 0; j < (int)input.inequality->size(); j++ ){
-		eval_scalar_interpolant_at_point(input.inequality->at(j));
-		if (input.inequality->at(j).level() >= 0)
+	#pragma omp parallel sections
+	{
+		#pragma omp section
 		{
-			if (input.inequality->at(j).scalar_field() >= 0) input.inequality->at(j).setResidual(true);
-			else input.inequality->at(j).setResidual(false);
+			// inequalities points
+			for (int j = 0; j < (int)input.inequality->size(); j++){
+				eval_scalar_interpolant_at_point(input.inequality->at(j));
+				if (input.inequality->at(j).level() >= 0)
+				{
+					if (input.inequality->at(j).scalar_field() >= 0) input.inequality->at(j).setResidual(true);
+					else input.inequality->at(j).setResidual(false);
+				}
+				else
+				{
+					if (input.inequality->at(j).scalar_field() < 0) input.inequality->at(j).setResidual(true);
+					else input.inequality->at(j).setResidual(false);
+				}
+			}
 		}
-		else
+		#pragma omp section
 		{
-			if (input.inequality->at(j).scalar_field() < 0) input.inequality->at(j).setResidual(true);
-			else input.inequality->at(j).setResidual(false);
+			// interface points
+			for (int j = 0; j < (int)input.itrface->size(); j++){
+				eval_scalar_interpolant_at_point(input.itrface->at(j));
+				input.itrface->at(j).setResidual(abs(input.itrface->at(j).scalar_field()));
+			}
 		}
-	}
-	// interface points
-	for (int j = 0; j < (int)input.itrface->size(); j++ ){
-		eval_scalar_interpolant_at_point(input.itrface->at(j));
-		input.itrface->at(j).setResidual(abs(input.itrface->at(j).scalar_field()));
-	}
-	// planar points
-	for (int j = 0; j < (int)input.planar->size(); j++ ){
-		eval_vector_interpolant_at_point(input.planar->at(j));
-		double angle = 0.0;
-		std::vector<double> v1;
-		std::vector<double> v2;
-		v1.push_back(input.planar->at(j).nx());
-		v1.push_back(input.planar->at(j).ny());
-		v1.push_back(input.planar->at(j).nz());
-		v2.push_back(input.planar->at(j).nx_interp());
-		v2.push_back(input.planar->at(j).ny_interp());
-		v2.push_back(input.planar->at(j).nz_interp());
-		Math_methods::angle_btw_2_vectors(v1,v2,angle);
-		input.planar->at(j).setResidual(angle);
-	}
-	// tangent points
-	for (int j = 0; j < (int)input.tangent->size(); j++ ){
-		eval_vector_interpolant_at_point(input.tangent->at(j));
-		double angle = 0.0;
-		std::vector<double> v1;
-		std::vector<double> v2;
-		v1.push_back(input.tangent->at(j).tx());
-		v1.push_back(input.tangent->at(j).ty());
-		v1.push_back(input.tangent->at(j).tz());
-		v2.push_back(input.tangent->at(j).nx_interp());
-		v2.push_back(input.tangent->at(j).ny_interp());
-		v2.push_back(input.tangent->at(j).nz_interp());
-		Math_methods::angle_btw_2_vectors<double>(v1,v2,angle);
-		input.planar->at(j).setResidual(angle);
+		#pragma omp section
+		{
+			// planar points
+			for (int j = 0; j < (int)input.planar->size(); j++){
+				eval_vector_interpolant_at_point(input.planar->at(j));
+				double angle = 0.0;
+				std::vector<double> v1;
+				std::vector<double> v2;
+				v1.push_back(input.planar->at(j).nx());
+				v1.push_back(input.planar->at(j).ny());
+				v1.push_back(input.planar->at(j).nz());
+				v2.push_back(input.planar->at(j).nx_interp());
+				v2.push_back(input.planar->at(j).ny_interp());
+				v2.push_back(input.planar->at(j).nz_interp());
+				Math_methods::angle_btw_2_vectors(v1, v2, angle);
+				input.planar->at(j).setResidual(angle);
+			}
+		}
+		#pragma omp section
+		{
+			// tangent points
+			for (int j = 0; j < (int)input.tangent->size(); j++){
+				eval_vector_interpolant_at_point(input.tangent->at(j));
+				double angle = 0.0;
+				std::vector<double> v1;
+				std::vector<double> v2;
+				v1.push_back(input.tangent->at(j).tx());
+				v1.push_back(input.tangent->at(j).ty());
+				v1.push_back(input.tangent->at(j).tz());
+				v2.push_back(input.tangent->at(j).nx_interp());
+				v2.push_back(input.tangent->at(j).ny_interp());
+				v2.push_back(input.tangent->at(j).nz_interp());
+				Math_methods::angle_btw_2_vectors<double>(v1, v2, angle);
+				input.planar->at(j).setResidual(angle);
+			}
+		}
 	}
 
 	return true;
@@ -277,16 +298,41 @@ bool Single_Surface::measure_residuals(Basic_input &input)
 
 bool Single_Surface::append_greedy_input(Basic_input &input)
 {
-	// planar > tangent > interface > inequalities
-
-	// PLANAR Observations
-	std::vector<int> planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar,m_parameters.gradient_slack,_avg_nn_dist_p);
-	// TANGENT Observations
-	std::vector<int> tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent,m_parameters.gradient_slack,_avg_nn_dist_t);
-	// INTERFACE Observations
-	std::vector<int> interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface,m_parameters.interface_slack,_avg_nn_dist_itr);
-	// INEQUALITIES Observations
-	std::vector<int> inequality_indices_to_include = Get_Inequality_STL_Vector_Indices_With_Large_Residuals(input.inequality,_avg_nn_dist_ie);
+	// Below section can be a lot of computations - leverage parallelism 
+	std::vector<int> planar_indices_to_include; // PLANAR Observations
+	std::vector<int> tangent_indices_to_include; // TANGENT Observations
+	std::vector<int> interface_indices_to_include; // INTERFACE Observations
+	std::vector<int> inequality_indices_to_include; // INEQUALITIES Observations
+	// For the first iteration only consider adding additional planar constraints
+	// These additional constraints could force large changes in the scalar field
+	// which could consequently pass closely to interface points not yet included
+	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+	else
+	{
+		#pragma omp parallel sections 
+		{
+			#pragma omp section
+			{
+				// PLANAR Observations
+				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+			}
+			#pragma omp section
+			{
+				// TANGENT Observations
+				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, _avg_nn_dist_t);
+			}
+			#pragma omp section
+			{
+				// INTERFACE Observations
+				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, _avg_nn_dist_itr);
+			}
+			#pragma omp section
+			{
+				// INEQUALITIES Observations
+				inequality_indices_to_include = Get_Inequality_STL_Vector_Indices_With_Large_Residuals(input.inequality, _avg_nn_dist_ie);
+			}
+		}
+	}
 
 	int pI2i = (int)planar_indices_to_include.size();
 	int tI2i = (int)tangent_indices_to_include.size();

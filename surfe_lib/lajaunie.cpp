@@ -109,6 +109,12 @@ Lajaunie_Approach::Lajaunie_Approach(const model_parameters& m_p, const Basic_in
 	b_input = basic_i;
 
 	_increment_pairs = new std::vector < std::vector < Point > >();
+	_n_increment_pair = 0;
+	_avg_nn_dist_ie = 0;
+	_avg_nn_dist_p = 0;
+	_avg_nn_dist_itr = 0;
+	_avg_nn_dist_t = 0;
+	_iteration = 0;
 }
 
 bool Lajaunie_Approach::get_method_parameters()
