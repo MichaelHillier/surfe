@@ -220,6 +220,7 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 	}
 	greedy_input.planar->push_back(b_input.planar->at(0));
 	for (int j = 1; j < (int)b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
+	for (int j = 0; j < (int)b_parameters.n_tangent; j++) excluded_input.tangent->push_back(b_input.tangent->at(j));
 
 	return true;
 }
@@ -298,6 +299,7 @@ bool Single_Surface::measure_residuals(Basic_input &input)
 
 bool Single_Surface::append_greedy_input(Basic_input &input)
 {
+	// This function can most likely be promoted the the Greedy parent class
 	// Below section can be a lot of computations - leverage parallelism 
 	std::vector<int> planar_indices_to_include; // PLANAR Observations
 	std::vector<int> tangent_indices_to_include; // TANGENT Observations

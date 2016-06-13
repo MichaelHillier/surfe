@@ -375,6 +375,43 @@ int furtherest_neighbour_index( const std::vector < Point > &pts1, const std::ve
 	return index;
 }
 
+bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector< Point> &pts, int(&TwoIndexes)[2])
+{
+	if (pts.size() < 2) return false;
+
+	double largest_distance = 0.0;
+	for (int j = 0; j < (int)pts.size(); j++){
+		for (int k = 0; k < (int)pts.size(); k++){
+			double distance_jk = distance_btw_pts(pts[j], pts[k]);
+			if (distance_jk > largest_distance)
+			{
+				largest_distance = distance_jk;
+				TwoIndexes[0] = j;
+				TwoIndexes[1] = k;
+			}
+		}
+	}
+
+	return true;
+}
+
+int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &p, const std::vector< Point > &pts, const double &dist)
+{
+	double smallest_residual = 100000000000;
+	int index = -1;
+	for (int j = 0; j < (int)pts.size(); j++){
+		double distance = distance_btw_pts(p, pts[j]);
+		double residual = abs(distance - dist);
+		if (residual < smallest_residual)
+		{
+			smallest_residual = residual;
+			index = j;
+		}
+	}
+
+	return index;
+}
+
 void calculate_bounds( const std::vector< Point > &pts, double (&bounds)[6] )
 {
 	// bounds[6] = { xmin, xmax, ymin, ymax, zmin, zmax }

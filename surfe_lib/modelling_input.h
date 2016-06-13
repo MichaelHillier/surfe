@@ -214,6 +214,8 @@ inline double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const std::vector < Point > &pts1, const std::vector < Point > &pts2);
+bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector< Point> &pts, int (&TwoIndexes)[2]);
+int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &p, const std::vector< Point > &pts, const double &dist);
 void calculate_bounds(const std::vector< Point > &pts, double (&bounds)[6]);
 std::vector<int> get_extremal_point_data_indices_from_points(const std::vector< Point > &pts);
 bool is_index_in_list(const int &index, const std::vector < int > &list);
