@@ -109,11 +109,7 @@ Lajaunie_Approach::Lajaunie_Approach(const model_parameters& m_p, const Basic_in
 	b_input = basic_i;
 
 	_increment_pairs = new std::vector < std::vector < Point > >();
-	_n_increment_pair = 0;
-	_avg_nn_dist_ie = 0;
-	_avg_nn_dist_p = 0;
-	_avg_nn_dist_itr = 0;
-	_avg_nn_dist_t = 0;
+
 	_iteration = 0;
 }
 
@@ -174,6 +170,8 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(Basic_input &greedy_inpu
 	// First find the horizon with the largest number of points, from this get 3 points that are well separated
 	// For the other horizons, get two points that are well separated
 
+	b_input.get_interface_data(); // get required interface data
+
 	// Find horizon with largest number of points -- ref_index
 	int ref_index = -1;
 	int largest_num_of_points = 0;
@@ -190,7 +188,7 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(Basic_input &greedy_inpu
 	// find the two points that are furtherest from each other from this horizon
 	int TwoIndexes[2];
 	double largest_separation_distance = 0;
-	if (!Find_STL_Vector_Indices_FurtherestTwoPoints(dense_horizon, TwoIndexes)) largest_separation_distance = distance_btw_pts(dense_horizon[TwoIndexes[0]],dense_horizon[TwoIndexes[1]]); // get the distance btw these points 
+	if (Find_STL_Vector_Indices_FurtherestTwoPoints(dense_horizon, TwoIndexes)) largest_separation_distance = distance_btw_pts(dense_horizon[TwoIndexes[0]],dense_horizon[TwoIndexes[1]]); // get the distance btw these points 
 	else return false;
 
 	int ThirdIndex = Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(dense_horizon[TwoIndexes[0]], dense_horizon, largest_separation_distance / 2); // get the third point that is well separated from the other two points
@@ -217,7 +215,7 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(Basic_input &greedy_inpu
 
 
 	// fill the data structures greedy_input & excluded_input 
-	for (int j = 0; j < (int)b_parameters.n_interface; j++){
+	for (int j = 0; j < (int)b_input.itrface->size(); j++){
 		bool exclude_index = true;
 		for (int k = 0; k < (int)cur_included_pts.size(); k++){
 			if (b_input.itrface->at(j).x() == cur_included_pts[k].x() &&
@@ -233,12 +231,11 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(Basic_input &greedy_inpu
 	}
 
 	greedy_input.planar->push_back(b_input.planar->at(0));
-	for (int j = 1; j < (int)b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
-	for (int j = 0; j < (int)b_parameters.n_tangent; j++) excluded_input.tangent->push_back(b_input.tangent->at(j));
+	for (int j = 1; j < (int)b_input.planar->size(); j++) excluded_input.planar->push_back(b_input.planar->at(j));
+	for (int j = 0; j < (int)b_input.tangent->size(); j++) excluded_input.tangent->push_back(b_input.tangent->at(j));
 
 	return true;
 }
-
 bool Lajaunie_Approach::measure_residuals(Basic_input &input)
 {
 	if (solver == NULL) return false;
@@ -253,11 +250,12 @@ bool Lajaunie_Approach::measure_residuals(Basic_input &input)
 				double reference_level = input.itrface->at(j).level();
 				// find a reference point in interface_test_points[] that has the same reference level
 				double actual_level_value;
-				for (int k = 0; k < (int)input.interface_test_points->size(); k++){
-					if (input.interface_test_points->at(k).level() == reference_level)
+				for (int k = 0; k < (int)this->b_input.interface_test_points->size(); k++){
+					if (this->b_input.interface_test_points->at(k).level() == reference_level)
 					{
-						eval_scalar_interpolant_at_point(input.interface_test_points->at(k));
-						actual_level_value = input.interface_test_points->at(k).scalar_field(); // this is the value it should be
+						eval_scalar_interpolant_at_point(this->b_input.interface_test_points->at(k));
+						actual_level_value = this->b_input.interface_test_points->at(k).scalar_field(); // this is the value it should be
+						break;
 					}
 				}
 				eval_scalar_interpolant_at_point(input.itrface->at(j));
@@ -301,6 +299,8 @@ bool Lajaunie_Approach::measure_residuals(Basic_input &input)
 			}
 		}
 	}
+
+	return true;
 }
 
 bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
@@ -314,7 +314,23 @@ bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
 	// For the first iteration only consider adding additional planar constraints
 	// These additional constraints could force large changes in the scalar field
 	// which could consequently pass closely to interface points not yet included
-	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+
+
+// 	planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+// 	if (planar_indices_to_include.size() != 0 )
+// 	{
+// 		this->b_input.planar->push_back(input.planar->at(planar_indices_to_include[0]));
+// 		input.planar->erase(input.planar->begin() + planar_indices_to_include[0]);
+// 		return true;
+// 	}
+// 	interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, b_input.GetInterfaceAvgNNDist());
+// 	if (interface_indices_to_include.size() != 0 )
+// 	{
+// 		this->b_input.itrface->push_back(input.itrface->at(interface_indices_to_include[0]));
+// 		input.itrface->erase(input.itrface->begin() + interface_indices_to_include[0]);
+// 		return true;
+// 	}
+	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
 	else
 	{
 #pragma omp parallel sections 
@@ -322,22 +338,22 @@ bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
 #pragma omp section
 			{
 				// PLANAR Observations
-				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
 			}
 #pragma omp section
 			{
 				// TANGENT Observations
-				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, _avg_nn_dist_t);
+				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, b_input.GetTangentAvgNNDist());
 			}
 #pragma omp section
 			{
 				// INTERFACE Observations
-				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, _avg_nn_dist_itr);
+				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, b_input.GetInterfaceAvgNNDist());
 			}
 #pragma omp section
 			{
 				// INEQUALITIES Observations
-				inequality_indices_to_include = Get_Inequality_STL_Vector_Indices_With_Large_Residuals(input.inequality, _avg_nn_dist_ie);
+				inequality_indices_to_include = Get_Inequality_STL_Vector_Indices_With_Large_Residuals(input.inequality, b_input.GetInequalityAvgNNDist());
 			}
 		}
 	}
@@ -354,13 +370,27 @@ bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
 	for (int j = 0; j < ieI2i; j++) this->b_input.inequality->push_back(input.inequality->at(inequality_indices_to_include[j]));
 
 	// Remove data from input so that residuals do not have to be measured at locations where the constraints are supplied
-	for (int j = 0; j < pI2i; j++) input.planar->erase(input.planar->begin() + planar_indices_to_include[j]);
-	for (int j = 0; j < tI2i; j++) input.tangent->erase(input.tangent->begin() + tangent_indices_to_include[j]);
-	for (int j = 0; j < itrI2i; j++) input.itrface->erase(input.itrface->begin() + interface_indices_to_include[j]);
-	for (int j = 0; j < ieI2i; j++) input.inequality->erase(input.inequality->begin() + inequality_indices_to_include[j]);
+	for (int j = 0; j < pI2i; j++ ){
+		input.planar->erase(input.planar->begin() + planar_indices_to_include[j]);
+		for (int k = j; k < pI2i; k++ ) planar_indices_to_include[k]--;
+	}
+	for (int j = 0; j < tI2i; j++ ){
+		input.tangent->erase(input.tangent->begin() + tangent_indices_to_include[j]);
+		for (int k = j; k < tI2i; k++ ) tangent_indices_to_include[k]--;
+	}
+	for (int j = 0; j < itrI2i; j++ ){
+		input.itrface->erase(input.itrface->begin() + interface_indices_to_include[j]);
+		for (int k = j; k < itrI2i; k++ ) interface_indices_to_include[k]--;
+	}
+	for (int j = 0; j < ieI2i; j++ ){
+		input.inequality->erase(input.inequality->begin() + inequality_indices_to_include[j]);
+		for (int k = j; k < ieI2i; k++ ) inequality_indices_to_include[k]--;
+	}
 
 	if (pI2i != 0 || tI2i != 0 || itrI2i != 0 || ieI2i != 0) return true;
 	else return false;
+
+	//return false;
 }
 
 bool Lajaunie_Approach::get_equality_values( std::vector<double> &equality_values )

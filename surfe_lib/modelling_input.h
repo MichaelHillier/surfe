@@ -163,6 +163,11 @@ public:
 
 class SURFE_LIB_EXPORT Basic_input{
 private:
+	// Attributes
+	double _avg_nn_dist_ie;
+	double _avg_nn_dist_itr;
+	double _avg_nn_dist_p;
+	double _avg_nn_dist_t;
 	// interface
 	void _get_distinct_interface_iso_values();
 	void _get_interface_points();
@@ -181,6 +186,11 @@ public:
 		interface_iso_values = new std::vector<double>();
 		interface_point_lists = new std::vector< std::vector < Interface > >();
 		interface_test_points = new std::vector< Interface >();
+
+		_avg_nn_dist_ie  = -99999.0; // no data value
+		_avg_nn_dist_itr = -99999.0; // no data value
+		_avg_nn_dist_p   = -99999.0; // no data value
+		_avg_nn_dist_t   = -99999.0; // no data value
 	}
 	~Basic_input()
 	{
@@ -208,12 +218,27 @@ public:
 	std::vector < Interface > *interface_test_points;
 	bool get_interface_data();
 
+	// spatial analysis
+	double compute_inequality_avg_nn_distance();
+	double compute_interface_avg_nn_distance();
+	double compute_planar_avg_nn_distance();
+	double compute_tangent_avg_nn_distance();
+	void compute_avg_nn_distances();
+	double GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
+	double GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }
+	double GetPlanarAvgNNDist() const { return _avg_nn_dist_p; }
+	double GetTangentAvgNNDist() const { return _avg_nn_dist_t; }
+	void SetInequalityAvgNNDist(const double &dist) { _avg_nn_dist_ie = dist; }
+	void SetInterfaceAvgNNDist(const double &dist) { _avg_nn_dist_itr = dist; }
+	void SetPlanarAvgNNDist(const double &dist) { _avg_nn_dist_p = dist; }
+	void SetTangentAvgNNDist(const double &dist) { _avg_nn_dist_t = dist; }
 };
 
 inline double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const std::vector < Point > &pts1, const std::vector < Point > &pts2);
+double avg_nn_distance(const std::vector < Point > &pts);
 bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector< Point> &pts, int (&TwoIndexes)[2]);
 int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &p, const std::vector< Point > &pts, const double &dist);
 void calculate_bounds(const std::vector< Point > &pts, double (&bounds)[6]);

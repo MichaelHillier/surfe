@@ -19,6 +19,53 @@ bool Basic_input::get_interface_data()
 	return true;
 }
 
+double Basic_input::compute_inequality_avg_nn_distance()
+{
+	std::vector< Point > pts(inequality->begin(),inequality->end());
+	return avg_nn_distance(pts);
+}
+
+double Basic_input::compute_interface_avg_nn_distance()
+{
+	std::vector< Point > pts(itrface->begin(),itrface->end());
+	return avg_nn_distance(pts);
+}
+
+double Basic_input::compute_planar_avg_nn_distance()
+{
+	std::vector< Point > pts(planar->begin(),planar->end());
+	return avg_nn_distance(pts);
+}
+
+double Basic_input::compute_tangent_avg_nn_distance()
+{
+	std::vector< Point > pts(tangent->begin(),tangent->end());
+	return avg_nn_distance(pts);
+}
+
+void Basic_input::compute_avg_nn_distances()
+{
+#pragma omp parallel sections
+	{
+#pragma omp section
+		{
+			_avg_nn_dist_ie = compute_inequality_avg_nn_distance();
+		}
+#pragma omp section
+		{
+			_avg_nn_dist_itr = compute_interface_avg_nn_distance();
+		}
+#pragma omp section
+		{
+			_avg_nn_dist_p = compute_planar_avg_nn_distance();
+		}
+#pragma omp section
+		{
+			_avg_nn_dist_t = compute_tangent_avg_nn_distance();
+		}
+	}
+}
+
 void Basic_input::_get_distinct_interface_iso_values()
 {
 	std::vector <double> iso_values;
@@ -375,6 +422,26 @@ int furtherest_neighbour_index( const std::vector < Point > &pts1, const std::ve
 	return index;
 }
 
+double avg_nn_distance( const std::vector < Point > &pts )
+{
+	double average_nn_distance = 0.0;
+	int n = (int)pts.size();
+	for (int j = 0; j < n; j++){
+		double min_dist = DBL_MAX;
+		for (int k = 0; k < n; k++){
+			if (k != j)
+			{
+				double dist = distance_btw_pts(pts.at(j), pts.at(k));
+				if (dist < min_dist) min_dist = dist;
+			}
+		}
+		if (n == 1) min_dist = 0; // trap this edge case
+		average_nn_distance += min_dist;
+	}
+	if (n != 0) average_nn_distance /= n;
+	return average_nn_distance;
+}
+
 bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector< Point> &pts, int(&TwoIndexes)[2])
 {
 	if (pts.size() < 2) return false;
@@ -624,7 +691,7 @@ std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals( const s
 	//               These are a bit special
 	std::vector<int> inequality_indices_to_include; // what we are going to function on function exit
 
-	double Large_distance = 1000000000;
+	double Large_distance = DBL_MAX;
 
 	std::vector < int > inequality_residuals_indices;
 	for (int j = 0; j < (int)inequality->size(); j++ ){
@@ -655,6 +722,8 @@ std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals( const s
 		}
 	}
 
+	std::sort(inequality_indices_to_include.begin(),inequality_indices_to_include.end());
+
 	return inequality_indices_to_include;
 }
 
@@ -671,18 +740,29 @@ std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(
 
 	std::vector<int> itrface_indices_to_include; // what we are going to function on function exit
 
-	double Large_distance = 1000000000;
+	double Large_distance = DBL_MAX;
 
+	double largest_residual = 0;
+	int ref_index = -1;
 	std::vector < double > large_itrface_residuals;
 	std::vector < int > large_itrface_residuals_indices;
 	for (int j = 0; j < (int)itrface->size(); j++ ){
 		double error = itrface->at(j).residual();
 		if ( error > itrface_uncertainty )
 		{
+			if ( error > largest_residual )
+			{
+				largest_residual = error;
+				ref_index = j;
+			}
 			large_itrface_residuals.push_back(error);
 			large_itrface_residuals_indices.push_back(j);
 		}
 	}
+// 	if (ref_index != -1 )
+// 	{
+// 		itrface_indices_to_include.push_back(ref_index);
+// 	}
 	if ( large_itrface_residuals.size() != 0)
 	{
 		// Residual Magnitude Condition
@@ -709,19 +789,21 @@ std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(
 			}
 			// Distance to other Large Residual Points Condition
 			if ( nn_dist  > avg_nn_distance) itrface_indices_to_include.push_back(index);
-			else
-			{
-				// Variability Condition
-				// sometimes there are points closely together that exhibit a large amount of variability 
-				// determine if that is the care - if so, include point
-				// compare measurement of index to nn_index
-				// using the measurement of the scalar_field() - this assumes that GRBF_Modelling_Methods->measure_residuals()
-				// has been called already 
-				double variability = abs(itrface->at(index).scalar_field() - itrface->at(nn_index).scalar_field() );
-				if ( variability > itrface_uncertainty ) itrface_indices_to_include.push_back(index);
- 			}
+// 			else
+// 			{
+// 				// Variability Condition
+// 				// sometimes there are points closely together that exhibit a large amount of variability 
+// 				// determine if that is the care - if so, include point
+// 				// compare measurement of index to nn_index
+// 				// using the measurement of the scalar_field() - this assumes that GRBF_Modelling_Methods->measure_residuals()
+// 				// has been called already 
+// 				double variability = abs(itrface->at(index).scalar_field() - itrface->at(nn_index).scalar_field() );
+// 				if ( variability > itrface_uncertainty ) itrface_indices_to_include.push_back(index);
+//  			}
 		}
 	}
+
+	std::sort(itrface_indices_to_include.begin(),itrface_indices_to_include.end());
 
 	return itrface_indices_to_include;
 }
@@ -732,23 +814,34 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals( const std::
 	// Intelligently* : Doesn't blindly capture all points with large residuals 
 	//                 - Considers the magnitude of the residuals
 	//                 - Considers the distance to other large residual points
-	//                 - Considers the variability with close large residual points
+	//                 - Considers the variability with close large residual points -- This has been taken out for now.. needs more testing
 
 	std::vector<int> planar_indices_to_include; // what we are going to function on function exit
 
 	double r2d = 57.29577951308232;
-	double Large_distance = 1000000000;
+	double Large_distance = DBL_MAX;
 
+	double largest_residual = 0;
+	int ref_index = -1;
 	std::vector < double > large_planar_residuals;
 	std::vector < int > large_planar_residuals_indices;
 	for (int j = 0; j < (int)planar->size(); j++ ){
 		double grad_err = planar->at(j).residual()*r2d;
 		if ( grad_err > angular_uncertainty )
 		{
+			if ( grad_err > largest_residual )
+			{
+				largest_residual = grad_err;
+				ref_index = j;
+			}
 			large_planar_residuals.push_back(grad_err);
 			large_planar_residuals_indices.push_back(j);
 		}
 	}
+// 	if (ref_index != -1 )
+// 	{
+// 		planar_indices_to_include.push_back(ref_index);
+// 	}
 	if ( large_planar_residuals.size() != 0)
 	{
 		// Residual Magnitude Condition
@@ -775,26 +868,28 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals( const std::
 			}
 			// Distance to other Large Residual Points Condition
 			if ( nn_dist  > avg_nn_distance) planar_indices_to_include.push_back(index);
-			else
-			{
-				// Variability Condition
-				// sometimes there are points closely together that exhibit a large amount of variability 
-				// determine if that is the care - if so, include point
-				// compare measurement of index to nn_index
-				double angle = 0.0;
-				std::vector<double> v1;
-				std::vector<double> v2;
-				v1.push_back(planar->at(index).nx());
-				v1.push_back(planar->at(index).ny());
-				v1.push_back(planar->at(index).nz());
-				v2.push_back(planar->at(nn_index).nx());
-				v2.push_back(planar->at(nn_index).ny());
-				v2.push_back(planar->at(nn_index).nz());
-				Math_methods::angle_btw_2_vectors(v1,v2,angle);
-				if ( (angle*r2d) > angular_uncertainty ) planar_indices_to_include.push_back(index);
-			}
+// 			else
+// 			{
+// 				// Variability Condition
+// 				// sometimes there are points closely together that exhibit a large amount of variability 
+// 				// determine if that is the care - if so, include point
+// 				// compare measurement of index to nn_index
+// 				double angle = 0.0;
+// 				std::vector<double> v1;
+// 				std::vector<double> v2;
+// 				v1.push_back(planar->at(index).nx());
+// 				v1.push_back(planar->at(index).ny());
+// 				v1.push_back(planar->at(index).nz());
+// 				v2.push_back(planar->at(nn_index).nx());
+// 				v2.push_back(planar->at(nn_index).ny());
+// 				v2.push_back(planar->at(nn_index).nz());
+// 				Math_methods::angle_btw_2_vectors(v1,v2,angle);
+// 				if ( (angle*r2d) > angular_uncertainty ) planar_indices_to_include.push_back(index);
+// 			}
 		}
 	}
+
+	std::sort(planar_indices_to_include.begin(),planar_indices_to_include.end());
 
 	return planar_indices_to_include;
 }
@@ -848,26 +943,28 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals( const std:
 			}
 			// Distance to other Large Residual Points Condition
 			if ( nn_dist  > avg_nn_distance) tangent_indices_to_include.push_back(index);
-			else
-			{
-				// Variability Condition
-				// sometimes there are points closely together that exhibit a large amount of variability 
-				// determine if that is the care - if so, include point
-				// compare measurement of index to nn_index
-				double angle = 0.0;
-				std::vector<double> v1;
-				std::vector<double> v2;
-				v1.push_back(tangent->at(index).tx());
-				v1.push_back(tangent->at(index).ty());
-				v1.push_back(tangent->at(index).tz());
-				v2.push_back(tangent->at(nn_index).tx());
-				v2.push_back(tangent->at(nn_index).ty());
-				v2.push_back(tangent->at(nn_index).tz());
-				Math_methods::angle_btw_2_vectors(v1,v2,angle);
-				if ( (angle*r2d) > angular_uncertainty ) tangent_indices_to_include.push_back(index);
-			}
+// 			else
+// 			{
+// 				// Variability Condition
+// 				// sometimes there are points closely together that exhibit a large amount of variability 
+// 				// determine if that is the care - if so, include point
+// 				// compare measurement of index to nn_index
+// 				double angle = 0.0;
+// 				std::vector<double> v1;
+// 				std::vector<double> v2;
+// 				v1.push_back(tangent->at(index).tx());
+// 				v1.push_back(tangent->at(index).ty());
+// 				v1.push_back(tangent->at(index).tz());
+// 				v2.push_back(tangent->at(nn_index).tx());
+// 				v2.push_back(tangent->at(nn_index).ty());
+// 				v2.push_back(tangent->at(nn_index).tz());
+// 				Math_methods::angle_btw_2_vectors(v1,v2,angle);
+// 				if ( (angle*r2d) > angular_uncertainty ) tangent_indices_to_include.push_back(index);
+// 			}
 		}
 	}
+
+	std::sort(tangent_indices_to_include.begin(),tangent_indices_to_include.end());
 
 	return tangent_indices_to_include;
 }

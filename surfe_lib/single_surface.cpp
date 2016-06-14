@@ -89,10 +89,6 @@ Single_Surface::Single_Surface(const model_parameters& m_p, const Basic_input& b
 	m_parameters = m_p;
 	b_input = basic_i;
 
-	_avg_nn_dist_ie = 0;
-	_avg_nn_dist_p = 0;
-	_avg_nn_dist_itr = 0;
-	_avg_nn_dist_t = 0;
 	_iteration = 0;
 }
 
@@ -204,11 +200,13 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 	std::vector < Interface > extremal_interace_pts;
 	std::vector < Point > pts(b_input.itrface->begin(),b_input.itrface->end()); 
 	std::vector < int > interface_indices = get_extremal_point_data_indices_from_points(pts);
-	if ( (int)interface_indices.size() < (int)b_parameters.n_poly_terms) return false;
-	for (int j = 0; j < (int)b_parameters.n_inequality; j++ ) excluded_input.inequality->push_back(b_input.inequality->at(j));
-	for (int j = 0; j < (int)b_parameters.n_interface;  j++ ){
+	int num_extremal_itr_pts = 4;
+	if (m_parameters.polynomial_order == 2) num_extremal_itr_pts = 6;
+	if ( (int)interface_indices.size() < num_extremal_itr_pts) return false;
+	for (int j = 0; j < (int)b_input.inequality->size(); j++ ) excluded_input.inequality->push_back(b_input.inequality->at(j));
+	for (int j = 0; j < (int)b_input.itrface->size();  j++ ){
 		bool exclude_index = true;
-		for (int k = 0; k < (int)interface_indices.size(); k++ ){
+		for (int k = 0; k < num_extremal_itr_pts; k++ ){
 			if (interface_indices[k] == j )
 			{
 				exclude_index = false;
@@ -219,8 +217,8 @@ bool Single_Surface::get_minimial_and_excluded_input(Basic_input &greedy_input, 
 		if (exclude_index) excluded_input.itrface->push_back(b_input.itrface->at(j));
 	}
 	greedy_input.planar->push_back(b_input.planar->at(0));
-	for (int j = 1; j < (int)b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
-	for (int j = 0; j < (int)b_parameters.n_tangent; j++) excluded_input.tangent->push_back(b_input.tangent->at(j));
+	for (int j = 1; j < (int)b_input.planar->size(); j++) excluded_input.planar->push_back(b_input.planar->at(j));
+	for (int j = 0; j < (int)b_input.tangent->size(); j++) excluded_input.tangent->push_back(b_input.tangent->at(j));
 
 	return true;
 }
@@ -308,7 +306,7 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 	// For the first iteration only consider adding additional planar constraints
 	// These additional constraints could force large changes in the scalar field
 	// which could consequently pass closely to interface points not yet included
-	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
 	else
 	{
 		#pragma omp parallel sections 
@@ -316,22 +314,22 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 			#pragma omp section
 			{
 				// PLANAR Observations
-				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
 			}
 			#pragma omp section
 			{
 				// TANGENT Observations
-				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, _avg_nn_dist_t);
+				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
 			}
 			#pragma omp section
 			{
 				// INTERFACE Observations
-				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, _avg_nn_dist_itr);
+				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, b_input.GetInterfaceAvgNNDist());
 			}
 			#pragma omp section
 			{
 				// INEQUALITIES Observations
-				inequality_indices_to_include = Get_Inequality_STL_Vector_Indices_With_Large_Residuals(input.inequality, _avg_nn_dist_ie);
+				inequality_indices_to_include = Get_Inequality_STL_Vector_Indices_With_Large_Residuals(input.inequality, b_input.GetInequalityAvgNNDist());
 			}
 		}
 	}
@@ -348,10 +346,22 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 	for (int j = 0; j < ieI2i; j++ ) this->b_input.inequality->push_back(input.inequality->at(inequality_indices_to_include[j]));
 
 	// Remove data from input so that residuals do not have to be measured at locations where the constraints are supplied
-	for (int j = 0; j < pI2i; j++ ) input.planar->erase(input.planar->begin() + planar_indices_to_include[j]);
-	for (int j = 0; j < tI2i; j++ ) input.tangent->erase(input.tangent->begin() + tangent_indices_to_include[j]);
-	for (int j = 0; j < itrI2i; j++ ) input.itrface->erase(input.itrface->begin() + interface_indices_to_include[j]);
-	for (int j = 0; j < ieI2i; j++ ) input.inequality->erase(input.inequality->begin() + inequality_indices_to_include[j]);
+	for (int j = 0; j < pI2i; j++ ){
+		input.planar->erase(input.planar->begin() + planar_indices_to_include[j]);
+		for (int k = j; k < pI2i; k++ ) planar_indices_to_include[k]--;
+	}
+	for (int j = 0; j < tI2i; j++ ){
+		input.tangent->erase(input.tangent->begin() + tangent_indices_to_include[j]);
+		for (int k = j; k < tI2i; k++ ) tangent_indices_to_include[k]--;
+	}
+	for (int j = 0; j < itrI2i; j++ ){
+		input.itrface->erase(input.itrface->begin() + interface_indices_to_include[j]);
+		for (int k = j; k < itrI2i; k++ ) interface_indices_to_include[k]--;
+	}
+	for (int j = 0; j < ieI2i; j++ ){
+		input.inequality->erase(input.inequality->begin() + inequality_indices_to_include[j]);
+		for (int k = j; k < ieI2i; k++ ) inequality_indices_to_include[k]--;
+	}
 
 	if ( pI2i != 0 || tI2i != 0 || itrI2i != 0 || ieI2i != 0) return true;
 	else return false;
