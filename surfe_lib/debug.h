@@ -1,7 +1,7 @@
 #ifndef debug_h
 #define debug_h
 
-#include <mpirxx.h>
+#include <gmpxx.h>
 #include <modelling_input.h>
 #include <modeling_methods.h>
 

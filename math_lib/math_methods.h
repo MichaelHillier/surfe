@@ -1,7 +1,7 @@
 #ifndef math_methods_h
 #define math_methods_h
 
-#include <mpirxx.h>
+#include <gmpxx.h>
 
 #include <vector>
 #include <algorithm>

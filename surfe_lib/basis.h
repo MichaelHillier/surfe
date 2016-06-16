@@ -3,7 +3,7 @@
 
 #include <modelling_parameters.h>
 #include <modelling_input.h>
-#include <mpirxx.h>
+#include <gmpxx.h>
 
 class Kernel{
 protected:

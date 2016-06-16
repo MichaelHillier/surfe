@@ -1,7 +1,7 @@
 #ifndef matrix_solver_h
 #define matrix_solver_h
 
-#include <mpirxx.h>
+#include <gmpxx.h>
 
 #include <vector>
 
