@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <fstream>
 
-bool Single_Surface::_get_polynomial_matrix_block(std::vector< std::vector <double> > &poly_matrix)
+bool Single_Surface::_get_polynomial_matrix_block(MatrixXd &poly_matrix)
 {
 	int n_ie = b_parameters.n_inequality;
 	int n_i = b_parameters.n_interface;
@@ -20,13 +20,13 @@ bool Single_Surface::_get_polynomial_matrix_block(std::vector< std::vector <doub
 
 	p_basis = create_polynomial_basis(m_parameters.polynomial_order);
 
-	if ((int)poly_matrix.size() != b_parameters.n_poly_terms ) return false;
+	if ((int)poly_matrix.rows() != b_parameters.n_poly_terms ) return false;
 	// for interface points ...
 	for (int j = 0; j < nl; j++ ){
 		p_basis->set_point(b_input.itrface->at(j));
 		std::vector<double> b = p_basis->basis();
 		if ((int)b.size() != b_parameters.n_poly_terms ) return false;
-		for (int k = 0; k < (int)b.size(); k++ ) poly_matrix[k][j] = b[k];
+		for (int k = 0; k < (int)b.size(); k++ ) poly_matrix(k,j) = b[k];
 	}
 	// for planar points ...
 	for (int j = 0; j < n_p; j++ ){
@@ -36,9 +36,9 @@ bool Single_Surface::_get_polynomial_matrix_block(std::vector< std::vector <doub
 		std::vector<double> bz = p_basis->dz();
 		if ((int)bx.size() != b_parameters.n_poly_terms ) return false;
 		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_matrix[k][nl + 3*j] = bx[k];
-			poly_matrix[k][nl + 3*j + 1] = by[k];
-			poly_matrix[k][nl + 3*j + 2] = bz[k];
+			poly_matrix(k,nl + 3*j) = bx[k];
+			poly_matrix(k,nl + 3*j + 1) = by[k];
+			poly_matrix(k,nl + 3*j + 2) = bz[k];
 		}
 	}
 	// for tangent points ...
@@ -49,14 +49,14 @@ bool Single_Surface::_get_polynomial_matrix_block(std::vector< std::vector <doub
 		std::vector<double> bz = p_basis->dz();
 		if ((int)bx.size() != b_parameters.n_poly_terms ) return false;
 		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_matrix[k][nl + 3 * n_p + j] = b_input.tangent->at(j).tx()*bx[k] + b_input.tangent->at(j).ty()*by[k] + b_input.tangent->at(j).tz()*bz[k];
+			poly_matrix(k,nl + 3 * n_p + j) = b_input.tangent->at(j).tx()*bx[k] + b_input.tangent->at(j).ty()*by[k] + b_input.tangent->at(j).tz()*bz[k];
 		}
 	}
 
 	return true;
 }
 
-bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix( const std::vector< std::vector <double> > &poly_matrix, std::vector< std::vector <double> > &interpolation_matrix )
+bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix)
 {
 	int n_ie = b_parameters.n_inequality;
 	int n_i = b_parameters.n_interface;
@@ -67,16 +67,16 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix( c
 	// | A PT |
 	// | P 0  |
 	// start with P
-	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
-		for (int k = 0; k < (int)poly_matrix[j].size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k] = poly_matrix[j][k];
-			interpolation_matrix[k][n_ie + n_i + 3*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k];
+	for (int j = 0; j < (int)poly_matrix.rows(); j++ ){
+		for (int k = 0; k < (int)poly_matrix.cols(); k++ ){
+			interpolation_matrix(n_ie + n_i + 3*n_p + n_t + j,k) = poly_matrix(j,k);
+			interpolation_matrix(k,n_ie + n_i + 3*n_p + n_t + j) = interpolation_matrix(n_ie + n_i + 3*n_p + n_t + j,k);
 		}
 	}
 
-	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
-		for (int k = 0; k < (int)poly_matrix.size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][n_ie + n_i + 3*n_p + n_t + k] = 0;
+	for (int j = 0; j < (int)poly_matrix.rows(); j++ ){
+		for (int k = 0; k < (int)poly_matrix.rows(); k++ ){
+			interpolation_matrix(n_ie + n_i + 3*n_p + n_t + j,n_ie + n_i + 3*n_p + n_t + k) = 0;
 		}
 	}
 
@@ -139,9 +139,10 @@ bool Single_Surface::setup_system_solver()
 
 	if (b_parameters.problem_type == Parameter_Types::Quadratic)
 	{
-		std::vector<double> inequality_values;
+		int n_ie = b_parameters.n_inequality;
+		VectorXd inequality_values(n_ie);
 		get_inequality_values(inequality_values);
-		std::vector<double> equality_values;
+		std::vector<double> equality_values; // RESUME CODING HERE 
 		get_equality_values(equality_values);
 		int nrows = b_parameters.n_constraints;
 		std::vector< std::vector < double > > interpolation_matrix = Math_methods::make_std_matrix<double>(nrows,nrows);
@@ -499,9 +500,9 @@ bool Single_Surface::get_inequality_matrix( const std::vector< std::vector <doub
 	return true;
 }
 
-bool Single_Surface::get_inequality_values( std::vector<double> &inequality_values )
+bool Single_Surface::get_inequality_values( VectorXd &inequality_values )
 {
-	for (int j = 0; j < (int)b_input.inequality->size(); j++ ) inequality_values.push_back(0.0);
+	for (int j = 0; j < (int)b_input.inequality->size(); j++ ) inequality_values(j) = 0.0;
 	return true;
 }
 

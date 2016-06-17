@@ -12,8 +12,8 @@ public:
 	Vector_Field(const model_parameters& m_p, const Basic_input& basic_i) { m_parameters = m_p; b_input = basic_i; }
 	~Vector_Field(){};
 	// Methods
-	bool get_interpolation_matrix(std::vector< std::vector <double> > &interpolation_matrix);
-	bool get_equality_values(std::vector<double> &equality_values);
+	bool get_interpolation_matrix(MatrixXd &interpolation_matrix);
+	bool get_equality_values(VectorXd &equality_values);
 	void eval_scalar_interpolant_at_point(Point &p);
 	void eval_vector_interpolant_at_point(Point &p);
 	bool get_method_parameters();

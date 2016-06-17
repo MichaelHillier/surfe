@@ -7,8 +7,10 @@
 #include <modelling_input.h>
 #include <matrix_solver.h>
 #include <basis.h>
+#include <Eigen/Core>
 
 using namespace std;
+using namespace Eigen;
 
 // Abstract base class
 class SURFE_LIB_EXPORT GRBF_Modelling_Methods {
@@ -37,9 +39,9 @@ public:
 	bool evaluate_vector_interpolant();
 	bool run_algorithm();
 	bool run_greedy_algorithm();
-	bool get_equality_matrix(const std::vector< std::vector <double> > &interpolation_matrix, std::vector < std::vector < double > > &equality_matrix);
-	virtual bool get_interpolation_matrix(std::vector< std::vector <double> > &interpolation_matrix) = 0;
-	virtual bool get_equality_values(std::vector<double> &equality_values) = 0;
+	bool get_equality_matrix(const MatrixXd &interpolation_matrix, MatrixXd &equality_matrix);
+	virtual bool get_interpolation_matrix(MatrixXd &interpolation_matrix) = 0;
+	virtual bool get_equality_values(VectorXd &equality_values) = 0;
 	virtual void eval_scalar_interpolant_at_point(Point &p) = 0;
 	virtual void eval_vector_interpolant_at_point(Point &p) = 0;
 	virtual bool get_method_parameters() = 0;

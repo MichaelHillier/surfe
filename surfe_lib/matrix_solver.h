@@ -4,6 +4,8 @@
 #include <gmpxx.h>
 
 #include <vector>
+#include <Eigen/Dense>
+#include <Eigen/Core>
 
 class System_Solver {
 public:
