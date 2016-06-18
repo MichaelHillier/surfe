@@ -165,28 +165,33 @@ bool Stratigraphic_Surfaces::process_input_data()
 	return true;
 }
 
-bool Stratigraphic_Surfaces::get_equality_values( std::vector<double> &equality_values )
+bool Stratigraphic_Surfaces::get_equality_values( VectorXd &equality_values )
 {
-	for (int j = 0; j < _n_interface_pairs; j++ ) equality_values.push_back(0.0);
-	for (int j = 0; j < (int)b_input.planar->size(); j++){
-		equality_values.push_back(b_input.planar->at(j).nx());
-		equality_values.push_back(b_input.planar->at(j).ny());
-		equality_values.push_back(b_input.planar->at(j).nz());
+	int j = 0;
+	int k = 0;
+	int l = 0;
+	for (j = 0; j < _n_interface_pairs; j++ ) equality_values(j) =  0.0;
+	for (k = 0; k < (int)b_input.planar->size(); k++){
+		equality_values(3 * k + j) = b_input.planar->at(j).nx();
+		equality_values(3 * k + j + 1) = b_input.planar->at(j).ny();
+		equality_values(3 * k + j + 2) = b_input.planar->at(j).nz();
 	}
-	for (int j = 0; j < (int)b_input.tangent->size(); j++) equality_values.push_back(0.0);
+	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) = 0.0;
 
 	return true;
 }
 
-bool Stratigraphic_Surfaces::get_inequality_values( std::vector<double> &inequality_values )
+bool Stratigraphic_Surfaces::get_inequality_values( VectorXd &inequality_values )
 {
-	for (int j = 0; j < _n_sequenced_interface_pairs; j++ ) inequality_values.push_back(m_parameters.min_stratigraphic_thickness);
-	for (int j = 0; j < _n_sequenced_inequality_pairs; j++ ) inequality_values.push_back(0.0);
+	int j = 0;
+	int k = 0;
+	for (j = 0; j < _n_sequenced_interface_pairs; j++ ) inequality_values(j) = m_parameters.min_stratigraphic_thickness;
+	for (k = 0; k < _n_sequenced_inequality_pairs; k++ ) inequality_values(k + j) = 0.0;
 
 	return true;
 }
 
-bool Stratigraphic_Surfaces::get_interpolation_matrix( std::vector< std::vector <double> > &interpolation_matrix )
+bool Stratigraphic_Surfaces::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 {
 	int n_ip = _n_increment_pairs;
 	int n_p = b_parameters.n_planar;
@@ -218,7 +223,7 @@ bool Stratigraphic_Surfaces::get_interpolation_matrix( std::vector< std::vector 
 			double v3 = kernel->basis_pt_pt();
 			kernel->set_points(_increment_pairs->at(j)[1], _increment_pairs->at(k)[1]);
 			double v4 = kernel->basis_pt_pt();
-			interpolation_matrix[j][k] = (v1 - v2) -  (v3 - v4);
+			interpolation_matrix(j,k) = (v1 - v2) -  (v3 - v4);
 		}
 		// Row:interface increment pair/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
@@ -230,9 +235,9 @@ bool Stratigraphic_Surfaces::get_interpolation_matrix( std::vector< std::vector 
 			double v2x = kernel->basis_pt_planar_x();
 			double v2y = kernel->basis_pt_planar_y();
 			double v2z = kernel->basis_pt_planar_z();
-			interpolation_matrix[j][3*k + n_ip]     = v1x - v2x;
-			interpolation_matrix[j][3*k + n_ip + 1] = v1y - v2y;
-			interpolation_matrix[j][3*k + n_ip + 2] = v1z - v2z;
+			interpolation_matrix(j,3*k + n_ip)     = v1x - v2x;
+			interpolation_matrix(j,3*k + n_ip + 1) = v1y - v2y;
+			interpolation_matrix(j,3*k + n_ip + 2) = v1z - v2z;
 		}
 		// Row:interface increment pair/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
@@ -240,7 +245,7 @@ bool Stratigraphic_Surfaces::get_interpolation_matrix( std::vector< std::vector 
 			double v1 = kernel->basis_pt_tangent();
 			kernel->set_points(_increment_pairs->at(j)[1], b_input.tangent->at(k));
 			double v2 = kernel->basis_pt_tangent();
-			interpolation_matrix[j][n_ip + 3*n_p + k] = v1 - v2;
+			interpolation_matrix(j,n_ip + 3*n_p + k) = v1 - v2;
 		}
 	}
 	// Planar Constraints
@@ -255,29 +260,29 @@ bool Stratigraphic_Surfaces::get_interpolation_matrix( std::vector< std::vector 
 			double v2x = kernel->basis_planar_x_pt();
 			double v2y = kernel->basis_planar_y_pt();
 			double v2z = kernel->basis_planar_z_pt();
-			interpolation_matrix[3*j + n_ip][k]     = v1x - v2x;
-			interpolation_matrix[3*j + n_ip + 1][k] = v1y - v2y;
-			interpolation_matrix[3*j + n_ip + 2][k] = v1z - v2z;
+			interpolation_matrix(3*j + n_ip,k)     = v1x - v2x;
+			interpolation_matrix(3*j + n_ip + 1,k) = v1y - v2y;
+			interpolation_matrix(3*j + n_ip + 2,k) = v1z - v2z;
 		}
 		// Row:planar/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.planar->at(k));
-			interpolation_matrix[3*j + n_ip][3*k + n_ip] = kernel->basis_planar_planar(Parameter_Types::DXDX);
-			interpolation_matrix[3*j + n_ip][3*k + n_ip + 1] = kernel->basis_planar_planar(Parameter_Types::DXDY);
-			interpolation_matrix[3*j + n_ip][3*k + n_ip + 2] = kernel->basis_planar_planar(Parameter_Types::DXDZ);
-			interpolation_matrix[3*j + n_ip + 1][3*k + n_ip] = kernel->basis_planar_planar(Parameter_Types::DYDX);
-			interpolation_matrix[3*j + n_ip + 1][3*k + n_ip + 1] = kernel->basis_planar_planar(Parameter_Types::DYDY);
-			interpolation_matrix[3*j + n_ip + 1][3*k + n_ip + 2] = kernel->basis_planar_planar(Parameter_Types::DYDZ);
-			interpolation_matrix[3*j + n_ip + 2][3*k + n_ip] = kernel->basis_planar_planar(Parameter_Types::DZDX);
-			interpolation_matrix[3*j + n_ip + 2][3*k + n_ip + 1] = kernel->basis_planar_planar(Parameter_Types::DZDY);
-			interpolation_matrix[3*j + n_ip + 2][3*k + n_ip + 2] = kernel->basis_planar_planar(Parameter_Types::DZDZ);
+			interpolation_matrix(3*j + n_ip,3*k + n_ip)         = kernel->basis_planar_planar(Parameter_Types::DXDX);
+			interpolation_matrix(3*j + n_ip,3*k + n_ip + 1)     = kernel->basis_planar_planar(Parameter_Types::DXDY);
+			interpolation_matrix(3*j + n_ip,3*k + n_ip + 2)     = kernel->basis_planar_planar(Parameter_Types::DXDZ);
+			interpolation_matrix(3*j + n_ip + 1,3*k + n_ip)     = kernel->basis_planar_planar(Parameter_Types::DYDX);
+			interpolation_matrix(3*j + n_ip + 1,3*k + n_ip + 1) = kernel->basis_planar_planar(Parameter_Types::DYDY);
+			interpolation_matrix(3*j + n_ip + 1,3*k + n_ip + 2) = kernel->basis_planar_planar(Parameter_Types::DYDZ);
+			interpolation_matrix(3*j + n_ip + 2,3*k + n_ip)     = kernel->basis_planar_planar(Parameter_Types::DZDX);
+			interpolation_matrix(3*j + n_ip + 2,3*k + n_ip + 1) = kernel->basis_planar_planar(Parameter_Types::DZDY);
+			interpolation_matrix(3*j + n_ip + 2,3*k + n_ip + 2) = kernel->basis_planar_planar(Parameter_Types::DZDZ);
 		}
 		// Row:planar/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.tangent->at(k));
-			interpolation_matrix[3*j + n_ip][n_ip + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DX);
-			interpolation_matrix[3*j + n_ip + 1][n_ip + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DY);
-			interpolation_matrix[3*j + n_ip + 2][n_ip + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DZ);
+			interpolation_matrix(3*j + n_ip,n_ip + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DX);
+			interpolation_matrix(3*j + n_ip + 1,n_ip + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DY);
+			interpolation_matrix(3*j + n_ip + 2,n_ip + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DZ);
 		}
 	}
 	// Tangent Constraints 
@@ -288,42 +293,34 @@ bool Stratigraphic_Surfaces::get_interpolation_matrix( std::vector< std::vector 
 			double v1 = kernel->basis_tangent_pt();
 			kernel->set_points(b_input.tangent->at(j), _increment_pairs->at(k)[1]);
 			double v2 = kernel->basis_tangent_pt();
-			interpolation_matrix[j + n_ip + 3*n_p][k] = v1 - v2;
+			interpolation_matrix(j + n_ip + 3*n_p,k) = v1 - v2;
 		}
 		// Row:tangent/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.tangent->at(j), b_input.planar->at(k));
-			interpolation_matrix[j + n_ip + 3*n_p][3*k + n_ip] = kernel->basis_tangent_planar(Parameter_Types::DX);
-			interpolation_matrix[j + n_ip + 3*n_p][3*k + n_ip + 1] = kernel->basis_tangent_planar(Parameter_Types::DY);
-			interpolation_matrix[j + n_ip + 3*n_p][3*k + n_ip + 2] = kernel->basis_tangent_planar(Parameter_Types::DZ);
+			interpolation_matrix(j + n_ip + 3*n_p,3*k + n_ip)     = kernel->basis_tangent_planar(Parameter_Types::DX);
+			interpolation_matrix(j + n_ip + 3*n_p,3*k + n_ip + 1) = kernel->basis_tangent_planar(Parameter_Types::DY);
+			interpolation_matrix(j + n_ip + 3*n_p,3*k + n_ip + 2) = kernel->basis_tangent_planar(Parameter_Types::DZ);
 		}
 		// Row:tangent/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
 			kernel->set_points(b_input.tangent->at(j), b_input.tangent->at(k));
-			interpolation_matrix[j + n_ip + 3*n_p][n_ip + 3*n_p + k] = kernel->basis_tangent_tangent();
+			interpolation_matrix(j + n_ip + 3*n_p,n_ip + 3*n_p + k) = kernel->basis_tangent_tangent();
 		}
 	}
-
-// 	if (m_parameters.use_smoothing)
-// 	{
-// 		double dist_err = sqrt(m_parameters.interface_slack * m_parameters.interface_slack / 3);
-// 		Point one(dist_err,dist_err,dist_err);
-// 		Point two(0,0,0);
-// 		kernel->set_points(one,two);
-// 		double err = kernel->basis_pt_pt();
-// 		for (int j = 0; j < (int)interpolation_matrix.size(); j++ ) interpolation_matrix[j][j] += err;
-// 	}
 
 	return true;
 }
 
-bool Stratigraphic_Surfaces::get_inequality_matrix( const std::vector< std::vector <double> > &interpolation_matrix, std::vector < std::vector < double > > &inequality_matrix )
+bool Stratigraphic_Surfaces::get_inequality_matrix( const MatrixXd &interpolation_matrix, MatrixXd &inequality_matrix )
 {
-	if ((int)inequality_matrix.size() == 0 || (int)inequality_matrix.size() > (int)interpolation_matrix.size() || (int)inequality_matrix[0].size() != (int)interpolation_matrix[0].size()) return false;
+	if (inequality_matrix.rows() == 0 || 
+		inequality_matrix.rows()  > interpolation_matrix.rows() ||
+		inequality_matrix.cols() != interpolation_matrix.cols() ) return false;
 
-	for (int j = 0; j < (int)inequality_matrix.size(); j++ ){
-		for (int k = 0; k < (int)inequality_matrix[j].size(); k++ ){
-			inequality_matrix[j][k] = interpolation_matrix[j][k];
+	for (int j = 0; j < (int)inequality_matrix.rows(); j++ ){
+		for (int k = 0; k < (int)inequality_matrix.cols(); k++ ){
+			inequality_matrix(j,k) = interpolation_matrix(j,k);
 		}
 	}
 
@@ -333,38 +330,28 @@ bool Stratigraphic_Surfaces::get_inequality_matrix( const std::vector< std::vect
 bool Stratigraphic_Surfaces::setup_system_solver()
 {
 	// only way to solve this problem is via a quadratic optimization problem
-	std::vector<double> inequality_values;
-	get_inequality_values(inequality_values);
-	std::vector<double> equality_values;
-	get_equality_values(equality_values);
-	int nrows = b_parameters.n_constraints;
-	std::vector< std::vector < double > > interpolation_matrix = Math_methods::make_std_matrix<double>(nrows,nrows);
-	if (!get_interpolation_matrix(interpolation_matrix)) return false;
 	int n_ie = b_parameters.n_inequality;
-	std::vector< std::vector < double > > inequality_matrix = Math_methods::make_std_matrix<double>(n_ie,nrows);
+	int n_e  = b_parameters.n_equality;
+	int n_c  = b_parameters.n_constraints;
+
+	VectorXd inequality_values(n_ie);
+	get_inequality_values(inequality_values);
+
+	VectorXd equality_values(n_e);
+	get_equality_values(equality_values);
+
+	MatrixXd interpolation_matrix(n_c,n_c);
+	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+	MatrixXd inequality_matrix(n_ie,n_c);
 	if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
-	int n_e = b_parameters.n_equality;
-	std::vector< std::vector < double > > equality_matrix = Math_methods::make_std_matrix<double>(n_e,nrows);
+
+	MatrixXd equality_matrix(n_e,n_c);
 	if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
+
 	Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
 	if(!qpc->solve()) return false;
 	solver = qpc;
-
-// 	std::vector< Evaluation_Point > it_pts;
-// 	for (int j = 0; j < (int)b_input.interface.size(); j++ ){
-// 		Evaluation_Point a_ev_pt(b_input.interface[j].x(),b_input.interface[j].y(),b_input.interface[j].z());
-// 		a_ev_pt.set_c(b_input.interface[j].c());
-// 		it_pts.push_back(a_ev_pt);
-// 	}
-// 	eval_scalar_interpolant_at_points(it_pts);
-// 	std::vector< Evaluation_Point > grad_pts;
-// 	for (int j = 0; j < (int)b_input.planar.size(); j++ ){
-// 		Evaluation_Point a_ev_pt(b_input.planar[j].x(),b_input.planar[j].y(),b_input.planar[j].z());
-// 		a_ev_pt.set_c(b_input.planar[j].c());
-// 		grad_pts.push_back(a_ev_pt);
-// 	}
-// 	eval_vector_interpolant_at_points(grad_pts);
-
 
 	if (!_update_interface_iso_values()) return false;
 

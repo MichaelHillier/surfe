@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <fstream>
 
-bool Lajaunie_Approach::_get_polynomial_matrix_block( std::vector< std::vector <double> > &poly_matrix )
+bool Lajaunie_Approach::_get_polynomial_matrix_block( MatrixXd &poly_matrix )
 {
 	int n_ip = _n_increment_pair;
 	int n_p = b_parameters.n_planar;
@@ -26,7 +26,7 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block( std::vector< std::vector <
 		p_basis->set_point(_increment_pairs->at(j)[1]);
 		std::vector<double> b2 = p_basis->basis(); 
 		if ((int)b1.size() != b_parameters.n_poly_terms || (int)b2.size() != b_parameters.n_poly_terms ) return false;
-		for (int k = 0; k < (int)b1.size(); k++ ) poly_matrix[k][j] = b1[k] - b2[k];
+		for (int k = 0; k < (int)b1.size(); k++ ) poly_matrix(k,j) = b1[k] - b2[k];
 	}
 	// for planar points ...
 	for (int j = 0; j < n_p; j++ ){
@@ -36,9 +36,9 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block( std::vector< std::vector <
 		std::vector<double> bz = p_basis->dz();
 		if ((int)bx.size() != b_parameters.n_poly_terms || (int)by.size() != b_parameters.n_poly_terms || (int)bz.size() != b_parameters.n_poly_terms) return false;
 		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_matrix[k][n_ip + 3*j] = bx[k];
-			poly_matrix[k][n_ip + 3*j + 1] = by[k];
-			poly_matrix[k][n_ip + 3*j + 2] = bz[k];
+			poly_matrix(k,n_ip + 3*j) = bx[k];
+			poly_matrix(k,n_ip + 3*j + 1) = by[k];
+			poly_matrix(k,n_ip + 3*j + 2) = bz[k];
 		}
 	}
 	// for tangent points ...
@@ -49,35 +49,35 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block( std::vector< std::vector <
 		std::vector<double> bz = p_basis->dz();
 		if ( (int)bx.size() != b_parameters.n_poly_terms || (int)by.size() != b_parameters.n_poly_terms || (int)bz.size() != b_parameters.n_poly_terms ) return false;
 		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_matrix[k][n_ip + 3 * n_p + j] = b_input.tangent->at(j).tx()*bx[k] + b_input.tangent->at(j).ty()*by[k] + b_input.tangent->at(j).tz()*bz[k];
+			poly_matrix(k,n_ip + 3 * n_p + j) = b_input.tangent->at(j).tx()*bx[k] + b_input.tangent->at(j).ty()*by[k] + b_input.tangent->at(j).tz()*bz[k];
 		}
 	}
 
 	return true;
 }
 
-bool Lajaunie_Approach::_insert_polynomial_matrix_blocks_in_interpolation_matrix( const std::vector< std::vector <double> > &poly_matrix, std::vector< std::vector <double> > &interpolation_matrix )
+bool Lajaunie_Approach::_insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix)
 {
 	int n_ip = _n_increment_pair;
 	int n_p = b_parameters.n_planar;
 	int n_t = b_parameters.n_tangent;
 
-	if ((n_ip +3*n_p + n_t + (int)poly_matrix.size()) > (int)interpolation_matrix.size() ||
-		(n_ip +3*n_p + n_t + (int)poly_matrix.size()) > (int)interpolation_matrix[0].size()) return false;
+	if ((n_ip +3*n_p + n_t + poly_matrix.rows()) > interpolation_matrix.rows() ||
+		(n_ip +3*n_p + n_t + poly_matrix.rows()) > interpolation_matrix.cols() ) return false;
 	// build polynomial blocks
 	// | A PT |
 	// | P 0  |
 	// start with P
-	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
-		for (int k = 0; k < (int)poly_matrix[j].size(); k++ ){
-			interpolation_matrix[n_ip + 3*n_p + n_t + j][k] = poly_matrix[j][k];
-			interpolation_matrix[k][n_ip + 3*n_p + n_t + j] = interpolation_matrix[n_ip + 3*n_p + n_t + j][k];
+	for (int j = 0; j < (int)poly_matrix.rows(); j++ ){
+		for (int k = 0; k < (int)poly_matrix.cols(); k++ ){
+			interpolation_matrix(n_ip + 3*n_p + n_t + j,k) = poly_matrix(j,k);
+			interpolation_matrix(k,n_ip + 3*n_p + n_t + j) = interpolation_matrix(n_ip + 3*n_p + n_t + j,k);
 		}
 	}
 
-	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
-		for (int k = 0; k < (int)poly_matrix.size(); k++ ){
-			interpolation_matrix[n_ip + 3*n_p + n_t + j][n_ip + 3*n_p + n_t + k] = 0;
+	for (int j = 0; j < (int)poly_matrix.rows(); j++ ){
+		for (int k = 0; k < (int)poly_matrix.cols(); k++ ){
+			interpolation_matrix(n_ip + 3*n_p + n_t + j,n_ip + 3*n_p + n_t + k) = 0;
 		}
 	}
 
@@ -147,11 +147,10 @@ bool Lajaunie_Approach::process_input_data()
 
 bool Lajaunie_Approach::setup_system_solver()
 {
-	int nrows = b_parameters.n_equality + b_parameters.n_poly_terms;
-	std::vector<double> equality_values;
+	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
+	VectorXd equality_values;
 	get_equality_values(equality_values);
-	if ((int)equality_values.size() != nrows) return false;
-	std::vector< std::vector <double> > interpolation_matrix = Math_methods::make_std_matrix<double>(nrows,nrows);
+	MatrixXd interpolation_matrix(n, n);
 	if (!get_interpolation_matrix(interpolation_matrix)) return false;
 	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
 	if (!llu->solve()) return false;
@@ -162,21 +161,25 @@ bool Lajaunie_Approach::setup_system_solver()
 	return true;
 }
 
-bool Lajaunie_Approach::get_equality_values( std::vector<double> &equality_values )
+bool Lajaunie_Approach::get_equality_values( VectorXd &equality_values )
 {
-	for (int j = 0; j < _n_increment_pair; j++ ) equality_values.push_back(0.0);
-	for (int j = 0; j < (int)b_input.planar->size(); j++){
-		equality_values.push_back(b_input.planar->at(j).nx());
-		equality_values.push_back(b_input.planar->at(j).ny());
-		equality_values.push_back(b_input.planar->at(j).nz());
+	int j = 0;
+	int k = 0;
+	int l = 0;
+	int m = 0;
+	for (j = 0; j < _n_increment_pair; j++ ) equality_values(j) = 0.0;
+	for (k = 0; k < (int)b_input.planar->size(); k++){
+		equality_values(3 * k + j)     = b_input.planar->at(j).nx();
+		equality_values(3 * k + j + 1) = b_input.planar->at(j).ny();
+		equality_values(3 * k + j + 2) = b_input.planar->at(j).nz();
 	}
-	for (int j = 0; j < (int)b_input.tangent->size(); j++) equality_values.push_back(0.0);
-	if (b_parameters.poly_term) for (int j = 0; j < (int)b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
+	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) = 0.0;
+	if (b_parameters.poly_term) for (m = 0; m < (int)b_parameters.n_poly_terms; m++ ) equality_values(m + l + 3 * k + j) = 0.0;
 
 	return true;
 }
 
-bool Lajaunie_Approach::get_interpolation_matrix( std::vector< std::vector <double> > &interpolation_matrix )
+bool Lajaunie_Approach::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 {
 	int n_ip = _n_increment_pair;
 	int n_p = b_parameters.n_planar;
@@ -203,7 +206,7 @@ bool Lajaunie_Approach::get_interpolation_matrix( std::vector< std::vector <doub
 			double v3 = kernel->basis_pt_pt();
 			kernel->set_points(_increment_pairs->at(j)[1], _increment_pairs->at(k)[1]);
 			double v4 = kernel->basis_pt_pt();
-			interpolation_matrix[j][k] = (v1 - v2) -  (v3 - v4);
+			interpolation_matrix(j,k) = (v1 - v2) -  (v3 - v4);
 		}
 		// Row:interface increment pair/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
@@ -215,9 +218,9 @@ bool Lajaunie_Approach::get_interpolation_matrix( std::vector< std::vector <doub
 			double v2x = kernel->basis_pt_planar_x();
 			double v2y = kernel->basis_pt_planar_y();
 			double v2z = kernel->basis_pt_planar_z();
-			interpolation_matrix[j][3*k + n_ip]     = v1x - v2x;
-			interpolation_matrix[j][3*k + n_ip + 1] = v1y - v2y;
-			interpolation_matrix[j][3*k + n_ip + 2] = v1z - v2z;
+			interpolation_matrix(j,3*k + n_ip)     = v1x - v2x;
+			interpolation_matrix(j,3*k + n_ip + 1) = v1y - v2y;
+			interpolation_matrix(j,3*k + n_ip + 2) = v1z - v2z;
 		}
 		// Row:interface increment pair/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
@@ -225,7 +228,7 @@ bool Lajaunie_Approach::get_interpolation_matrix( std::vector< std::vector <doub
 			double v1 = kernel->basis_pt_tangent();
 			kernel->set_points(_increment_pairs->at(j)[1], b_input.tangent->at(k));
 			double v2 = kernel->basis_pt_tangent();
-			interpolation_matrix[j][n_ip + 3*n_p + k] = v1 - v2;
+			interpolation_matrix(j,n_ip + 3*n_p + k) = v1 - v2;
 		}
 	}
 	// Planar Constraints
@@ -240,29 +243,29 @@ bool Lajaunie_Approach::get_interpolation_matrix( std::vector< std::vector <doub
 			double v2x = kernel->basis_planar_x_pt();
 			double v2y = kernel->basis_planar_y_pt();
 			double v2z = kernel->basis_planar_z_pt();
-			interpolation_matrix[3*j + n_ip][k]     = v1x - v2x;
-			interpolation_matrix[3*j + n_ip + 1][k] = v1y - v2y;
-			interpolation_matrix[3*j + n_ip + 2][k] = v1z - v2z;
+			interpolation_matrix(3*j + n_ip,k)     = v1x - v2x;
+			interpolation_matrix(3*j + n_ip + 1,k) = v1y - v2y;
+			interpolation_matrix(3*j + n_ip + 2,k) = v1z - v2z;
 		}
 		// Row:planar/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.planar->at(k));
-			interpolation_matrix[3*j + n_ip][3*k + n_ip] = kernel->basis_planar_planar(Parameter_Types::DXDX);
-			interpolation_matrix[3*j + n_ip][3*k + n_ip + 1] = kernel->basis_planar_planar(Parameter_Types::DXDY);
-			interpolation_matrix[3*j + n_ip][3*k + n_ip + 2] = kernel->basis_planar_planar(Parameter_Types::DXDZ);
-			interpolation_matrix[3*j + n_ip + 1][3*k + n_ip] = kernel->basis_planar_planar(Parameter_Types::DYDX);
-			interpolation_matrix[3*j + n_ip + 1][3*k + n_ip + 1] = kernel->basis_planar_planar(Parameter_Types::DYDY);
-			interpolation_matrix[3*j + n_ip + 1][3*k + n_ip + 2] = kernel->basis_planar_planar(Parameter_Types::DYDZ);
-			interpolation_matrix[3*j + n_ip + 2][3*k + n_ip] = kernel->basis_planar_planar(Parameter_Types::DZDX);
-			interpolation_matrix[3*j + n_ip + 2][3*k + n_ip + 1] = kernel->basis_planar_planar(Parameter_Types::DZDY);
-			interpolation_matrix[3*j + n_ip + 2][3*k + n_ip + 2] = kernel->basis_planar_planar(Parameter_Types::DZDZ);
+			interpolation_matrix(3*j + n_ip,3*k + n_ip) = kernel->basis_planar_planar(Parameter_Types::DXDX);
+			interpolation_matrix(3 * j + n_ip,3 * k + n_ip + 1) = kernel->basis_planar_planar(Parameter_Types::DXDY);
+			interpolation_matrix(3 * j + n_ip,3 * k + n_ip + 2) = kernel->basis_planar_planar(Parameter_Types::DXDZ);
+			interpolation_matrix(3 * j + n_ip + 1,3 * k + n_ip) = kernel->basis_planar_planar(Parameter_Types::DYDX);
+			interpolation_matrix(3 * j + n_ip + 1,3 * k + n_ip + 1) = kernel->basis_planar_planar(Parameter_Types::DYDY);
+			interpolation_matrix(3 * j + n_ip + 1,3 * k + n_ip + 2) = kernel->basis_planar_planar(Parameter_Types::DYDZ);
+			interpolation_matrix(3 * j + n_ip + 2,3 * k + n_ip) = kernel->basis_planar_planar(Parameter_Types::DZDX);
+			interpolation_matrix(3 * j + n_ip + 2,3 * k + n_ip + 1) = kernel->basis_planar_planar(Parameter_Types::DZDY);
+			interpolation_matrix(3 * j + n_ip + 2,3 * k + n_ip + 2) = kernel->basis_planar_planar(Parameter_Types::DZDZ);
 		}
 		// Row:planar/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.tangent->at(k));
-			interpolation_matrix[3*j + n_ip][n_ip + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DX);
-			interpolation_matrix[3*j + n_ip + 1][n_ip + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DY);
-			interpolation_matrix[3*j + n_ip + 2][n_ip + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DZ);
+			interpolation_matrix(3*j + n_ip,n_ip + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DX);
+			interpolation_matrix(3*j + n_ip + 1,n_ip + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DY);
+			interpolation_matrix(3*j + n_ip + 2,n_ip + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DZ);
 		}
 	}
 	// Tangent Constraints 
@@ -273,19 +276,19 @@ bool Lajaunie_Approach::get_interpolation_matrix( std::vector< std::vector <doub
 			double v1 = kernel->basis_tangent_pt();
 			kernel->set_points(b_input.tangent->at(j), _increment_pairs->at(k)[1]);
 			double v2 = kernel->basis_tangent_pt();
-			interpolation_matrix[j + n_ip + 3*n_p][k] = v1 - v2;
+			interpolation_matrix(j + n_ip + 3*n_p,k) = v1 - v2;
 		}
 		// Row:tangent/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.tangent->at(j), b_input.planar->at(k));
-			interpolation_matrix[j + n_ip + 3*n_p][3*k + n_ip] = kernel->basis_tangent_planar(Parameter_Types::DX);
-			interpolation_matrix[j + n_ip + 3*n_p][3*k + n_ip + 1] = kernel->basis_tangent_planar(Parameter_Types::DY);
-			interpolation_matrix[j + n_ip + 3*n_p][3*k + n_ip + 2] = kernel->basis_tangent_planar(Parameter_Types::DZ);
+			interpolation_matrix(j + n_ip + 3 * n_p,3 * k + n_ip) = kernel->basis_tangent_planar(Parameter_Types::DX);
+			interpolation_matrix(j + n_ip + 3 * n_p,3 * k + n_ip + 1) = kernel->basis_tangent_planar(Parameter_Types::DY);
+			interpolation_matrix(j + n_ip + 3 * n_p,3 * k + n_ip + 2) = kernel->basis_tangent_planar(Parameter_Types::DZ);
 		}
 		// Row:tangent/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
 			kernel->set_points(b_input.tangent->at(j), b_input.tangent->at(k));
-			interpolation_matrix[j + n_ip + 3*n_p][n_ip + 3*n_p + k] = kernel->basis_tangent_tangent();
+			interpolation_matrix(j + n_ip + 3*n_p,n_ip + 3*n_p + k) = kernel->basis_tangent_tangent();
 		}
 	}
 
@@ -294,34 +297,11 @@ bool Lajaunie_Approach::get_interpolation_matrix( std::vector< std::vector <doub
 	// | P 0  |
 	if (b_parameters.poly_term)
 	{
-		std::vector < std::vector <double> > poly_matrix = Math_methods::make_std_matrix<double>(b_parameters.n_poly_terms,b_parameters.n_constraints);
+		MatrixXd poly_matrix(b_parameters.n_poly_terms, b_parameters.n_constraints);
 		if (!_get_polynomial_matrix_block(poly_matrix)) return false;
 		// fill remaining matrix blocks (P, PT, 0)
-		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(poly_matrix,interpolation_matrix)) return false;
+		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(poly_matrix, interpolation_matrix)) return false;
 	}
-
-// 	if (m_parameters.use_smoothing)
-// 	{
-// 		double dist_err = sqrt(m_parameters.interface_slack * m_parameters.interface_slack / 3);
-// 		Point one(dist_err,dist_err,dist_err);
-// 		Point two(0,0,0);
-// 		kernel->set_points(one,two);
-// 		double err = kernel->basis_pt_pt();
-// 		for (int j = 0; j < (int)interpolation_matrix.size(); j++ ) interpolation_matrix[j][j] += err;
-// 	}
-
-// 	std::ofstream out("E:\interpolation_mat.txt");
-// 
-// 	out.precision(15); // sets how many digits for each variable is outputted to the output file
-// 
-// 
-// 	for (int j=0;j<(int)interpolation_matrix.size();j++){
-// 		for (int k=0;k<(int)interpolation_matrix[j].size();k++){
-// 			out<<"  "<<interpolation_matrix[j][k];
-// 		}
-// 		out<<std::endl;
-// 	}
-
 
 	return true;
 }

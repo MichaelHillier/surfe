@@ -5,8 +5,11 @@
 
 #include <vector>
 #include <algorithm>
+#include <Eigen/Core>
 
 #define SQR(x)   ((x)*(x)) // x^2
+
+using namespace Eigen;
 
 class Math_methods{
 private:
@@ -40,6 +43,12 @@ public:
 	template <class T> static void SWAP(T &a, T &b){ T x = a; a = b; b = x; }
 	template <class T> static bool angle_btw_2_vectors( const std::vector < T > &v1, const std::vector < T > &v2, T &angle);
 	static double RandomDouble(const double &min, const double&max);
+	template <class T> static bool quadratic_solver2(const Matrix <T, Dynamic, Dynamic> &H,
+		const Matrix <T, Dynamic, Dynamic> &A,
+		const Matrix <T, Dynamic, Dynamic> &C,
+		const Matrix <T, Dynamic, 1> &b,
+		const Matrix <T, Dynamic, 1> &d,
+		Matrix <T, Dynamic, 1> &fvalues);
 };
 
 template <class T>
@@ -587,6 +596,375 @@ while (!found_soln)
 	iter++;
 }
 return true;
+}
+
+template <class T>
+bool Math_methods::quadratic_solver2(const Matrix <T, Dynamic, Dynamic> &H,
+	const Matrix <T, Dynamic, Dynamic> &A,
+	const Matrix <T, Dynamic, Dynamic> &C,
+	const Matrix <T, Dynamic, 1> &b,
+	const Matrix <T, Dynamic, 1> &d,
+	Matrix <T, Dynamic, 1> &fvalues)
+{
+	// Describe the Quadratic Optimization problem
+	// min (w.r.t. x) f(x) = 1/2 * xT * H * x => our objective function
+	// s.t.            T * x = b
+	//                C * x >= d
+	// NOTE: H must be a positive definite matrix !!! There is a check for this in the constructor for the matrix solver
+	// The Interior Point method using a Predictor-Corrector method will be used to solve the QP
+	// Lagrangian (Primal)
+	// L(x,y,z) = 1/2 * xT * H * x - yT * (T * x - b) - zT * (C * x - d)
+	// KKT Conditions
+	// dL/dx = H * x - AT * y - CT * z = 0
+	// dL/dy = T * x - b               = 0
+	// dL/dz = C * x - s - d           = 0  s (slack variable)
+	//         z >= 0 , s >= 0
+	//         z_i * s_i = 0
+	// Solve Block Matrix
+	// | H  -AT  -CT   0 || dx |     | rh |  -> r1      
+	// | T    0    0   0 || dy | = - | ra |  -> r2   EQN (1)
+	// | C    0    0  -I || dz |     | rc |  -> r3 
+	// | 0    0    S   Z || ds |     | rsz|  -> r4 
+	// where S = diag (s0,s1,...,sn)
+	//       Z = diag (z0,z1,...,zn)
+	//       I  = Identity matrix
+	//       rh = H * x - AT * y - CT * z
+	//       ra = T * x - b
+	//       rc = C * x - s - d
+	//       rsz = Z * S
+	//       n := # of rows in H
+	//       na := # of rows in T
+	//       nc := # of rows in C
+	//       H[n x n]
+	//       T[na x n]
+	//       C[nc x n]
+	//       S[nc x nc]
+	//       Z[nc x nc]
+	//       I[nc x nc]
+	// EQN (1) can be reduced in size by block elimination since S and Z are strictly positive
+	// New EQN becomes
+	// | H  AT      CT   || dx|    |     -rh     | 
+	// | T   0	     0   ||-dy| =  |     -ra     |
+	// | C   0 -Z^(-1)*S ||-dz|    |-rc-Z^(-1)rsz|
+
+	int n = (int)H.size();
+	int na = (int)A.size();
+	int nc = (int)C.size();
+
+	///////////////////////////////////////////////////////////////////////
+	/////////////////////////// Initialization ////////////////////////////
+	///////////////////////////////////////////////////////////////////////
+	// Calculation Helper Variables
+	T add, temp, temp2, temp_p, minus_one, elemsum, datanorm, zTs, mu, zero, prev_mu;
+	zero = 0.0;
+	elemsum = 0.0;
+	// KKT System
+	Matrix <T, Dynamic, 1> x, y, z, s, rh, ra, rc, rsz;
+	std::vector<T> x, y, z, s, rh, ra, rc, rsz; // RESUME CODING HERE
+	x.resize(n, 0);
+	y.resize(na, 0);
+	z.resize(nc, 0);
+	s.resize(nc, 0);
+	rh.resize(n, 0);
+	ra.resize(na, 0);
+	rc.resize(nc, 0);
+	rsz.resize(nc, 0);
+	std::vector<T> t1, t2, t3, t4, t5;
+	t1.resize(n, 0);
+	t2.resize(n, 0);
+	t3.resize(n, 0);
+	t4.resize(na, 0);
+	t5.resize(nc, 0);
+	std::vector< std::vector < T > > AT = Math_methods::matrix_transpose(A);
+	std::vector< std::vector < T > > CT = Math_methods::matrix_transpose(C);
+	std::vector< std::vector < T > > KKT = Math_methods::make_std_matrix<T>(n + na + 2 * nc, n + na + 2 * nc);
+	std::vector< std::vector < T > > KKT_predictor = Math_methods::make_std_matrix<T>(n + na + 2 * nc, n + na + 2 * nc);
+	std::vector< std::vector < T > > KKT_corrector = Math_methods::make_std_matrix<T>(n + na + 2 * nc, n + na + 2 * nc);
+	std::vector< T > solution_vector;
+	solution_vector.resize(n + na + 2 * nc, 0);
+
+	// step containers and related helper variables
+	T alpha, min_alpha_z, min_alpha_s, max_alpha_z, max_alpha_s, mu_aff, sigma;
+	std::vector < T > alpha_z, alpha_s, dx_aff, dy_aff, dz_aff, ds_aff, rsz_aff, dvector;
+	alpha_z.resize(nc, 0);
+	alpha_s.resize(nc, 0);
+	dx_aff.resize(n, 0);
+	dy_aff.resize(na, 0);
+	dz_aff.resize(nc, 0);
+	ds_aff.resize(nc, 0);
+	rsz_aff.resize(nc, 0);
+	dvector.resize(n + na + 2 * nc, 0);
+	std::vector < T > dx, dy, dz, ds, dvector_corr;
+	dx.resize(n, 0);
+	dy.resize(na, 0);
+	dz.resize(nc, 0);
+	ds.resize(nc, 0);
+	dvector_corr.resize(n + na + 2 * nc, 0);
+
+	///////////////////////////////////////////////////////////////////////
+	////////////////////// End of Initialization //////////////////////////
+	///////////////////////////////////////////////////////////////////////
+
+	// get norm of matrix 
+	datanorm = sqrt(Math_methods::find_max_element_in_matrix(H));
+
+	// setup initial iterate for z and s...
+	for (int j = 0; j < nc; j++){
+		z[j] = datanorm;
+		s[j] = datanorm;
+	}
+
+	// Build KKT matrix blocks [1][1], [1][2], [1][3], [1][4]
+	for (int j = 0; j < n; j++){ // Matrix rows...
+		// Matrix columns...
+		// [1][1] Block
+		for (int k = 0; k < n; k++) KKT[j][k] = H[j][k];
+		// [1][2] Block
+		for (int k = 0; k < na; k++) KKT[j][n + k] = -1.0*AT[j][k];
+		// [1][3] Block
+		for (int k = 0; k < nc; k++) KKT[j][n + na + k] = -1.0*CT[j][k];
+		// [1][4] Block
+		for (int k = 0; k < nc; k++) KKT[j][n + na + nc + k] = 0.0;
+	}
+	// Build KKT matrix blocks [2][1], [2][2], [2][3], [2][4]
+	for (int j = 0; j < na; j++){
+		// [2][1] Block
+		for (int k = 0; k < n; k++)  KKT[n + j][k] = A[j][k];
+		// [2][2] Block
+		for (int k = 0; k < na; k++) KKT[n + j][n + k] = 0.0;
+		// [2][3] Block
+		for (int k = 0; k < nc; k++) KKT[n + j][n + na + k] = 0.0;
+		// [2][4] Block
+		for (int k = 0; k < nc; k++) KKT[n + j][n + na + nc + k] = 0.0;
+	}
+	// Build KKT matrix blocks [3][1], [3][2], [3][3], [3][4]
+	for (int j = 0; j < nc; j++){
+		// [3][1] Block
+		for (int k = 0; k < n; k++)  KKT[n + na + j][k] = C[j][k];
+		// [3][2] Block
+		for (int k = 0; k < na; k++) KKT[n + na + j][n + k] = 0.0;
+		// [3][3] Block
+		for (int k = 0; k < nc; k++) KKT[n + na + j][n + na + k] = 0.0;
+		// [3][4] Block
+		for (int k = 0; k < nc; k++){
+			if (j == k) KKT[n + na + j][n + na + nc + k] = -1.0;
+			else KKT[n + na + j][n + na + nc + k] = 0.0;
+		}
+	}
+	// Build KKT matrix blocks [4][1], [4][2]
+	for (int j = 0; j < nc; j++){
+		// [4][1] Block
+		for (int k = 0; k < n; k++)  KKT[n + na + nc + j][k] = 0.0;
+		// [4][2] Block
+		for (int k = 0; k < na; k++) KKT[n + na + nc + j][n + k] = 0.0;
+	}
+
+	// Build KKT matrix blocks: [4][3], [4][4]
+	for (int j = 0; j < nc; j++){
+		// [4][3] Block
+		for (int k = 0; k < nc; k++){
+			if (j == k) KKT[n + na + nc + j][n + na + k] = s[j];
+			else KKT[n + na + nc + j][n + na + k] = 0.0;
+		}
+		// [4][4] Block
+		for (int k = 0; k < nc; k++){
+			if (j == k) KKT[n + na + nc + j][n + na + nc + k] = z[j];
+			else KKT[n + na + nc + j][n + na + nc + k] = 0.0;
+		}
+	}
+
+	//////////////////////////////////////////////
+	// Determine Starting Point for the iterate //
+	//////////////////////////////////////////////
+	// 1st compute residuals for the affine system
+	Math_methods::matrix_vector_multiply(H, x, t1);
+	Math_methods::matrix_vector_multiply(AT, y, t2);
+	Math_methods::matrix_vector_multiply(CT, z, t3);
+	// 	_output_vector(t3,"t3.txt"); // debug
+	// 	_output_vector(z,"z.txt");
+	// 	_output_matrix(CT,"CT.txt");
+	for (int j = 0; j < n; j++){ // rh residual = H*x - AT*y - CT*z
+		rh[j] = t1[j] - t2[j] - t3[j];
+		solution_vector[j] = -1.0*rh[j];
+	}
+	Math_methods::matrix_vector_multiply(A, x, t4);
+	for (int j = 0; j < na; j++){ // ra residual = A*x - b
+		ra[j] = t4[j] - b[j];
+		solution_vector[n + j] = -1.0*ra[j];
+	}
+	zTs = 0.0; // re-initialize this adder
+	Math_methods::matrix_vector_multiply(C, x, t5);
+	for (int j = 0; j < nc; j++){ // rc residual = C*x - s - d
+		rc[j] = t5[j] - s[j] - d[j];
+		rsz[j] = s[j] * z[j]; // rsz residual = Z[]*S[]*e
+		solution_vector[n + na + j] = -1.0*rc[j];
+		zTs += rsz[j];
+		solution_vector[n + na + nc + j] = -1.0*rsz[j];
+	}
+	// Solve Affine system ...
+	for (int j = 0; j < n + na + 2 * nc; j++) dvector[j] = solution_vector[j];
+	for (int j = 0; j < n + na + 2 * nc; j++){
+		for (int k = 0; k < n + na + 2 * nc; k++) KKT_predictor[j][k] = KKT[j][k];
+	}
+	// 	_output_matrix(KKT_predictor,"KKT_predictor.txt"); // debug
+	// 	_output_vector(dvector,"dvector_b4.txt");
+	Math_methods::solve_sym_linear_system_via_LU_dcmp(KKT_predictor, dvector);
+	//	_output_vector(dvector,"dvector_af.txt"); // debug
+
+	for (int j = 0; j < n; j++){
+		dx[j] = dvector[j];
+		if (j < na) dy[j] = dvector[j + n];
+		if (j < nc)
+		{
+			dz[j] = dvector[j + n + na];
+			ds[j] = dvector[j + n + na + nc];
+		}
+	}
+	// Update iterate using full affine scaling
+	// (x,y,z,s)->(x,y,z,s) + (dx_aff,dy_aff,dz_aff,ds_aff)
+	for (int j = 0; j < n; j++) x[j] += dx[j];
+	for (int j = 0; j < na; j++) y[j] += dy[j];
+	for (int j = 0; j < nc; j++) z[j] += dz[j];
+	for (int j = 0; j < nc; j++) s[j] += ds[j];
+
+	// above iterate likely infeasible
+	// measure violation
+	std::vector < T > max_violation_list;
+	for (int j = 0; j < nc; j++){
+		T v1 = -1.0*z[j];
+		T v2 = -1.0*s[j];
+		T maximum = max_element_wrt_zero(v1, v2);
+		if (maximum < 0) maximum = 0.0;
+		max_violation_list.push_back(maximum);
+	}
+	// sort max_violation_list
+	std::sort(max_violation_list.begin(), max_violation_list.end());
+	T max_violation = max_violation_list[nc - 1];
+	// compute the iterate shift for complementary variables z & s
+	T shift = 1000.0 + 2.0*max_violation;
+	// update complementary variables ...
+	for (int j = 0; j < nc; j++){
+		z[j] += shift;
+		s[j] += shift;
+	}
+
+	bool found_soln = false;
+	int iter = 0;
+	while (!found_soln)
+	{
+		// Update KKT matrix blocks: [4][3], [4][4]
+		for (int j = 0; j < nc; j++){
+			// [4][3] Block
+			for (int k = 0; k < nc; k++){
+				if (j == k) KKT[n + na + nc + j][n + na + k] = s[j];
+				else KKT[n + na + nc + j][n + na + k] = 0.0;
+			}
+			// [4][4] Block
+			for (int k = 0; k < nc; k++){
+				if (j == k) KKT[n + na + nc + j][n + na + nc + k] = z[j];
+				else KKT[n + na + nc + j][n + na + nc + k] = 0.0;
+			}
+		}
+
+		//_output_matrix(KKT,"KKT_matrix.txt"); // debug
+
+		// COMPUTE RESIDUALS ...
+		Math_methods::matrix_vector_multiply(H, x, t1);
+		Math_methods::matrix_vector_multiply(AT, y, t2);
+		Math_methods::matrix_vector_multiply(CT, z, t3);
+		for (int j = 0; j < n; j++){ // rh residual = H*x - AT*y - CT*z
+			rh[j] = t1[j] - t2[j] - t3[j];
+			solution_vector[j] = -1.0*rh[j];
+		}
+		Math_methods::matrix_vector_multiply(A, x, t4);
+		for (int j = 0; j < na; j++){ // ra residual = A*x - b
+			ra[j] = t4[j] - b[j];
+			solution_vector[n + j] = -1.0*ra[j];
+		}
+		zTs = 0.0; // re-initialize this adder
+		Math_methods::matrix_vector_multiply(C, x, t5);
+		for (int j = 0; j < nc; j++){ // rc residual = C*x - s - d
+			rc[j] = t5[j] - s[j] - d[j];
+			rsz[j] = s[j] * z[j]; // rsz residual = Z[]*S[]*e
+			solution_vector[n + na + j] = -1.0*rc[j];
+			zTs += rsz[j];
+			solution_vector[n + na + nc + j] = -1.0*rsz[j];
+		}
+		//calculate mu
+		mu = zTs / nc;
+		//double mu_d = _get_double(mu); // debug
+		if (iter > 5 && mu > prev_mu) return false;
+		prev_mu = mu;
+		if (mu < 0.00000001)
+		{
+			found_soln = true;
+			for (int j = 0; j < n; j++) fvalues[j] = x[j]; // get solution
+			continue;
+		}
+		///////////////////////////////////////////////////////
+		/////////////////// Predictor Step ////////////////////
+		///////////////////////////////////////////////////////
+		// Solve Affine system ...
+		//cout<<" solution vector for affine system "<<endl;
+		for (int j = 0; j < n + na + 2 * nc; j++) dvector[j] = solution_vector[j];
+		for (int j = 0; j < n + na + 2 * nc; j++){
+			for (int k = 0; k < n + na + 2 * nc; k++) KKT_predictor[j][k] = KKT[j][k];
+		}
+		Math_methods::solve_sym_linear_system_via_LU_dcmp(KKT_predictor, dvector);
+
+		// get step vectors...
+		for (int j = 0; j < nc; j++){
+			dz_aff[j] = dvector[j + n + na];
+			ds_aff[j] = dvector[j + n + na + nc];
+		}
+
+		alpha = _find_step_length(s, ds_aff, z, dz_aff);
+
+		// calculate mu_aff
+		elemsum = 0.0;
+		for (int j = 0; j < nc; j++) elemsum += (z[j] + alpha*dz_aff[j]) * (s[j] + alpha*ds_aff[j]);
+		mu_aff = elemsum / nc;
+		sigma = (mu_aff / mu)*(mu_aff / mu)*(mu_aff / mu);
+
+		///////////////////////////////////////////////////////
+		/////////////////// Corrector Step ////////////////////
+		///////////////////////////////////////////////////////
+		// modify rsz vector using the calculated correctors ...
+		// recompute rsz residuals...
+		// Z*S*e - sigma*mu*e + dz_aff*ds_aff*e
+		for (int j = 0; j < nc; j++){
+			rsz_aff[j] = rsz[j] - sigma*mu + dz_aff[j] * ds_aff[j];
+			solution_vector[n + na + nc + j] = -1.0*rsz_aff[j];
+		}
+		for (int j = 0; j < n + na + 2 * nc; j++) dvector_corr[j] = solution_vector[j];
+
+		// Solve the corrected linear system ...
+		for (int j = 0; j < n + na + 2 * nc; j++){
+			for (int k = 0; k < n + na + 2 * nc; k++) KKT_corrector[j][k] = KKT[j][k];
+		}
+		Math_methods::solve_sym_linear_system_via_LU_dcmp(KKT_corrector, dvector_corr);
+
+		// get step vectors from corrector step...
+		for (int j = 0; j < n; j++){
+			dx[j] = dvector_corr[j];
+			if (j < na) dy[j] = dvector_corr[j + n];
+			if (j < nc)
+			{
+				dz[j] = dvector_corr[j + n + na];
+				ds[j] = dvector_corr[j + n + na + nc];
+			}
+		}
+
+		alpha = _find_step_length(s, ds, z, dz);
+
+		// update x,y,z,s vectors using alpha step
+		for (int j = 0; j < n; j++) x[j] += alpha*dx[j];
+		for (int j = 0; j < na; j++) y[j] += alpha*dy[j];
+		for (int j = 0; j < nc; j++) z[j] += alpha*dz[j];
+		for (int j = 0; j < nc; j++) s[j] += alpha*ds[j];
+		iter++;
+	}
+	return true;
 }
 
 template <class T>

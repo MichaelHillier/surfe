@@ -4,14 +4,13 @@
 #include <gmpxx.h>
 
 #include <vector>
-#include <Eigen/Dense>
 #include <Eigen/Core>
 
 class System_Solver {
 public:
 	System_Solver(){}
 	virtual ~System_Solver(){}
-	std::vector<double> weights;
+	VectorXd weights;
 	virtual bool solve() = 0;
  	virtual bool validate_matrix_systems() = 0;
  	//virtual bool validate_constraint_vectors() = 0;
@@ -20,10 +19,10 @@ public:
 
 class Linear_LU_decomposition : public System_Solver {
 private:
-	std::vector < std::vector < double > > _interpolation_matrix;
-	std::vector<double> _constraint_values;
+	MatrixXd _interpolation_matrix;
+	VectorXd _constraint_values;
 public:
-	Linear_LU_decomposition(const std::vector < std::vector < double > > &matrix, const std::vector<double> &vector)
+	Linear_LU_decomposition(const MatrixXd &matrix, const VectorXd &vector)
 	{ _interpolation_matrix = matrix; _constraint_values = vector; }
 	Linear_LU_decomposition(){}
 	virtual ~Linear_LU_decomposition() {}
@@ -36,23 +35,23 @@ public:
 class Quadratic_Predictor_Corrector : public System_Solver {
 private:
 	mpf_class _largest_element;
-	std::vector < std::vector < double > > _interpolation_matrixD;
-	std::vector < std::vector < mpf_class > > _hessian_matrix;
-	std::vector < std::vector < mpf_class > > _interpolation_matrix;
-	std::vector < std::vector < mpf_class > > _equality_matrix;
-	std::vector < std::vector < mpf_class > > _inequality_matrix;
-	std::vector < mpf_class > _equality_vector;
-	std::vector < mpf_class > _inequality_vector;
-	std::vector < std::vector < mpf_class > > _convert_double_matrix_2_mpf(const std::vector < std::vector < double > > &matrix);
-	std::vector < mpf_class > _convert_double_vector_2_mpf(const std::vector <double > &vector);
-	std::vector < double> _convert_mpf_vector_2_double(const std::vector < mpf_class > &vector);
-	std::vector < std::vector <mpf_class > > _get_hessian_matrix(const std::vector < std::vector < mpf_class > > &matrix);
+	MatrixXd _interpolation_matrixD;
+	Matrix <mpf_class, Dynamic, Dynamic> _hessian_matrix;
+	Matrix <mpf_class, Dynamic, Dynamic> _interpolation_matrix;
+	Matrix <mpf_class, Dynamic, Dynamic> _equality_matrix;
+	Matrix <mpf_class, Dynamic, Dynamic> _inequality_matrix;
+	Matrix <mpf_class, Dynamic, 1> _equality_vector;
+	Matrix <mpf_class, Dynamic, 1> _inequality_vector;
+	Matrix <mpf_class, Dynamic, Dynamic> _convert_double_matrix_2_mpf(const MatrixXd &matrix);
+	Matrix <mpf_class, Dynamic, 1> _convert_double_vector_2_mpf(const VectorXd &vector);
+	VectorXd _convert_mpf_vector_2_double(const Matrix <mpf_class, Dynamic, 1> &vector);
+	Matrix <mpf_class, Dynamic, Dynamic> _get_hessian_matrix(const Matrix <mpf_class, Dynamic, Dynamic> &matrix);
 public:
-	Quadratic_Predictor_Corrector(const std::vector < std::vector < double > > &interpolation_matrix,
-			                        const std::vector < std::vector < double > > &equality_matrix,
-									const std::vector < std::vector < double > > &inequality_matrix,
-									const std::vector < double > equality_vector,
-									const std::vector < double > inequality_vector)
+	Quadratic_Predictor_Corrector(const MatrixXd &interpolation_matrix,
+		                          const MatrixXd &equality_matrix,
+								  const MatrixXd &inequality_matrix,
+								  const VectorXd equality_vector,
+								  const VectorXd inequality_vector)
 	{
 		_interpolation_matrixD = interpolation_matrix;
 		_interpolation_matrix = _convert_double_matrix_2_mpf(interpolation_matrix);
