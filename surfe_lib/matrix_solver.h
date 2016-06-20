@@ -6,6 +6,8 @@
 #include <vector>
 #include <Eigen/Core>
 
+using namespace Eigen;
+
 class System_Solver {
 public:
 	System_Solver(){}
