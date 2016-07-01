@@ -149,6 +149,7 @@ bool Single_Surface::setup_system_solver()
 		get_equality_values(equality_values);
 
 		MatrixXd interpolation_matrix(n_c,n_c);
+		interpolation_matrix.coe
 		if (!get_interpolation_matrix(interpolation_matrix)) return false;
 
 		MatrixXd inequality_matrix(n_ie,n_c);

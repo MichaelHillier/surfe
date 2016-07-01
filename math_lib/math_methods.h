@@ -187,7 +187,7 @@ template <class T>
 T Math_methods::_find_step_length(const Matrix <T, Dynamic, 1> &a, const Matrix <T, Dynamic, 1> &da,
 	const Matrix <T, Dynamic, 1> &b, const Matrix <T, Dynamic, 1> &db)
 {
-	int n = a.rows();
+	int n = (int)a.rows();
 	//if (a.rows() != b.rows() || a.rows() != da.rows() || a.rows() != db.rows() || da.rows() != db.rows()) throw -1;
 	// find step length (a) ... this is the most important step
 	// has to satisfy all the non-negativity conditions ...
@@ -275,9 +275,9 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 	// | T   0	     0   ||-dy| =  |     -ra     |
 	// | C   0 -Z^(-1)*S ||-dz|    |-rc-Z^(-1)rsz|
 
-	int n  = H.rows();
-	int na = A.rows();
-	int nc = C.rows();
+	int n = (int)H.rows();
+	int na = (int)A.rows();
+	int nc = (int)C.rows();
 
 	///////////////////////////////////////////////////////////////////////
 	/////////////////////////// Initialization ////////////////////////////
@@ -304,7 +304,6 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 	Matrix <T, Dynamic, 1> rsz(nc);
 	rsz.setZero();
 
-	std::vector<T> t1, t2, t3, t4, t5;
 	Matrix <T, Dynamic, 1> t1(n);
 	t1.setZero();
 	Matrix <T, Dynamic, 1> t2(n);
@@ -344,7 +343,6 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 	Matrix <T, Dynamic, 1> dvector(n + na + 2 * nc);
 	dvector.setZero();
 
-	std::vector < T > dx, dy, dz, ds, dvector_corr;
 	Matrix <T, Dynamic, 1> dx(n);
 	dx.setZero();
 	Matrix <T, Dynamic, 1> dy(na);
@@ -562,7 +560,7 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		for (int j = 0; j < n + na + 2 * nc; j++){
 			for (int k = 0; k < n + na + 2 * nc; k++) KKT_predictor(j,k) = KKT(j,k);
 		}
-		dvector = KKT_predictor.PartialPivLU().solve(solution_vector);
+		dvector = KKT_predictor.partialPivLu().solve(solution_vector);
 
 		// get step vectors...
 		for (int j = 0; j < nc; j++){
@@ -594,7 +592,7 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		for (int j = 0; j < n + na + 2 * nc; j++){
 			for (int k = 0; k < n + na + 2 * nc; k++) KKT_corrector(j,k) = KKT(j,k);
 		}
-		dvector_corr = KKT_corrector.partialPivLU().solve(solution_vector);
+		dvector_corr = KKT_corrector.partialPivLu().solve(solution_vector);
 
 		// get step vectors from corrector step...
 		for (int j = 0; j < n; j++){
