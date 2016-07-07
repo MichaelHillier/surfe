@@ -176,16 +176,16 @@ private:
 public:
 	Basic_input()
 	{
-		inequality = new std::vector<Inequality>();
-		itrface = new std::vector<Interface>();
-		planar = new std::vector<Planar>();
-		tangent = new std::vector<Tangent>();
+		inequality = new std::vector<Inequality>;
+		itrface = new std::vector<Interface>;
+		planar = new std::vector<Planar>;
+		tangent = new std::vector<Tangent>;
 
-		evaluation_pts = new std::vector<Evaluation_Point>();
+		evaluation_pts = new std::vector<Evaluation_Point>;
 
-		interface_iso_values = new std::vector<double>();
-		interface_point_lists = new std::vector< std::vector < Interface > >();
-		interface_test_points = new std::vector< Interface >();
+		interface_iso_values = new std::vector<double>;
+		interface_point_lists = new std::vector< std::vector < Interface > >;
+		interface_test_points = new std::vector< Interface >;
 
 		_avg_nn_dist_ie  = -99999.0; // no data value
 		_avg_nn_dist_itr = -99999.0; // no data value

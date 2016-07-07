@@ -224,28 +224,8 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm()
 		// debug: should output intermediate input constraints and modelled surface using those constraints
 		// if ( !greedy_method->_output_greedy_debug_objects()) return false;
 
-		// check topology : FUTURE
-
 		// add appropriate data based on residuals
 		if (!greedy_method->append_greedy_input(excluded_input)) converged = true; // if no input is added convergence is assumed
-		else
-		{
-			// We have to delete the data pointed to by greedy_method because some of that data    e.g. Lajaunie_Approach::_increment_pairs
-			// is incorrect since we added new data. Some of the data is private in the subclasses
-			// so we must delete all of it. This could be optimized in the future, but for now it
-			// is best that things are correct and stable
-			// Copy the necessary data...
-			std::vector<Inequality> *inequality = new std::vector<Inequality>(*greedy_method->b_input.inequality);
-			std::vector<Interface> *itrface     = new std::vector<Interface>(*greedy_method->b_input.itrface);
-			std::vector<Planar> *planar         = new std::vector<Planar>(*greedy_method->b_input.planar);
-			std::vector<Tangent> *tangent       = new std::vector<Tangent>(*greedy_method->b_input.tangent);
-			greedy_input.inequality = inequality;
-			greedy_input.itrface    = itrface;
-			greedy_input.planar     = planar;
-			greedy_input.tangent    = tangent;
-			delete greedy_method;
-			greedy_method = get_method(m_parameters,greedy_input);
-		}
 		iter++;
 		greedy_method->_SetIteration(iter);
 	}
@@ -254,6 +234,8 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm()
 	if (!greedy_method->evaluate_scalar_interpolant()) return false;
 
 	b_input.evaluation_pts = greedy_method->b_input.evaluation_pts;
+	b_input.interface_iso_values->clear();
+	b_input.interface_iso_values = new std::vector<double>(*greedy_method->b_input.interface_iso_values);
 
 	return true;
 } 

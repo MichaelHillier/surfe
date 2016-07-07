@@ -13,6 +13,13 @@ bool Basic_input::get_interface_data()
 {
 	if ((int)itrface->size() < 2) return false;
 
+	// For greedy algorithm this function can get called many times.
+	// Need to take some care and make sure we are not appending
+	// to existing lists. clear if necessary
+	if ((int)interface_iso_values->size()  != 0 ) interface_iso_values->clear(); // this is need for greedy, since this is called many times
+	if ((int)interface_point_lists->size() != 0 ) interface_point_lists->clear();
+	if ((int)interface_test_points->size() != 0 ) interface_test_points->clear();
+
 	_get_distinct_interface_iso_values();
 	_get_interface_points();
 

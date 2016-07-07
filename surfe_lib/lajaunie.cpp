@@ -142,6 +142,12 @@ bool Lajaunie_Approach::process_input_data()
 	else
 	{
 		if (!b_input.get_interface_data()) return false;
+
+		// For greedy algorithm this function can get called many times.
+		// Need to take some care and make sure we are not appending
+		// to existing _increment_pairs list. clear if necessary
+		if ((int)_increment_pairs->size() != 0 ) _increment_pairs->clear();
+
 		if (!_get_increment_pairs()) return false;
 	}
 	return true;
