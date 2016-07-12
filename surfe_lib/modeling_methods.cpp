@@ -2,9 +2,13 @@
 #include <modeling_methods.h>
 #include <matrix_solver.h>
 #include <basis.h>
+#include <single_surface.h>
+#include <lajaunie.h>
+#include <stratigraphic_surfaces.h>
+#include <continuous_property.h>
+
 #include <algorithm>
 #include <vector>
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -162,7 +166,7 @@ RBFKernel * GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF
 	}
 }
 
-bool Greedy_Method::_output_greedy_debug_objects()
+bool GRBF_Modelling_Methods::_output_greedy_debug_objects()
 {
 	if (solver == NULL) return false;
 	else
@@ -178,103 +182,34 @@ bool Greedy_Method::_output_greedy_debug_objects()
 	return true;
 }
 
-void Greedy_Method::_Compute_Avg_NN_Dist_Data()
+GRBF_Modelling_Methods * GRBF_Modelling_Methods::get_method( const model_parameters& m_parameters,const Basic_input& input )
 {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
-
-	// Give a thread to finding the avg NN dist for each data type
-	#pragma omp parallel sections
-	{
-		#pragma omp section
-		{
-			// for inequality points
-			for (int j = 0; j < n_ie; j++){
-				double min_dist = 10000000000000.0;
-				for (int k = 0; k < n_ie; k++){
-					if (k != j)
-					{
-						double dist = distance_btw_pts(b_input.inequality->at(j), b_input.inequality->at(k));
-						if (dist < min_dist) min_dist = dist;
-					}
-				}
-				if (n_ie == 1) min_dist = 0; // trap this edge case
-				_avg_nn_dist_ie += min_dist;
-			}
-			if (n_ie != 0) _avg_nn_dist_ie /= n_ie;
-		}
-		#pragma omp section
-		{
-			// for interface points
-			for (int j = 0; j < n_i; j++){
-				double min_dist = 10000000000000.0;
-				for (int k = 0; k < n_i; k++){
-					if (k != j)
-					{
-						double dist = distance_btw_pts(b_input.itrface->at(j), b_input.itrface->at(k));
-						if (dist < min_dist) min_dist = dist;
-					}
-				}
-				if (n_i == 1) min_dist = 0; // trap this edge case
-				_avg_nn_dist_itr += min_dist;
-			}
-			if (n_i != 0) _avg_nn_dist_itr /= n_i;
-		}
-		#pragma omp section
-		{
-			// for planar points
-			for (int j = 0; j < n_p; j++){
-				double min_dist = 10000000000000.0;
-				for (int k = 0; k < n_p; k++){
-					if (k != j)
-					{
-						double dist = distance_btw_pts(b_input.planar->at(j), b_input.planar->at(k));
-						if (dist < min_dist) min_dist = dist;
-					}
-				}
-				if (n_p == 1) min_dist = 0; // trap this edge case
-				_avg_nn_dist_p += min_dist;
-			}
-			if (n_p != 0) _avg_nn_dist_p /= n_p;
-		}
-		#pragma omp section
-		{
-			// for tangent points
-			for (int j = 0; j < n_t; j++){
-				double min_dist = 10000000000000.0;
-				for (int k = 0; k < n_t; k++){
-					if (k != j)
-					{
-						double dist = distance_btw_pts(b_input.tangent->at(j), b_input.tangent->at(k));
-						if (dist < min_dist) min_dist = dist;
-					}
-				}
-				if (n_t == 1) min_dist = 0; // trap this edge case
-				_avg_nn_dist_t += min_dist;
-			}
-			if (n_t != 0) _avg_nn_dist_t /= n_t;
-		}
-	}
+	if (m_parameters.model_type == Parameter_Types::Single_surface) return new Single_Surface(m_parameters,input);
+	else if (m_parameters.model_type == Parameter_Types::Lajaunie_approach) return new Lajaunie_Approach(m_parameters,input);
+	else if (m_parameters.model_type == Parameter_Types::Stratigraphic_horizons) return new Stratigraphic_Surfaces(m_parameters,input);
+	else return new Continuous_Property(m_parameters,input);
 }
 
-bool Greedy_Method::run_greedy_algorithm()
+bool GRBF_Modelling_Methods::run_greedy_algorithm()
 {
 	// check if there are non-zero errors permitted on the data
 	if (m_parameters.interface_slack == 0 && m_parameters.gradient_slack == 0) return false;
-	Greedy_Method *greedy_method = this->clone();
 
-	greedy_method->_Compute_Avg_NN_Dist_Data();
+	GRBF_Modelling_Methods *greedy_method = get_method(m_parameters,b_input);
+
+	greedy_method->b_input.compute_avg_nn_distances();
 
 	Basic_input greedy_input, excluded_input;
 	// initialize starting data
 	if (!get_minimial_and_excluded_input(greedy_input, excluded_input)) return false;
+	greedy_input.SetInequalityAvgNNDist(greedy_method->b_input.GetInequalityAvgNNDist());
+	greedy_input.SetInterfaceAvgNNDist(greedy_method->b_input.GetInterfaceAvgNNDist());
+	greedy_input.SetPlanarAvgNNDist(greedy_method->b_input.GetPlanarAvgNNDist());
+	greedy_input.SetTangentAvgNNDist(greedy_method->b_input.GetTangentAvgNNDist());
 	greedy_method->b_input = greedy_input;
-	greedy_method->b_input.evaluation_pts = b_input.evaluation_pts;
 
 	bool converged = false;
-	_iteration = 0;
+	int iter = 0;
 	while (!converged)
 	{
 		// run normal algorithm
@@ -289,17 +224,18 @@ bool Greedy_Method::run_greedy_algorithm()
 		// debug: should output intermediate input constraints and modelled surface using those constraints
 		// if ( !greedy_method->_output_greedy_debug_objects()) return false;
 
-		// check topology : FUTURE
-
 		// add appropriate data based on residuals
 		if (!greedy_method->append_greedy_input(excluded_input)) converged = true; // if no input is added convergence is assumed
-		else delete greedy_method->solver; // clean up pointers since a new one gets allocated in setup_system_solver()
-		_iteration++;
+		iter++;
+		greedy_method->_SetIteration(iter);
 	}
 
+	greedy_method->b_input.evaluation_pts = b_input.evaluation_pts;
 	if (!greedy_method->evaluate_scalar_interpolant()) return false;
 
 	b_input.evaluation_pts = greedy_method->b_input.evaluation_pts;
+	b_input.interface_iso_values->clear();
+	b_input.interface_iso_values = new std::vector<double>(*greedy_method->b_input.interface_iso_values);
 
 	return true;
-}
+} 

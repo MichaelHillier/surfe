@@ -5,7 +5,7 @@
 
 #include "modeling_methods.h"
 
-class SURFE_LIB_EXPORT Lajaunie_Approach : public Greedy_Method {
+class SURFE_LIB_EXPORT Lajaunie_Approach : public GRBF_Modelling_Methods {
 private:
 	int _n_increment_pair;
 	bool _get_polynomial_matrix_block(std::vector< std::vector <double> > &poly_matrix);
@@ -28,7 +28,7 @@ public:
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input);
 	bool measure_residuals(Basic_input &input);
 	bool append_greedy_input(Basic_input &input);
-	Greedy_Method *clone() { return new Lajaunie_Approach(*this); }
+	GRBF_Modelling_Methods *clone() { return new Lajaunie_Approach(*this); }
 	// Attributes
 	Polynomial_Basis *p_basis;
 };

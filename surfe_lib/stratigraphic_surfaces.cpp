@@ -133,10 +133,6 @@ Stratigraphic_Surfaces::Stratigraphic_Surfaces(const model_parameters& m_p, cons
 	_n_sequenced_inequality_pairs = 0;
 	_n_interface_pairs = 0;
 
-	_avg_nn_dist_ie = 0;
-	_avg_nn_dist_p = 0;
-	_avg_nn_dist_itr = 0;
-	_avg_nn_dist_t = 0;
 	_iteration = 0;
 }
 

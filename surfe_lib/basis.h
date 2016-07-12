@@ -89,7 +89,7 @@ public:
 
 class Cubic : public RBFKernel {
 public:
-	virtual ~Cubic(){}
+	~Cubic(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable

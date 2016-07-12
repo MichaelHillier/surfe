@@ -6,7 +6,7 @@
 #include <modeling_methods.h>
 
 
-class SURFE_LIB_EXPORT Vector_Field : public Greedy_Method {
+class SURFE_LIB_EXPORT Vector_Field : public GRBF_Modelling_Methods {
 public:
 	// Constructor/Destructor
 	Vector_Field(const model_parameters& m_p, const Basic_input& basic_i) 
@@ -14,10 +14,6 @@ public:
 		m_parameters = m_p; 
 		b_input = basic_i; 
 
-		_avg_nn_dist_ie = 0;
-		_avg_nn_dist_p = 0;
-		_avg_nn_dist_itr = 0;
-		_avg_nn_dist_t = 0;
 		_iteration = 0;
 	}
 	~Vector_Field(){};
@@ -32,7 +28,7 @@ public:
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) { return true; } // TO implement
 	bool measure_residuals(Basic_input &input) { return true; } // TO implement
 	bool append_greedy_input(Basic_input &input) { return true; } // TO implement
-	Greedy_Method *clone() { return new Vector_Field(*this); }
+	GRBF_Modelling_Methods *clone() { return new Vector_Field(*this); }
 };
 
 #endif
