@@ -214,9 +214,20 @@ inline double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const std::vector < Point > &pts1, const std::vector < Point > &pts2);
+bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector< Point> &pts, int (&TwoIndexes)[2]);
+int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &p, const std::vector< Point > &pts, const double &dist);
 void calculate_bounds(const std::vector< Point > &pts, double (&bounds)[6]);
 std::vector<int> get_extremal_point_data_indices_from_points(const std::vector< Point > &pts);
 bool is_index_in_list(const int &index, const std::vector < int > &list);
 bool find_fill_distance(const Basic_input &input, double &fill_distance);
+// The below functions will intelligently* get the indices within the STL vector of points that have large residuals
+// Intelligently* : Doesn't blindly capture all points with large residuals 
+//                 - Considers the magnitude of the residuals
+//                 - Considers the distance to other large residual points
+//                 - Considers the variability with close large residual points
+std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const std::vector<Inequality> *inequality, const double &avg_nn_distance );
+std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std::vector<Interface> *itrface, const double &itrface_uncertainty, const double &avg_nn_distance );
+std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::vector<Planar> *planar, const double &angular_uncertainty, const double &avg_nn_distance );
+std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::vector<Tangent> *tangent, const double &angular_uncertainty, const double &avg_nn_distance );
 
 #endif

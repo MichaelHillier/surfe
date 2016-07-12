@@ -109,6 +109,12 @@ Lajaunie_Approach::Lajaunie_Approach(const model_parameters& m_p, const Basic_in
 	b_input = basic_i;
 
 	_increment_pairs = new std::vector < std::vector < Point > >();
+	_n_increment_pair = 0;
+	_avg_nn_dist_ie = 0;
+	_avg_nn_dist_p = 0;
+	_avg_nn_dist_itr = 0;
+	_avg_nn_dist_t = 0;
+	_iteration = 0;
 }
 
 bool Lajaunie_Approach::get_method_parameters()
@@ -160,6 +166,201 @@ bool Lajaunie_Approach::setup_system_solver()
 	if (!_update_interface_iso_values()) return false;
 
 	return true;
+}
+
+bool Lajaunie_Approach::get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input)
+{
+	// get minimial number of interface points from each interface
+	// First find the horizon with the largest number of points, from this get 3 points that are well separated
+	// For the other horizons, get two points that are well separated
+
+	// Find horizon with largest number of points -- ref_index
+	int ref_index = -1;
+	int largest_num_of_points = 0;
+	for (int j = 0; j < (int)b_input.interface_point_lists->size(); j++){
+		int num_of_points = (int)b_input.interface_point_lists->at(j).size();
+		if (num_of_points > largest_num_of_points)
+		{
+			largest_num_of_points = num_of_points;
+			ref_index = j;
+		}
+	}
+	// put all of the points from the horizon with the largest num of points in a Point vector for distance analysis routines
+	std::vector< Point > dense_horizon (b_input.interface_point_lists->at(ref_index).begin(), b_input.interface_point_lists->at(ref_index).end());
+	// find the two points that are furtherest from each other from this horizon
+	int TwoIndexes[2];
+	double largest_separation_distance = 0;
+	if (!Find_STL_Vector_Indices_FurtherestTwoPoints(dense_horizon, TwoIndexes)) largest_separation_distance = distance_btw_pts(dense_horizon[TwoIndexes[0]],dense_horizon[TwoIndexes[1]]); // get the distance btw these points 
+	else return false;
+
+	int ThirdIndex = Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(dense_horizon[TwoIndexes[0]], dense_horizon, largest_separation_distance / 2); // get the third point that is well separated from the other two points
+	std::vector< int > dense_horizon_indices;
+	dense_horizon_indices.push_back(TwoIndexes[0]);
+	dense_horizon_indices.push_back(TwoIndexes[1]);
+	dense_horizon_indices.push_back(ThirdIndex);
+
+	std::vector< Point > cur_included_pts; // temp container for holding minimial well separated interface points from many different horizons
+	for (int j = 0; j < 3; j++) cur_included_pts.push_back(dense_horizon[dense_horizon_indices[j]]);
+
+	for (int j = 0; j < (int)b_input.interface_point_lists->size(); j++){
+		if (j != ref_index) // already processed horizon b_input.interface_point_lists[ref_index]
+		{
+			// find a point in these horizon that is the furthest from the already included points
+			std::vector< Point > j_horizon(b_input.interface_point_lists->at(j).begin(), b_input.interface_point_lists->at(j).end());
+			int index1 = furtherest_neighbour_index(j_horizon, cur_included_pts);
+			cur_included_pts.push_back(j_horizon[index1]);
+			// find a point that is furthest from the index1 point
+			int index2 = furtherest_neighbour_index(j_horizon[index1], j_horizon);
+			cur_included_pts.push_back(j_horizon[index2]);
+		}
+	}
+
+
+	// fill the data structures greedy_input & excluded_input 
+	for (int j = 0; j < (int)b_parameters.n_interface; j++){
+		bool exclude_index = true;
+		for (int k = 0; k < (int)cur_included_pts.size(); k++){
+			if (b_input.itrface->at(j).x() == cur_included_pts[k].x() &&
+				b_input.itrface->at(j).y() == cur_included_pts[k].y() &&
+				b_input.itrface->at(j).z() == cur_included_pts[k].z())
+			{
+				exclude_index = false;
+				greedy_input.itrface->push_back(b_input.itrface->at(j));
+				break;
+			}
+		}
+		if (exclude_index) excluded_input.itrface->push_back(b_input.itrface->at(j));
+	}
+
+	greedy_input.planar->push_back(b_input.planar->at(0));
+	for (int j = 1; j < (int)b_parameters.n_planar; j++) excluded_input.planar->push_back(b_input.planar->at(j));
+	for (int j = 0; j < (int)b_parameters.n_tangent; j++) excluded_input.tangent->push_back(b_input.tangent->at(j));
+
+	return true;
+}
+
+bool Lajaunie_Approach::measure_residuals(Basic_input &input)
+{
+	if (solver == NULL) return false;
+
+#pragma omp parallel sections
+	{
+#pragma omp section
+		{
+			// interface points - These are a bit special in the way to compute residuals b/c these points are used as increment constraints
+			for (int j = 0; j < (int)input.itrface->size(); j++){
+				// what is the reference level
+				double reference_level = input.itrface->at(j).level();
+				// find a reference point in interface_test_points[] that has the same reference level
+				double actual_level_value;
+				for (int k = 0; k < (int)input.interface_test_points->size(); k++){
+					if (input.interface_test_points->at(k).level() == reference_level)
+					{
+						eval_scalar_interpolant_at_point(input.interface_test_points->at(k));
+						actual_level_value = input.interface_test_points->at(k).scalar_field(); // this is the value it should be
+					}
+				}
+				eval_scalar_interpolant_at_point(input.itrface->at(j));
+				input.itrface->at(j).setResidual(abs(input.itrface->at(j).scalar_field() - actual_level_value));
+			}
+		}
+#pragma omp section
+		{
+			// planar points
+			for (int j = 0; j < (int)input.planar->size(); j++){
+				eval_vector_interpolant_at_point(input.planar->at(j));
+				double angle = 0.0;
+				std::vector<double> v1;
+				std::vector<double> v2;
+				v1.push_back(input.planar->at(j).nx());
+				v1.push_back(input.planar->at(j).ny());
+				v1.push_back(input.planar->at(j).nz());
+				v2.push_back(input.planar->at(j).nx_interp());
+				v2.push_back(input.planar->at(j).ny_interp());
+				v2.push_back(input.planar->at(j).nz_interp());
+				Math_methods::angle_btw_2_vectors(v1, v2, angle);
+				input.planar->at(j).setResidual(angle);
+			}
+		}
+#pragma omp section
+		{
+			// tangent points
+			for (int j = 0; j < (int)input.tangent->size(); j++){
+				eval_vector_interpolant_at_point(input.tangent->at(j));
+				double angle = 0.0;
+				std::vector<double> v1;
+				std::vector<double> v2;
+				v1.push_back(input.tangent->at(j).tx());
+				v1.push_back(input.tangent->at(j).ty());
+				v1.push_back(input.tangent->at(j).tz());
+				v2.push_back(input.tangent->at(j).nx_interp());
+				v2.push_back(input.tangent->at(j).ny_interp());
+				v2.push_back(input.tangent->at(j).nz_interp());
+				Math_methods::angle_btw_2_vectors<double>(v1, v2, angle);
+				input.planar->at(j).setResidual(angle);
+			}
+		}
+	}
+}
+
+bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
+{
+	// This function can most likely be promoted the the Greedy parent class
+	// Below section can be a lot of computations - leverage parallelism 
+	std::vector<int> planar_indices_to_include; // PLANAR Observations
+	std::vector<int> tangent_indices_to_include; // TANGENT Observations
+	std::vector<int> interface_indices_to_include; // INTERFACE Observations
+	std::vector<int> inequality_indices_to_include; // INEQUALITIES Observations
+	// For the first iteration only consider adding additional planar constraints
+	// These additional constraints could force large changes in the scalar field
+	// which could consequently pass closely to interface points not yet included
+	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+	else
+	{
+#pragma omp parallel sections 
+		{
+#pragma omp section
+			{
+				// PLANAR Observations
+				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, _avg_nn_dist_p);
+			}
+#pragma omp section
+			{
+				// TANGENT Observations
+				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, _avg_nn_dist_t);
+			}
+#pragma omp section
+			{
+				// INTERFACE Observations
+				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, _avg_nn_dist_itr);
+			}
+#pragma omp section
+			{
+				// INEQUALITIES Observations
+				inequality_indices_to_include = Get_Inequality_STL_Vector_Indices_With_Large_Residuals(input.inequality, _avg_nn_dist_ie);
+			}
+		}
+	}
+
+	int pI2i = (int)planar_indices_to_include.size();
+	int tI2i = (int)tangent_indices_to_include.size();
+	int itrI2i = (int)interface_indices_to_include.size();
+	int ieI2i = (int)inequality_indices_to_include.size();
+
+	// Add to current greedy input
+	for (int j = 0; j < pI2i; j++) this->b_input.planar->push_back(input.planar->at(planar_indices_to_include[j]));
+	for (int j = 0; j < tI2i; j++) this->b_input.tangent->push_back(input.tangent->at(tangent_indices_to_include[j]));
+	for (int j = 0; j < itrI2i; j++) this->b_input.itrface->push_back(input.itrface->at(interface_indices_to_include[j]));
+	for (int j = 0; j < ieI2i; j++) this->b_input.inequality->push_back(input.inequality->at(inequality_indices_to_include[j]));
+
+	// Remove data from input so that residuals do not have to be measured at locations where the constraints are supplied
+	for (int j = 0; j < pI2i; j++) input.planar->erase(input.planar->begin() + planar_indices_to_include[j]);
+	for (int j = 0; j < tI2i; j++) input.tangent->erase(input.tangent->begin() + tangent_indices_to_include[j]);
+	for (int j = 0; j < itrI2i; j++) input.itrface->erase(input.itrface->begin() + interface_indices_to_include[j]);
+	for (int j = 0; j < ieI2i; j++) input.inequality->erase(input.inequality->begin() + inequality_indices_to_include[j]);
+
+	if (pI2i != 0 || tI2i != 0 || itrI2i != 0 || ieI2i != 0) return true;
+	else return false;
 }
 
 bool Lajaunie_Approach::get_equality_values( std::vector<double> &equality_values )

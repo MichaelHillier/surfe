@@ -5,7 +5,7 @@
 
 #include <modeling_methods.h>
 
-class SURFE_LIB_EXPORT Stratigraphic_Surfaces : public GRBF_Modelling_Methods {
+class SURFE_LIB_EXPORT Stratigraphic_Surfaces : public Greedy_Method {
 private:
 	// Methods
 	bool _get_increment_pairs();
@@ -34,8 +34,8 @@ public:
 	bool setup_system_solver();
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) { return true; } // TO implement
 	bool measure_residuals(Basic_input &input) { return true; } // TO implement
-	bool append_greedy_input(const Basic_input &input) { return true; } // TO implement
-	GRBF_Modelling_Methods *clone() {return new Stratigraphic_Surfaces(*this);}
+	bool append_greedy_input(Basic_input &input) { return true; } // TO implement
+	Greedy_Method *clone() { return new Stratigraphic_Surfaces(*this); }
 	// Attributes
 	Polynomial_Basis *p_basis;
 };

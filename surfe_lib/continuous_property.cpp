@@ -88,6 +88,12 @@ Continuous_Property::Continuous_Property(const model_parameters& m_p, const Basi
 	// set GUI parameters and basic input (inequality, interface, planar, tangent) data members to class
 	m_parameters = m_p;
 	b_input = basic_i;
+
+	_avg_nn_dist_ie = 0;
+	_avg_nn_dist_p = 0;
+	_avg_nn_dist_itr = 0;
+	_avg_nn_dist_t = 0;
+	_iteration = 0;
 }
 
 
@@ -220,7 +226,7 @@ bool Continuous_Property::measure_residuals( Basic_input &input )
 	return true;
 }
 
-bool Continuous_Property::append_greedy_input( const Basic_input &input )
+bool Continuous_Property::append_greedy_input(Basic_input &input )
 {
 	// planar > tangent > interface > inequalities
 

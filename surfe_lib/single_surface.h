@@ -5,7 +5,7 @@
 
 #include <modeling_methods.h>
 
-class SURFE_LIB_EXPORT Single_Surface : public GRBF_Modelling_Methods {
+class SURFE_LIB_EXPORT Single_Surface : public Greedy_Method {
 private:
 	bool _get_polynomial_matrix_block(std::vector< std::vector <double> > &poly_matrix);
 	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const std::vector< std::vector <double> > &poly_matrix, std::vector< std::vector <double> > &interpolation_matrix);
@@ -26,8 +26,8 @@ public:
 	bool setup_system_solver();
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input);
 	bool measure_residuals(Basic_input &input);
-	bool append_greedy_input(const Basic_input &input);
-	GRBF_Modelling_Methods *clone() {return new Single_Surface(*this);}
+	bool append_greedy_input(Basic_input &input);
+	Greedy_Method *clone() { return new Single_Surface(*this); }
 	// Attributes
 	Polynomial_Basis *p_basis;
 };
