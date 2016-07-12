@@ -207,6 +207,31 @@ public:
 	virtual MQ *clone() { return new MQ(*this); }
 };
 
+class MQ3 : public RBFKernel {
+private:
+	double _c;
+public:
+	MQ3(const double &shape_parameter) { _c = shape_parameter; }
+	~MQ3(){}
+	double basis();
+	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1(); // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2();
+	double dz_p1();
+	double dz_p2();
+	double dxx();
+	double dxy();
+	double dxz();
+	double dyx();
+	double dyy();
+	double dyz();
+	double dzx();
+	double dzy();
+	double dzz();
+	virtual MQ3 *clone() { return new MQ3(*this); }
+};
+
 class AMQ : public RBFKernel {
 private:
 	double _shape_parameter;
