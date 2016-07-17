@@ -375,24 +375,48 @@ double distance_btw_pts( const Point &p1, const Point &p2 )
 
 int nearest_neighbour_index( const Point &p, const std::vector < Point > &pts )
 {
-	// following is a bit more elaborate than it could be 
-	// because p could be in the list pts[]. In that case
-	// you will want to have the next nearest neighbour
+	double min_distance = DBL_MAX;
+	int index = -1; // if this is actually returned by this function a seg fault will result
 
-	// calculate all the distances + create index array
+	// calculate all non-zero distances
+	for (int j = 0; j < (int)pts.size(); j++ ){
+		double distance = distance_btw_pts(p, pts[j]);
+		if (distance != 0) // in case p is in the set of pts
+		{
+			if (distance < min_distance)
+			{
+				min_distance = distance;
+				index = j;
+			}
+		}
+	}
+
+	return index;
+}
+std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p, const std::vector < Point > &pts)
+{
+	std::vector<int> nn_indices;
+
+	int n_pts = (int)pts.size();
+
+	// calculate all non-zero distances + create index array
 	std::vector < double > dist_arr;
 	std::vector < int > index_arr;
-	for (int j = 0; j < (int)pts.size(); j++ ){
-		dist_arr.push_back( distance_btw_pts(p, pts[j]));
-		index_arr.push_back(j);
+	for (int j = 0; j < (int)pts.size(); j++){
+		double distance = distance_btw_pts(p, pts[j]);
+		if (distance != 0)
+		{
+			dist_arr.push_back(distance);
+			index_arr.push_back(j);
+		}
 	}
 	// sort distances and corresponding indicies 
-	Math_methods::sort_vector_w_index(dist_arr,index_arr); // smallest to largest
+	Math_methods::sort_vector_w_index(dist_arr, index_arr); // smallest to largest
 
-	for (int j = 0; j < (int)pts.size(); j++ ){
-		if ( dist_arr[j] != 0 ) return index_arr[j];
-	}
-	return -1;
+	if ( n <= n_pts ) for (int j = 0; j < n; j++) nn_indices.push_back(index_arr[j]);
+	else for (int j = 0; j < n_pts; j++) nn_indices.push_back(index_arr[j]); // will return less than n nn index. best option vs getting seg fault
+
+	return nn_indices;
 }
 
 int furtherest_neighbour_index( const Point &p, const std::vector < Point > &pts )

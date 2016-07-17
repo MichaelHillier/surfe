@@ -216,7 +216,8 @@ public:
 	std::vector < double > *interface_iso_values;
 	std::vector < std::vector < Interface > > *interface_point_lists;
 	std::vector < Interface > *interface_test_points;
-	bool get_interface_data();
+	bool get_interface_data(); // fills interface_iso_values, interface_point_lists, interface_test_points data structures
+	bool get_local_anisotropy() { return true; } // TO IMPLEMENT using planar data extract local tensors for every planar point. 
 
 	// spatial analysis
 	double compute_inequality_avg_nn_distance();
@@ -236,6 +237,7 @@ public:
 
 inline double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector < Point > &pts);
+std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const std::vector < Point > &pts1, const std::vector < Point > &pts2);
 double avg_nn_distance(const std::vector < Point > &pts);

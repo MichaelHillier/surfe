@@ -10,7 +10,10 @@ protected:
 	Point *_p1;
 	Point *_p2;
 public:
+	virtual ~Kernel(){}
 	void set_points(Point& point1, Point& point2) { _p1 = &point1; _p2 = &point2; }
+	void set_center(Point& center) { _p2 = &center; }
+	void set_evaluation_points(Point &eval_pt) { _p1 = &eval_pt; }
 	Point *p1() const { return _p1; }
 	Point *p2() const { return _p2; }
 	virtual double basis_pt_pt() = 0;
@@ -112,7 +115,7 @@ public:
 class ACubic : public RBFKernel {
 public:
 	ACubic(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
-	virtual ~ACubic(){}
+	~ACubic(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -137,7 +140,7 @@ private:
 	double _shape_parameter;
 public:
 	Gaussian(const double& shape_parameter) { _shape_parameter = shape_parameter; }
-	virtual ~Gaussian(){}
+	~Gaussian(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -162,7 +165,7 @@ private:
 	double _shape_parameter;
 public:
 	AGaussian(const double &shape_parameter, const std::vector<Planar> &planar) { _shape_parameter = shape_parameter; get_global_anisotropy(planar); }
-	virtual ~AGaussian(){}
+	~AGaussian(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -187,7 +190,7 @@ private:
 	double _shape_parameter;
 public:
 	MQ(const double &shape_parameter) { _shape_parameter = shape_parameter; }
-	virtual ~MQ(){}
+	~MQ(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -237,7 +240,7 @@ private:
 	double _shape_parameter;
 public:
 	AMQ(const double &shape_parameter, const std::vector<Planar> &planar) { _shape_parameter = shape_parameter; get_global_anisotropy(planar); }
-	virtual ~AMQ(){}
+	~AMQ(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -259,7 +262,7 @@ public:
 
 class TPS : public RBFKernel {
 public:
-	virtual ~TPS(){}
+	~TPS(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -282,7 +285,7 @@ public:
 class ATPS : public RBFKernel {
 public:
 	ATPS(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
-	virtual ~ATPS(){}
+	~ATPS(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -307,7 +310,7 @@ private:
 	double _shape_parameter;
 public:
 	IMQ(const double& shape_parameter) { _shape_parameter = shape_parameter; }
-	virtual ~IMQ(){}
+	~IMQ(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -332,7 +335,7 @@ private:
 	double _shape_parameter;
 public:
 	AIMQ(const double &shape_parameter, const std::vector<Planar> &planar) { _shape_parameter = shape_parameter; get_global_anisotropy(planar); }
-	virtual ~AIMQ(){}
+	~AIMQ(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -354,7 +357,7 @@ public:
 
 class R : public RBFKernel {
 public:
-	virtual ~R(){}
+	~R(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
@@ -377,7 +380,7 @@ public:
 class AR : public RBFKernel {
 public:
 	AR(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
-	virtual ~AR(){}
+	~AR(){}
 	double basis();
 	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
 	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
