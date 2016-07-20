@@ -17,7 +17,7 @@ bool Linear_LU_decomposition::solve()
 bool Linear_LU_decomposition::validate_matrix_systems()
 {
 	// check if there are any NaN or INF values
-	if (_interpolation_matrix.allFinite) return true;
+	if (_interpolation_matrix.allFinite()) return true;
 	else return false;
 
 	// the other potential problem could be the input has un-initialized values in it.
@@ -92,7 +92,7 @@ bool Quadratic_Predictor_Corrector::solve()
 
 bool Quadratic_Predictor_Corrector::validate_matrix_systems()
 {
-	if (!_interpolation_matrixD.allFinite) return false;
+	if (!_interpolation_matrixD.allFinite()) return false;
 
 	LLT<MatrixXd> lltofMatrix(_interpolation_matrixD);
 	if (lltofMatrix.info() == NumericalIssue) return false;

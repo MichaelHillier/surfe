@@ -4,11 +4,13 @@
 #include <gmpxx.h>
 
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <fstream>
 #include <algorithm>
 #include <Eigen/Core>
 #include <Eigen/Dense>
-
-#define SQR(x)   ((x)*(x)) // x^2
+#include <Eigen/Eigenvalues>
 
 using namespace Eigen;
 
@@ -17,23 +19,10 @@ private:
 	template <class T> static T _find_step_length(const Matrix <T, Dynamic, 1> &a, const Matrix <T, Dynamic, 1> &da,
 		const Matrix <T, Dynamic, 1> &b, const Matrix <T, Dynamic, 1> &db);
 	template <class T> static void _rot(std::vector< std::vector < T > > &a, const T &s, const T &tau, const int &i, const int &j, const int &k, const int &l);
-	// convenience functions for debugging ...
-	static void _output_matrix(const std::vector < std::vector < double > > & matrix, const std::string &filename);
-	static void _output_matrix(const std::vector < std::vector < mpf_class > > & matrix, const std::string &filename);
-	static void _output_vector(const std::vector<mpf_class > &vector, const std::string &filename);
-	static void _output_vector(const std::vector<double > &vector, const std::string &filename);
 	static double _get_double(const double &d) { return d;}
 	static double _get_double(const mpf_class &d) { return d.get_d(); }
 public:
 	template <class T> static bool sort_vector_w_index(std::vector<T> &arr, std::vector<int> &brr);
-	template <class T> static bool eigenanalysis( std::vector < std::vector <T> > &A, std::vector < std::vector < T > > &Q, std::vector< T > &w);
-	template <class T> static bool ludcmp(std::vector< std::vector < T > > &a, std::vector<int> &indx, T &d); 
-	template <class T> static void lubksb(std::vector< std::vector < T > > &a, std::vector<int> &indx, std::vector<T> &b);
-	template <class T> static bool solve_sym_linear_system_via_LU_dcmp(std::vector< std::vector <T> > &a, std::vector <T> &b);
-	template <class T> static std::vector< std::vector < T > > make_std_matrix(const int &rows, const int&cols);
-	template <class T> static T find_max_element_in_matrix(const std::vector < std::vector < T > > &mat);
-	template <class T> static std::vector< std::vector < T > > matrix_transpose(const std::vector < std::vector < T > > &mat);
-	template <class T> static bool matrix_vector_multiply(const std::vector < std::vector < T > > &A, const std::vector< T > &b, std::vector < T > &c);
 	template <class T> static T max_element_wrt_zero(const T &a, const T &b);
 	template <class T> static void SWAP(T &a, T &b){ T x = a; a = b; b = x; }
 	template <class T> static bool angle_btw_2_vectors( const std::vector < T > &v1, const std::vector < T > &v2, T &angle);
@@ -65,101 +54,6 @@ bool Math_methods::angle_btw_2_vectors( const std::vector < T > &v1, const std::
 }
 
 template <class T>
-void Math_methods::_rot( std::vector< std::vector < T > > &a, const T &s, const T &tau, const int &i, const int &j, const int &k, const int &l )
-{
-	T g,h;
-
-	g=a[i][j];
-	h=a[k][l];
-	a[i][j]=g-s*(h+g*tau); // if T is mpf_class type then explosion could happen here. Maybe do explicit cast from int to mpf_class ?
-	a[k][l]=h+s*(g-h*tau);
-}
-
-template <class T>
-bool Math_methods::eigenanalysis( std::vector < std::vector <T> > &A, std::vector < std::vector < T > > &Q, std::vector< T > &w )
-{
-	// computation via Jacobi method.
-
- 	// check is matrix a is square
- 	const int n = (int)A.size();
- 	for (int j = 0; j < n; j++ ){
- 		if ((int)A[j].size() != n ) return false;
- 	}
-
-	T tresh,theta,tau,t,sm,s,h,g,c;
-
-	std::vector<T> b;
-	b.resize(n);
-	std::vector<T> z;
-	z.resize(n);
-	for (int ip=0;ip<n;ip++) {
-		for (int iq=0;iq<n;iq++) Q[ip][iq]=0.0;
-		Q[ip][ip]=1.0;
-	}
-	for (int ip=0;ip<n;ip++) {
-		b[ip]=w[ip]=A[ip][ip];
-		z[ip]=0.0;
-	}
-	int nrot=0;
-	for (int i=1;i<=50;i++) {
-		sm=0.0;
-		for (int ip=0;ip<n-1;ip++) {
-			for (int iq=ip+1;iq<n;iq++)
-				sm += abs(A[ip][iq]);
-		}
-		if (sm == 0.0)
-			return 0;
-		if (i < 4)
-			tresh=0.2*sm/(n*n);
-		else
-			tresh=0.0;
-		for (int ip=0; ip<n-1; ip++) {
-			for (int iq=ip+1; iq<n; iq++) {
-				g=100.0*abs(A[ip][iq]);
-				if (i > 4 && (abs(w[ip])+g) == abs(w[ip])
-					&& (abs(w[iq])+g) == abs(w[iq]))
-					A[ip][iq]=0.0;
-				else if (abs(A[ip][iq]) > tresh) {
-					h=w[iq]-w[ip];
-					if ((abs(h)+g) == abs(h))
-						t=(A[ip][iq])/h;
-					else {
-						theta=0.5*h/(A[ip][iq]);
-						t=1.0/(abs(theta)+sqrt(1.0+theta*theta));
-						if (theta < 0.0) t = -t;
-					}
-					c=1.0/sqrt(1+t*t);
-					s=t*c;
-					tau=s/(1.0+c);
-					h=t*A[ip][iq];
-					z[ip] -= h;
-					z[iq] += h;
-					w[ip] -= h;
-					w[iq] += h;
-					A[ip][iq]=0.0;
-					for (int j=0; j<ip; j++)
-						_rot(A,s,tau,j,ip,j,iq);
-					for (int j=ip+1; j<iq; j++)
-						_rot(A,s,tau,ip,j,j,iq);
-					for (int j=iq+1; j<n; j++)
-						_rot(A,s,tau,ip,j,iq,j);
-					for (int j=0; j<n; j++)
-						_rot(Q,s,tau,j,ip,j,iq);
-					++nrot;
-				}
-			}
-		}
-		for (int ip=0; ip<n; ip++) {
-			b[ip] += z[ip];
-			w[ip]=b[ip];
-			z[ip]=0.0;
-		}
-	}
-
-	return true;
-}
-
-template <class T>
 T Math_methods::max_element_wrt_zero( const T &a, const T &b)
 {
 	T max_value = a;
@@ -168,19 +62,6 @@ T Math_methods::max_element_wrt_zero( const T &a, const T &b)
 	if (c > max_value) max_value = c;
 	
 	return max_value;
-}
-
-template <class T>
-T Math_methods::find_max_element_in_matrix( const std::vector < std::vector < T > > &mat )
-{
-	if ((int)mat[0].size() == 0) throw -1;
-	T max_element = mat[0][0];
-	for (int j = 0; j < (int)mat.size(); j++ ){
-		for (int k = 0; k < (int)mat[j].size(); k++ ){
-			if (mat[j][k] > max_element) max_element = mat[j][k];
-		}
-	}
-	return max_element;
 }
 
 template <class T>
@@ -614,143 +495,6 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		for (int j = 0; j < nc; j++) s(j) += alpha*ds(j);
 		iter++;
 	}
-	return true;
-}
-
-template <class T>
-bool Math_methods::matrix_vector_multiply( const std::vector < std::vector < T > > &A, const std::vector< T > &b, std::vector < T > &c )
-{
-	int nrows = (int)A.size();
-	int ncols = (int)A[0].size();
-	int nvrows= (int)b.size();
-	if (nvrows != ncols) return false;
-
-	for (int j=0;j<nrows;j++){
-		T elemsum = 0.0;
-		for (int k=0;k<ncols;k++){
-			elemsum+=A[j][k]*b[k];
-		}
-		c[j]=elemsum;
-	}
-	return true;
-}
-
-template <class T> std::vector< std::vector < T > >
-Math_methods::matrix_transpose( const std::vector < std::vector < T > > &mat )
-{
-	int nrows = (int)mat[0].size();
-	int ncols = (int)mat.size();
-	std::vector < std::vector < T > > trans_mat = make_std_matrix<T>(nrows,ncols);
-	for (int j = 0; j < nrows; j++ ){
-		for (int k = 0; k < ncols; k++ ){
-			trans_mat[j][k] = mat[k][j];
-		}
-	}
-	return trans_mat;
-}
-
-template <class T>
-std::vector< std::vector < T > > Math_methods::make_std_matrix( const int &nrows, const int&ncols )
-{
-	std::vector< std::vector < T > > matrix;
-	matrix.resize(nrows);
-	for (int j = 0; j < nrows; j++ ) matrix[j].resize(ncols);
-	return matrix;
-}
-
-template <class T>
-bool Math_methods::ludcmp( std::vector< std::vector < T > > &a, std::vector<int> &indx, T &d )
-{
-	const T TINY = 1.0e-20;
-	int i, imax = 0, j, k;
-	T big, dum, sum, temp;
-
-	int n = (int)a.size();
-	std::vector< T > vv;
-	vv.resize(n);
-	d = 1.0;
-	for (i = 0;i<n;i++) {
-		big = 0.0;
-		for (j = 0;j<n;j++)
-			if ((temp = abs(a[i][j])) > big) big = temp;
-		if (big == 0.0) return false;
-		vv[i] = 1.0 / big;
-	}
-	for (j = 0;j<n;j++) {
-		for (i = 0;i<j;i++) {
-			sum = a[i][j];
-			for (k = 0;k<i;k++) sum -= a[i][k] * a[k][j];
-			a[i][j] = sum;
-		}
-		big = 0.0;
-		for (i = j;i<n;i++) {
-			sum = a[i][j];
-			for (k = 0;k<j;k++) sum -= a[i][k] * a[k][j];
-			a[i][j] = sum;
-			if ((dum = vv[i] * abs(sum)) >= big) {
-				big = dum;
-				imax = i;
-			}
-		}
-		if (j != imax) {
-			for (k = 0;k<n;k++) {
-				dum = a[imax][k];
-				a[imax][k] = a[j][k];
-				a[j][k] = dum;
-			}
-			d = -d;
-			vv[imax] = vv[j];
-		}
-		indx[j] = imax;
-		if (a[j][j] == 0.0) a[j][j] = TINY;
-		if (j != n - 1) {
-			dum = 1.0 / (a[j][j]);
-			for (i = j + 1;i<n;i++) a[i][j] *= dum;
-		}
-	}
-
-	return true;
-}
-
-template <class T>
-void Math_methods::lubksb( std::vector< std::vector < T > > &a, std::vector<int> &indx, std::vector<T> &b )
-{
-	int i, ii = 0, ip, j;
-	T sum;
-
-	int n = (int)a.size();
-	for (i = 0;i<n;i++) {
-		ip = indx[i];
-		sum = b[ip];
-		//cout<<" ii= "<<ii<<" ip= "<<ip<<" index["<<i<<"]= "<<indx[i]<<" sum = "<<sum<<endl; // debug
-		b[ip] = b[i];
-		if (ii != 0)
-			for (j = ii - 1;j<i;j++) sum -= a[i][j] * b[j];
-		else if (sum != 0.0)
-			ii = i + 1;
-		b[i] = sum;
-	}
-	for (i = n - 1;i >= 0;i--) {
-		sum = b[i];
-		//cout<<" Sum= "<<sum<<endl;
-		for (j = i + 1;j<n;j++) sum -= a[i][j] * b[j];
-		//cout<<" a[i][i]= "<<a[i][i]<<endl;  // debug
-		b[i] = sum / a[i][i];
-		//cout<<" b["<<i<<"]= "<<b[i]<<" sum= "<<sum<<" a[i][i]= "<<a[i][i]<<endl;  // debug
-	}
-}
-
-template <class T>
-bool Math_methods::solve_sym_linear_system_via_LU_dcmp( std::vector< std::vector <T> > &a, std::vector <T> &b )
-{
-	std::vector<int> indx;
-	indx.resize((int)a.size(),0);
-	T d;
-	// perform LU decomposition
-	if (!ludcmp<T>(a, indx, d)) return false;
-	// perform LU back substitution to obtain solution
-	lubksb<T>(a, indx, b);
-
 	return true;
 }
 
