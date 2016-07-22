@@ -11,6 +11,9 @@ bool Linear_LU_decomposition::solve()
 	if (_constraint_values.rows() != _interpolation_matrix.rows()) return false;
 
 	weights = _interpolation_matrix.partialPivLu().solve(_constraint_values);
+
+	if ( !weights.allFinite()) return false; 
+
 	return true;
 }
 
