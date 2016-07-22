@@ -5,6 +5,10 @@
 #include <modelling_input.h>
 #include <gmpxx.h>
 
+#include <Eigen/Core>
+
+using namespace Eigen;
+
 class Kernel{
 protected:
 	Point *_p1;
@@ -44,18 +48,13 @@ protected:
 	inline void scaled_radius();
 	// anisotropy members 
 	double _Global_Plunge[3];
-	double _Transform[3][3];
+	Matrix3f _Transform;
 	bool get_global_anisotropy(const std::vector<Planar> &planar);
 public:
 	RBFKernel() : _radius(0), _x_delta(0), _y_delta(0), _z_delta(0), _c_delta(0)
 	{
-		for (int j = 0; j < 3; j ++ ){
-			_Global_Plunge[j] = NULL;
-			for (int k = 0; k < 3; k++ ){
-				if (j == k) _Transform[j][k] = 1.0;
-				else _Transform[j][k] = 0.0;
-			}
-		}
+		for (int j = 0; j < 3; j ++ ) _Global_Plunge[j] = NULL;
+		_Transform.setZero();
 	}
 	virtual ~RBFKernel(){}
 	virtual double basis() = 0;
@@ -407,47 +406,47 @@ protected:
 public:
 	Polynomial_Basis() : _truncated(false) { }
 	void set_point(Point& point) { _p = &point;}
-	virtual std::vector<double> basis() = 0;
-	virtual std::vector<double> dx() = 0;
-	virtual std::vector<double> dy() = 0;
-	virtual std::vector<double> dz() = 0;
+	virtual VectorXd basis() = 0;
+	virtual VectorXd dx() = 0;
+	virtual VectorXd dy() = 0;
+	virtual VectorXd dz() = 0;
 	virtual Polynomial_Basis *clone() = 0;
 };
 
 class Poly_Zero : public Polynomial_Basis{
 public:
 	Poly_Zero(bool truncated = false) { _truncated = truncated; }
-	std::vector<double> basis();
-	std::vector<double> dx();
-	std::vector<double> dy();
-	std::vector<double> dz();
+	VectorXd basis();
+	VectorXd dx();
+	VectorXd dy();
+	VectorXd dz();
 	virtual Poly_Zero *clone() {return new Poly_Zero(*this); }
 };
 
 class Poly_First : public Polynomial_Basis {
 public:
 	Poly_First(bool truncated = false) { _truncated = truncated; }
-	std::vector<double> basis();
-	std::vector<double> dx();
-	std::vector<double> dy();
-	std::vector<double> dz();
+	VectorXd basis();
+	VectorXd dx();
+	VectorXd dy();
+	VectorXd dz();
 	virtual Poly_First *clone() {return new Poly_First(*this); }
 };
 
 class Poly_Second : public Polynomial_Basis {
 public:
 	Poly_Second(bool truncated = false) { _truncated = truncated; }
-	std::vector<double> basis();
-	std::vector<double> dx();
-	std::vector<double> dy();
-	std::vector<double> dz();
+	VectorXd basis();
+	VectorXd dx();
+	VectorXd dy();
+	VectorXd dz();
 	virtual Poly_Second *clone() {return new Poly_Second(*this); }
 };
 
 class Lagrangian_Polynomial_Basis {
 private:
-	std::vector<mpf_class> _polynomial_constants;
-	std::vector< std::vector <mpf_class> > _derivative_polynomial_constants;
+	Matrix <mpf_class, Dynamic, 1> _polynomial_constants;
+	Matrix <mpf_class, Dynamic, Dynamic> _derivative_polynomial_constants;
 	bool _get_unisolvent_subset(const std::vector < std::vector < Interface > > &interface_point_lists);
 	void _initialize_basis();
 public:
@@ -460,10 +459,10 @@ public:
 			// throw exception
 		}
 	}
-	std::vector<mpf_class> poly(const Point *p);
-	std::vector<mpf_class> poly_dx(const Point *p);
-	std::vector<mpf_class> poly_dy(const Point *p);
-	std::vector<mpf_class> poly_dz(const Point *p);
+	Matrix <mpf_class, Dynamic, 1> poly(const Point *p);
+	Matrix <mpf_class, Dynamic, 1> poly_dx(const Point *p);
+	Matrix <mpf_class, Dynamic, 1> poly_dy(const Point *p);
+	Matrix <mpf_class, Dynamic, 1> poly_dz(const Point *p);
 	std::vector < Interface > unisolvent_subset_points;
 };
 

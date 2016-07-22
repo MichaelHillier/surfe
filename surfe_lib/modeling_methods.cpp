@@ -128,15 +128,17 @@ bool GRBF_Modelling_Methods::run_algorithm()
 	return true;
 }
 
-bool GRBF_Modelling_Methods::get_equality_matrix( const std::vector< std::vector <double> > &interpolation_matrix, std::vector < std::vector < double > > &equality_matrix )
+bool GRBF_Modelling_Methods::get_equality_matrix( const MatrixXd &interpolation_matrix, MatrixXd &equality_matrix )
 {
-	if ((int)equality_matrix.size() == 0 || (int)equality_matrix.size() > (int)interpolation_matrix.size() || (int)equality_matrix[0].size() != (int)interpolation_matrix[0].size()) return false;
-	int n_ie = (int)interpolation_matrix.size() - (int)equality_matrix.size();
+	if (equality_matrix.rows() == 0 ||
+		equality_matrix.rows() > interpolation_matrix.rows() ||
+		equality_matrix.cols() != interpolation_matrix.cols()) return false;
+	int n_ie = (int)interpolation_matrix.rows() - (int)equality_matrix.rows();
 	if (n_ie != b_parameters.n_inequality) return false;
 
-	for (int j = 0; j < (int)equality_matrix.size(); j++ ){
-		for (int k = 0; k < (int)equality_matrix[j].size(); k++ ){
-			equality_matrix[j][k] = interpolation_matrix[j + n_ie][k];
+	for (int j = 0; j < equality_matrix.rows(); j++ ){
+		for (int k = 0; k < equality_matrix.cols(); k++ ){
+			equality_matrix(j,k) = interpolation_matrix(j + n_ie,k);
 		}
 	}
 

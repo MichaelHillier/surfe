@@ -8,8 +8,8 @@
 class SURFE_LIB_EXPORT Lajaunie_Approach : public GRBF_Modelling_Methods {
 private:
 	int _n_increment_pair;
-	bool _get_polynomial_matrix_block(std::vector< std::vector <double> > &poly_matrix);
-	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const std::vector< std::vector <double> > &poly_matrix, std::vector< std::vector <double> > &interpolation_matrix);
+	bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
+	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
 	std::vector < std::vector < Point > > *_increment_pairs;
 	bool _get_increment_pairs();
 public:
@@ -18,8 +18,8 @@ public:
 	~Lajaunie_Approach(){};
 	// Methods
 	Polynomial_Basis *create_polynomial_basis(const int &poly_order);
-	bool get_interpolation_matrix(std::vector< std::vector <double> > &interpolation_matrix);
-	bool get_equality_values(std::vector<double> &equality_values);
+	bool get_interpolation_matrix(MatrixXd &interpolation_matrix);
+	bool get_equality_values(VectorXd &equality_values);
 	void eval_scalar_interpolant_at_point(Point &p);
 	void eval_vector_interpolant_at_point(Point &p);
 	bool get_method_parameters();

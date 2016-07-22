@@ -20,6 +20,11 @@ else()
    MESSAGE(FATAL_ERROR "Could not find GMP")
 endif()
 
+# Get Eigen dependency
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 find_package(OpenMP)
 if (OpenMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")

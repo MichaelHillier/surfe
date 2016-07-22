@@ -23,10 +23,10 @@ public:
 	Stratigraphic_Surfaces(const model_parameters& m_p, const Basic_input& basic_i);
 	~Stratigraphic_Surfaces(){};
 	// Methods
-	bool get_interpolation_matrix(std::vector< std::vector <double> > &interpolation_matrix);
-	bool get_equality_values(std::vector<double> &equality_values);
-	bool get_inequality_matrix(const std::vector< std::vector <double> > &interpolation_matrix, std::vector < std::vector < double > > &inequality_matrix);
-	bool get_inequality_values(std::vector<double> &inequality_values);
+	bool get_interpolation_matrix(MatrixXd &interpolation_matrix);
+	bool get_equality_values(VectorXd &equality_values);
+	bool get_inequality_matrix(const MatrixXd &interpolation_matrix, MatrixXd &inequality_matrix);
+	bool get_inequality_values(VectorXd &inequality_values);
 	void eval_scalar_interpolant_at_point(Point &p);
 	void eval_vector_interpolant_at_point(Point &p);
 	bool get_method_parameters();

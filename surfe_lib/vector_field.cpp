@@ -38,18 +38,18 @@ bool Vector_Field::process_input_data()
 	return true;
 }
 
-bool Vector_Field::get_equality_values( std::vector<double> &equality_values )
+bool Vector_Field::get_equality_values( VectorXd &equality_values )
 {
 	for (int j = 0; j < (int)b_input.planar->size(); j++){
-		equality_values.push_back(b_input.planar->at(j).nx());
-		equality_values.push_back(b_input.planar->at(j).ny());
-		equality_values.push_back(b_input.planar->at(j).nz());
+		equality_values(3*j) = b_input.planar->at(j).nx();
+		equality_values(3*j + 1) = b_input.planar->at(j).ny();
+		equality_values(3*j + 2) = b_input.planar->at(j).nz();
 	}
 
 	return true;
 }
 
-bool Vector_Field::get_interpolation_matrix( std::vector< std::vector <double> > &interpolation_matrix )
+bool Vector_Field::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 {
 	int n_p = b_parameters.n_planar;
 
@@ -63,15 +63,15 @@ bool Vector_Field::get_interpolation_matrix( std::vector< std::vector <double> >
 		// Row:planar/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.planar->at(k));
-			interpolation_matrix[3*j][3*k] = kernel->basis_planar_planar(Parameter_Types::DXDX);
-			interpolation_matrix[3*j][3*k + 1] = kernel->basis_planar_planar(Parameter_Types::DXDY);
-			interpolation_matrix[3*j][3*k + 2] = kernel->basis_planar_planar(Parameter_Types::DXDZ);
-			interpolation_matrix[3*j + 1][3*k] = kernel->basis_planar_planar(Parameter_Types::DYDX);
-			interpolation_matrix[3*j + 1][3*k + 1] = kernel->basis_planar_planar(Parameter_Types::DYDY);
-			interpolation_matrix[3*j + 1][3*k + 2] = kernel->basis_planar_planar(Parameter_Types::DYDZ);
-			interpolation_matrix[3*j + 2][3*k] = kernel->basis_planar_planar(Parameter_Types::DZDX);
-			interpolation_matrix[3*j + 2][3*k + 1] = kernel->basis_planar_planar(Parameter_Types::DZDY);
-			interpolation_matrix[3*j + 2][3*k + 2] = kernel->basis_planar_planar(Parameter_Types::DZDZ);
+			interpolation_matrix(3*j,3*k) = kernel->basis_planar_planar(Parameter_Types::DXDX);
+			interpolation_matrix(3*j,3*k + 1) = kernel->basis_planar_planar(Parameter_Types::DXDY);
+			interpolation_matrix(3*j,3*k + 2) = kernel->basis_planar_planar(Parameter_Types::DXDZ);
+			interpolation_matrix(3*j + 1,3*k) = kernel->basis_planar_planar(Parameter_Types::DYDX);
+			interpolation_matrix(3*j + 1,3*k + 1) = kernel->basis_planar_planar(Parameter_Types::DYDY);
+			interpolation_matrix(3*j + 1,3*k + 2) = kernel->basis_planar_planar(Parameter_Types::DYDZ);
+			interpolation_matrix(3*j + 2,3*k) = kernel->basis_planar_planar(Parameter_Types::DZDX);
+			interpolation_matrix(3*j + 2,3*k + 1) = kernel->basis_planar_planar(Parameter_Types::DZDY);
+			interpolation_matrix(3*j + 2,3*k + 2) = kernel->basis_planar_planar(Parameter_Types::DZDZ);
 		}
 	}
 
@@ -81,12 +81,14 @@ bool Vector_Field::get_interpolation_matrix( std::vector< std::vector <double> >
 bool Vector_Field::setup_system_solver()
 {
 
-	int nrows = b_parameters.n_equality + b_parameters.n_poly_terms;
-	std::vector<double> equality_values;
+	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
+
+	VectorXd equality_values;
 	get_equality_values(equality_values);
-	if ((int)equality_values.size() != nrows) return false;
-	std::vector< std::vector <double> > interpolation_matrix = Math_methods::make_std_matrix<double>(nrows,nrows);
+
+	MatrixXd interpolation_matrix(n, n);
 	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
 	Linear_LU_decomposition llu(interpolation_matrix,equality_values);
 	if (!llu.solve()) return false;
 	solver = &llu;

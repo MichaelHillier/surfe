@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <fstream>
 
-bool Continuous_Property::_get_polynomial_matrix_block(std::vector< std::vector <double> > &poly_matrix)
+bool Continuous_Property::_get_polynomial_matrix_block(MatrixXd &poly_matrix)
 {
 	int n_ie = b_parameters.n_inequality;
 	int n_i = b_parameters.n_interface;
@@ -24,39 +24,39 @@ bool Continuous_Property::_get_polynomial_matrix_block(std::vector< std::vector 
 	// for interface points ...
 	for (int j = 0; j < nl; j++ ){
 		p_basis->set_point(b_input.itrface->at(j));
-		std::vector<double> b = p_basis->basis();
-		if ((int)b.size() != b_parameters.n_poly_terms ) return false;
-		for (int k = 0; k < (int)b.size(); k++ ) poly_matrix[k][j] = b[k];
+		VectorXd b = p_basis->basis();
+		if ((int)b.rows() != b_parameters.n_poly_terms ) return false;
+		for (int k = 0; k < (int)b.rows(); k++ ) poly_matrix(k,j) = b(k);
 	}
 	// for planar points ...
 	for (int j = 0; j < n_p; j++ ){
 		p_basis->set_point(b_input.planar->at(j));
-		std::vector<double> bx = p_basis->dx();
-		std::vector<double> by = p_basis->dy();
-		std::vector<double> bz = p_basis->dz();
-		if ((int)bx.size() != b_parameters.n_poly_terms ) return false;
-		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_matrix[k][nl + 3*j] = bx[k];
-			poly_matrix[k][nl + 3*j + 1] = by[k];
-			poly_matrix[k][nl + 3*j + 2] = bz[k];
+		VectorXd bx = p_basis->dx();
+		VectorXd by = p_basis->dy();
+		VectorXd bz = p_basis->dz();
+		if ((int)bx.rows() != b_parameters.n_poly_terms ) return false;
+		for (int k = 0; k < (int)bx.rows(); k++ ){
+			poly_matrix(k,nl + 3*j) = bx(k);
+			poly_matrix(k,nl + 3*j + 1) = by(k);
+			poly_matrix(k,nl + 3*j + 2) = bz(k);
 		}
 	}
 	// for tangent points ...
 	for (int j = 0; j < n_t; j++ ){
 		p_basis->set_point(b_input.tangent->at(j));
-		std::vector<double> bx = p_basis->dx();
-		std::vector<double> by = p_basis->dy();
-		std::vector<double> bz = p_basis->dz();
-		if ((int)bx.size() != b_parameters.n_poly_terms ) return false;
-		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_matrix[k][nl + 3 * n_p + j] = b_input.tangent->at(j).tx()*bx[k] + b_input.tangent->at(j).ty()*by[k] + b_input.tangent->at(j).tz()*bz[k];
+		VectorXd bx = p_basis->dx();
+		VectorXd by = p_basis->dy();
+		VectorXd bz = p_basis->dz();
+		if ((int)bx.rows() != b_parameters.n_poly_terms ) return false;
+		for (int k = 0; k < (int)bx.rows(); k++ ){
+			poly_matrix(k,nl + 3 * n_p + j) = b_input.tangent->at(j).tx()*bx(k) + b_input.tangent->at(j).ty()*by(k) + b_input.tangent->at(j).tz()*bz(k);
 		}
 	}
 
 	return true;
 }
 
-bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matrix( const std::vector< std::vector <double> > &poly_matrix, std::vector< std::vector <double> > &interpolation_matrix )
+bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matrix( const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix )
 {
 	int n_ie = b_parameters.n_inequality;
 	int n_i = b_parameters.n_interface;
@@ -67,16 +67,16 @@ bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matr
 	// | A PT |
 	// | P 0  |
 	// start with P
-	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
-		for (int k = 0; k < (int)poly_matrix[j].size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k] = poly_matrix[j][k];
-			interpolation_matrix[k][n_ie + n_i + 3*n_p + n_t + j] = interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][k];
+	for (int j = 0; j < (int)poly_matrix.rows(); j++ ){
+		for (int k = 0; k < (int)poly_matrix.cols(); k++ ){
+			interpolation_matrix(n_ie + n_i + 3*n_p + n_t + j,k) = poly_matrix(j,k);
+			interpolation_matrix(k,n_ie + n_i + 3*n_p + n_t + j) = interpolation_matrix(n_ie + n_i + 3*n_p + n_t + j,k);
 		}
 	}
 
 	for (int j = 0; j < (int)poly_matrix.size(); j++ ){
 		for (int k = 0; k < (int)poly_matrix.size(); k++ ){
-			interpolation_matrix[n_ie + n_i + 3*n_p + n_t + j][n_ie + n_i + 3*n_p + n_t + k] = 0;
+			interpolation_matrix(n_ie + n_i + 3*n_p + n_t + j,n_ie + n_i + 3*n_p + n_t + k) = 0;
 		}
 	}
 
@@ -135,12 +135,14 @@ bool Continuous_Property::get_method_parameters()
 bool Continuous_Property::setup_system_solver()
 {
 
-	int nrows = b_parameters.n_equality + b_parameters.n_poly_terms;
-	std::vector<double> equality_values;
+	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
+
+	VectorXd equality_values(n);
 	get_equality_values(equality_values);
-	if ((int)equality_values.size() != nrows) return false;
-	std::vector< std::vector <double> > interpolation_matrix = Math_methods::make_std_matrix<double>(nrows,nrows);
+
+	MatrixXd interpolation_matrix(n,n);
 	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
 	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
 	if (!llu->solve()) return false;
 	solver = llu;
@@ -312,8 +314,8 @@ void Continuous_Property::eval_scalar_interpolant_at_point( Point &p )
 	{
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
-		std::vector<double> b = p_basis_j->basis();
-		for (int k = 0; k < (int)b.size(); k++ ) poly += b[k] * solver->weights[n_i + 3*n_p + n_t + k];
+		VectorXd b = p_basis_j->basis();
+		for (int k = 0; k < (int)b.size(); k++ ) poly += b(k) * solver->weights[n_i + 3*n_p + n_t + k];
 		delete p_basis_j;
 	}
 	p.set_scalar_field(elemsum_1 + elemsum_2 + elemsum_3 +elemsum_4 + poly);
@@ -370,13 +372,13 @@ void Continuous_Property::eval_vector_interpolant_at_point( Point &p )
 	{
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
-		std::vector<double> bx = p_basis_j->dx();
-		std::vector<double> by = p_basis_j->dy();
-		std::vector<double> bz = p_basis_j->dz();
+		VectorXd bx = p_basis_j->dx();
+		VectorXd by = p_basis_j->dy();
+		VectorXd bz = p_basis_j->dz();
 		for (int k = 0; k < (int)bx.size(); k++ ){
-			poly_x += bx[k] * solver->weights[n_i + 3*n_p + n_t + k];
-			poly_y += by[k] * solver->weights[n_i + 3*n_p + n_t + k];
-			poly_z += bz[k] * solver->weights[n_i + 3*n_p + n_t + k];
+			poly_x += bx(k) * solver->weights[n_i + 3*n_p + n_t + k];
+			poly_y += by(k) * solver->weights[n_i + 3*n_p + n_t + k];
+			poly_z += bz(k) * solver->weights[n_i + 3*n_p + n_t + k];
 		}
 		delete p_basis_j;
 	}
@@ -387,16 +389,20 @@ void Continuous_Property::eval_vector_interpolant_at_point( Point &p )
 	delete kernel_j;
 }
 
-bool Continuous_Property::get_equality_values( std::vector<double> &equality_values )
+bool Continuous_Property::get_equality_values( VectorXd &equality_values )
 {
-	for (int j = 0; j < (int)b_input.itrface->size(); j++) equality_values.push_back(b_input.itrface->at(j).level());
-	for (int j = 0; j < (int)b_input.planar->size(); j++){
-		equality_values.push_back(b_input.planar->at(j).nx());
-		equality_values.push_back(b_input.planar->at(j).ny());
-		equality_values.push_back(b_input.planar->at(j).nz());
+	int j = 0;
+	int k = 0;
+	int l = 0;
+	int m = 0;
+	for (j = 0; j < (int)b_input.itrface->size(); j++) equality_values(j) = b_input.itrface->at(j).level();
+	for (k = 0; k < (int)b_input.planar->size(); k++){
+		equality_values(3*k + j) = b_input.planar->at(j).nx();
+		equality_values(3*k + j + 1) = b_input.planar->at(j).ny();
+		equality_values(3*k + j + 2) = b_input.planar->at(j).nz();
 	}
-	for (int j = 0; j < (int)b_input.tangent->size(); j++) equality_values.push_back(0.0);
-	if (b_parameters.poly_term) for (int j = 0; j < (int)b_parameters.n_poly_terms; j++ ) equality_values.push_back(0.0);
+	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3*k + j) = 0.0;
+	if (b_parameters.poly_term) for (m = 0; m < (int)b_parameters.n_poly_terms; m++ ) equality_values(m + l + 3*k + j) = 0.0;
 
 	return true;
 }
@@ -409,7 +415,7 @@ bool Continuous_Property::process_input_data()
 	return true;
 }
 
-bool Continuous_Property::get_interpolation_matrix( std::vector< std::vector <double> > &interpolation_matrix )
+bool Continuous_Property::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 {
 	int n_i = b_parameters.n_interface;
 	int n_p = b_parameters.n_planar;
@@ -429,19 +435,19 @@ bool Continuous_Property::get_interpolation_matrix( std::vector< std::vector <do
 		// Row:interface/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
 			kernel->set_points(b_input.itrface->at(j), b_input.itrface->at(k));
-			interpolation_matrix[j][k] = kernel->basis_pt_pt();
+			interpolation_matrix(j,k) = kernel->basis_pt_pt();
 		}
 		// Row:interface/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.itrface->at(j), b_input.planar->at(k));
-			interpolation_matrix[j][3*k + n_i] = kernel->basis_pt_planar_x();
-			interpolation_matrix[j][3*k + n_i + 1] = kernel->basis_pt_planar_y();
-			interpolation_matrix[j][3*k + n_i + 2] = kernel->basis_pt_planar_z();
+			interpolation_matrix(j,3*k + n_i) = kernel->basis_pt_planar_x();
+			interpolation_matrix(j,3*k + n_i + 1) = kernel->basis_pt_planar_y();
+			interpolation_matrix(j,3*k + n_i + 2) = kernel->basis_pt_planar_z();
 		}
 		// Row:interface/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
 			kernel->set_points(b_input.itrface->at(j), b_input.tangent->at(k));
-			interpolation_matrix[j][n_i + 3*n_p + k] = kernel->basis_pt_tangent();
+			interpolation_matrix(j,n_i + 3*n_p + k) = kernel->basis_pt_tangent();
 		}
 	}
 	// Planar Constraints
@@ -449,29 +455,29 @@ bool Continuous_Property::get_interpolation_matrix( std::vector< std::vector <do
 		// Row:planar/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.itrface->at(k));
-			interpolation_matrix[3*j + n_i][k] = kernel->basis_planar_x_pt();
-			interpolation_matrix[3*j + n_i + 1][k] = kernel->basis_planar_y_pt();
-			interpolation_matrix[3*j + n_i + 2][k] = kernel->basis_planar_z_pt();
+			interpolation_matrix(3*j + n_i,k) = kernel->basis_planar_x_pt();
+			interpolation_matrix(3*j + n_i + 1,k) = kernel->basis_planar_y_pt();
+			interpolation_matrix(3*j + n_i + 2,k) = kernel->basis_planar_z_pt();
 		}
 		// Row:planar/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.planar->at(k));
-			interpolation_matrix[3*j + n_i][3*k + n_i] = kernel->basis_planar_planar(Parameter_Types::DXDX);
-			interpolation_matrix[3*j + n_i][3*k + n_i + 1] = kernel->basis_planar_planar(Parameter_Types::DXDY);
-			interpolation_matrix[3*j + n_i][3*k + n_i + 2] = kernel->basis_planar_planar(Parameter_Types::DXDZ);
-			interpolation_matrix[3*j + n_i + 1][3*k + n_i] = kernel->basis_planar_planar(Parameter_Types::DYDX);
-			interpolation_matrix[3*j + n_i + 1][3*k + n_i + 1] = kernel->basis_planar_planar(Parameter_Types::DYDY);
-			interpolation_matrix[3*j + n_i + 1][3*k + n_i + 2] = kernel->basis_planar_planar(Parameter_Types::DYDZ);
-			interpolation_matrix[3*j + n_i + 2][3*k + n_i] = kernel->basis_planar_planar(Parameter_Types::DZDX);
-			interpolation_matrix[3*j + n_i + 2][3*k + n_i + 1] = kernel->basis_planar_planar(Parameter_Types::DZDY);
-			interpolation_matrix[3*j + n_i + 2][3*k + n_i + 2] = kernel->basis_planar_planar(Parameter_Types::DZDZ);
+			interpolation_matrix(3*j + n_i,3*k + n_i)         = kernel->basis_planar_planar(Parameter_Types::DXDX);
+			interpolation_matrix(3*j + n_i,3*k + n_i + 1)     = kernel->basis_planar_planar(Parameter_Types::DXDY);
+			interpolation_matrix(3*j + n_i,3*k + n_i + 2)     = kernel->basis_planar_planar(Parameter_Types::DXDZ);
+			interpolation_matrix(3*j + n_i + 1,3*k + n_i)     = kernel->basis_planar_planar(Parameter_Types::DYDX);
+			interpolation_matrix(3*j + n_i + 1,3*k + n_i + 1) = kernel->basis_planar_planar(Parameter_Types::DYDY);
+			interpolation_matrix(3*j + n_i + 1,3*k + n_i + 2) = kernel->basis_planar_planar(Parameter_Types::DYDZ);
+			interpolation_matrix(3*j + n_i + 2,3*k + n_i)     = kernel->basis_planar_planar(Parameter_Types::DZDX);
+			interpolation_matrix(3*j + n_i + 2,3*k + n_i + 1) = kernel->basis_planar_planar(Parameter_Types::DZDY);
+			interpolation_matrix(3*j + n_i + 2,3*k + n_i + 2) = kernel->basis_planar_planar(Parameter_Types::DZDZ);
 		}
 		// Row:planar/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
 			kernel->set_points(b_input.planar->at(j), b_input.tangent->at(k));
-			interpolation_matrix[3*j + n_i][n_i + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DX);
-			interpolation_matrix[3*j + n_i + 1][n_i + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DY);
-			interpolation_matrix[3*j + n_i + 2][n_i + 3*n_p + k] = kernel->basis_planar_tangent(Parameter_Types::DZ);
+			interpolation_matrix(3*j + n_i,n_i + 3*n_p + k)     = kernel->basis_planar_tangent(Parameter_Types::DX);
+			interpolation_matrix(3*j + n_i + 1,n_i + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DY);
+			interpolation_matrix(3*j + n_i + 2,n_i + 3*n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DZ);
 		}
 	}
 	// Tangent Constraints 
@@ -479,19 +485,19 @@ bool Continuous_Property::get_interpolation_matrix( std::vector< std::vector <do
 		// Row:tangent/Column:interface block
 		for (int k = 0; k < n_i; k++ ){
 			kernel->set_points(b_input.tangent->at(j), b_input.itrface->at(k));
-			interpolation_matrix[j + n_i + 3*n_p][k] = kernel->basis_tangent_pt();
+			interpolation_matrix(j + n_i + 3*n_p,k) = kernel->basis_tangent_pt();
 		}
 		// Row:tangent/Column:planar block
 		for (int k = 0; k < n_p; k++ ){
 			kernel->set_points(b_input.tangent->at(j), b_input.planar->at(k));
-			interpolation_matrix[j + n_i + 3*n_p][3*k + n_i] = kernel->basis_tangent_planar(Parameter_Types::DX);
-			interpolation_matrix[j + n_i + 3*n_p][3*k + n_i + 1] = kernel->basis_tangent_planar(Parameter_Types::DY);
-			interpolation_matrix[j + n_i + 3*n_p][3*k + n_i + 2] = kernel->basis_tangent_planar(Parameter_Types::DZ);
+			interpolation_matrix(j + n_i + 3*n_p,3*k + n_i) = kernel->basis_tangent_planar(Parameter_Types::DX);
+			interpolation_matrix(j + n_i + 3*n_p,3*k + n_i + 1) = kernel->basis_tangent_planar(Parameter_Types::DY);
+			interpolation_matrix(j + n_i + 3*n_p,3*k + n_i + 2) = kernel->basis_tangent_planar(Parameter_Types::DZ);
 		}
 		// Row:tangent/Column:tangent block
 		for (int k = 0; k < n_t; k++ ){
 			kernel->set_points(b_input.tangent->at(j), b_input.tangent->at(k));
-			interpolation_matrix[j + n_i + 3*n_p][n_i + 3*n_p + k] = kernel->basis_tangent_tangent();
+			interpolation_matrix(j + n_i + 3*n_p,n_i + 3*n_p + k) = kernel->basis_tangent_tangent();
 		}
 	}
 
@@ -500,21 +506,11 @@ bool Continuous_Property::get_interpolation_matrix( std::vector< std::vector <do
 	// | P 0  |
 	if (b_parameters.poly_term)
 	{
-		std::vector < std::vector <double> > poly_matrix = Math_methods::make_std_matrix<double>(b_parameters.n_poly_terms,b_parameters.n_constraints);
+		MatrixXd poly_matrix(b_parameters.n_poly_terms,b_parameters.n_constraints);
 		if (!_get_polynomial_matrix_block(poly_matrix)) return false;
 		// fill remaining matrix blocks (P, PT, 0)
 		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(poly_matrix,interpolation_matrix)) return false;
 	}
-	// for testing ...
-	// 	if (m_parameters.use_smoothing)
-	// 	{
-	// 		double dist_err = sqrt(m_parameters.interface_slack * m_parameters.interface_slack / 3);
-	// 		Point one(dist_err,dist_err,dist_err);
-	// 		Point two(0,0,0);
-	// 		kernel->set_points(one,two);
-	// 		double err = kernel->basis_pt_pt();
-	// 		for (int j = 0; j < (n_ie + n_i); j++ ) interpolation_matrix[j][j] += err;
-	// 	}
 
 	return true;
 }
