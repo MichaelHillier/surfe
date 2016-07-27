@@ -110,20 +110,25 @@ bool Single_Surface::get_method_parameters()
 	// Total number of constraints ...
 	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
+	if (m_parameters.use_uncertainty)
+	{
+		b_parameters.restricted_range = true;
+		b_parameters.n_bounded_inequality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
+	}
+	else b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
-	if (b_parameters.n_inequality == 0)
-	{
-		b_parameters.poly_term = true; // NOTE: May want to have this as an option when using SPD functions
-		b_parameters.modified_basis = false;
-		b_parameters.problem_type = Parameter_Types::Linear;
-	}
-	else
+	if (b_parameters.n_inequality != 0 || b_parameters.n_bounded_inequality != 0)
 	{
 		b_parameters.poly_term = false;
 		b_parameters.modified_basis = true;
 		b_parameters.problem_type = Parameter_Types::Quadratic;
+	}
+	else
+	{
+		b_parameters.poly_term = true; // NOTE: May want to have this as an option when using SPD functions
+		b_parameters.modified_basis = false;
+		b_parameters.problem_type = Parameter_Types::Linear;
 	}
 
 	int m = m_parameters.polynomial_order + 1;
@@ -139,25 +144,32 @@ bool Single_Surface::setup_system_solver()
 	// 2) What type of RBF is used 
 	// 3) Smoothing -> maybe use least squares / right now we are doing matrix smoothing
 
-	int n_ie = b_parameters.n_inequality;
-	int n_e = b_parameters.n_equality;
-	int n_c = b_parameters.n_constraints;
+	int n_ie  = b_parameters.n_inequality;
+	int n_bie = 2*b_parameters.n_bounded_inequality; // 2x b/c you have a lower AND upper bound per constraint pt
+	int n_e   = b_parameters.n_equality;
+	int n_c   = b_parameters.n_constraints;
 	if (b_parameters.problem_type == Parameter_Types::Quadratic)
 	{
-		VectorXd inequality_values(n_ie);
-		get_inequality_values(inequality_values);
+		VectorXd inequality_values(n_ie + n_bie);
+		if ((n_ie + n_bie) != 0) get_inequality_values(inequality_values);
 
 		VectorXd equality_values(n_e);
-		get_equality_values(equality_values);
+		if ( n_e != 0 )	get_equality_values(equality_values);
 
 		MatrixXd interpolation_matrix(n_c,n_c);
 		if (!get_interpolation_matrix(interpolation_matrix)) return false;
 
-		MatrixXd inequality_matrix(n_ie,n_c);
-		if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
+		MatrixXd inequality_matrix(n_ie + n_bie,n_c);
+		if ((n_ie + n_bie) != 0)
+		{
+			if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
+		}
 
 		MatrixXd equality_matrix(n_e,n_c);
-		if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
+		if ( n_e != 0)
+		{
+			if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
+		}
 
 		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
 		if(!qpc->solve()) return false;
@@ -499,11 +511,12 @@ bool Single_Surface::get_equality_values( VectorXd &equality_values )
 
 bool Single_Surface::get_inequality_matrix( const MatrixXd &interpolation_matrix, MatrixXd &inequality_matrix )
 {
-	if (inequality_matrix.rows() == 0 || 
-		inequality_matrix.rows() > interpolation_matrix.rows() || 
-		inequality_matrix.cols() != interpolation_matrix.cols() || 
-		inequality_matrix.rows() != (int)b_input.inequality->size() ) return false;
+	if (inequality_matrix.rows() == 0 ||  
+		inequality_matrix.cols() != interpolation_matrix.cols()) return false;
 
+	// below inequality constraints have to be put in terms of s(x) >= level
+	// so if s(x) <= level => -1.0*s(x) >= -1.0*level
+	// for single surface level is always 0. so, -1.0*s(x) > 0 
 	for (int j = 0; j < inequality_matrix.rows(); j++ ){
 		for (int k = 0; k < inequality_matrix.cols(); k++ ){
 			if (b_input.inequality->at(j).level() > 0) inequality_matrix(j,k) = interpolation_matrix(j,k);
@@ -511,15 +524,66 @@ bool Single_Surface::get_inequality_matrix( const MatrixXd &interpolation_matrix
 		}
 	}
 
-	// all inequality constraints have to be put in terms of s(x) >= level
-	// so if s(x) <= level => -1.0*s(x) >= -1.0*level
-	// for single surface level is always 0. so, -1.0*s(x) > 0 
+	if (b_parameters.restricted_range)
+	{
+		int n_ie = b_parameters.n_inequality;
+		int n_i = b_parameters.n_interface;
+		int n_p = b_parameters.n_planar;
+		int n_t = b_parameters.n_tangent;
+		for (int j = 0; j < n_i; j++ ){
+			for (int k = 0; k < inequality_matrix.cols(); k++ ){
+				inequality_matrix(n_ie + 2*j + 0, k) =  interpolation_matrix(n_ie + j,k); // lower bound constraint Ax >= lower_bound
+				inequality_matrix(n_ie + 2*j + 1, k) = -interpolation_matrix(n_ie + j,k); // upper bound constraint -Ax >= -upper_bound
+			}
+		}
+		for (int j = 0; j < n_p; j++ ){
+			for (int k = 0; k < inequality_matrix.cols(); k++){
+				inequality_matrix(n_ie + 2*n_i + 6*j + 0, k) =  interpolation_matrix(n_ie + n_i + 3*j + 0, k); // lower bound constraint Ax >= lower_bound
+				inequality_matrix(n_ie + 2*n_i + 6*j + 1, k) = -interpolation_matrix(n_ie + n_i + 3*j + 0, k); // upper bound constraint -Ax >= -upper_bound
+				inequality_matrix(n_ie + 2*n_i + 6*j + 2, k) =  interpolation_matrix(n_ie + n_i + 3*j + 1, k);  // ... 
+				inequality_matrix(n_ie + 2*n_i + 6*j + 3, k) = -interpolation_matrix(n_ie + n_i + 3*j + 1, k);
+				inequality_matrix(n_ie + 2*n_i + 6*j + 4, k) =  interpolation_matrix(n_ie + n_i + 3*j + 2, k);
+				inequality_matrix(n_ie + 2*n_i + 6*j + 5, k) = -interpolation_matrix(n_ie + n_i + 3*j + 2, k);
+			}
+		}
+		for (int j = 0; j < n_t; j++ ){
+			for (int k = 0; k < inequality_matrix.cols(); k++){
+				inequality_matrix(n_ie + 2*n_i + 6*n_p + 2*j + 0, k) =  interpolation_matrix(n_ie + n_i + 3*n_p + j, k); //  Ax >= angle_lower_bound (always positive)
+				inequality_matrix(n_ie + 2*n_i + 6*n_p + 2*j + 1, k) = -interpolation_matrix(n_ie + n_i + 3*n_p + j, k); // -Ax >= -angle_upper_bound (always positive)
+			}
+		}
+	}
+
 	return true;
 }
 
 bool Single_Surface::get_inequality_values( VectorXd &inequality_values )
 {
-	for (int j = 0; j < (int)b_input.inequality->size(); j++ ) inequality_values(j) = 0.0;
+	int n_ie = b_parameters.n_inequality;
+	for (int j = 0; j < n_ie; j++ ) inequality_values(j) = 0.0;
+
+	if (b_parameters.restricted_range)
+	{
+		int n_i = b_parameters.n_interface;
+		int n_p = b_parameters.n_planar;
+		int n_t = b_parameters.n_tangent;
+		for (int j = 0; j < n_i; j++ ){
+			inequality_values(n_ie + 2*j + 0) =  b_input.itrface->at(j).level_lower_bound(); //  Ax >=  lower_bound
+			inequality_values(n_ie + 2*j + 1) = -b_input.itrface->at(j).level_upper_bound(); // -Ax >= -upper_bound
+		}
+		for (int j = 0; j < n_p; j++ ){
+			inequality_values(n_ie + 2*n_i + 6*j + 0) =  b_input.planar->at(j).nx_lower_bound(); //  Ax >=  lower_bound
+			inequality_values(n_ie + 2*n_i + 6*j + 1) = -b_input.planar->at(j).nx_upper_bound(); // -Ax >= -upper_bound
+			inequality_values(n_ie + 2*n_i + 6*j + 2) =  b_input.planar->at(j).ny_lower_bound(); // ...
+			inequality_values(n_ie + 2*n_i + 6*j + 3) = -b_input.planar->at(j).ny_upper_bound();
+			inequality_values(n_ie + 2*n_i + 6*j + 4) =  b_input.planar->at(j).nz_lower_bound();
+			inequality_values(n_ie + 2*n_i + 6*j + 5) = -b_input.planar->at(j).nz_upper_bound();
+		}
+		for (int j = 0; j < n_t; j++ ){
+			inequality_values(2*n_i + 6*n_p + 2*j + 0) =  b_input.tangent->at(j).angle_lower_bound(); //  Ax >=  angle_lower_bound
+			inequality_values(2*n_i + 6*n_p + 2*j + 1) = -b_input.tangent->at(j).angle_upper_bound(); // -Ax >= -angle_upper_bound
+		}
+	}
 	return true;
 }
 
@@ -530,6 +594,9 @@ bool Single_Surface::process_input_data()
 	{
 		if (!b_input.get_interface_data()) return false;
 	}
+
+	for (int j = 0; j < (int)b_input.planar->size(); j++ ) b_input.planar->at(j).setNormalBounds(10.0,5.0);
+
 	return true;
 }
 

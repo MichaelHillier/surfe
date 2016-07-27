@@ -4,9 +4,14 @@
 #include <gmpxx.h>
 
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+
 #include <Eigen/Core>
 
 using namespace Eigen;
+using namespace std;
 
 class System_Solver {
 public:
@@ -55,6 +60,13 @@ public:
 								  const VectorXd equality_vector,
 								  const VectorXd inequality_vector)
 	{
+		// Debug
+		cout<<" Interpolation matrix:\n"<< interpolation_matrix << endl;
+		cout<<" Equality matrix:\n"<< equality_matrix <<endl;
+		cout<<" Inequality matrix:\n"<< inequality_matrix << endl;
+		cout<<" Equality vector:\n"<< equality_vector << endl;
+		cout<<" Inequality vector:\n"<< inequality_vector <<endl;
+		// end debug
 		_interpolation_matrixD = interpolation_matrix;
 		_interpolation_matrix = _convert_double_matrix_2_mpf(interpolation_matrix);
 		_equality_matrix = _convert_double_matrix_2_mpf(equality_matrix);

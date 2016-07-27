@@ -3,6 +3,9 @@
 
 #include <surfe_lib_module.h>
 
+#define D2R 0.01745329251994329576923690768489 // degrees to radians conversion factor
+#define R2D 57.295779513082320876798154814105  // radians to degrees conversion factor
+
 struct SURFE_LIB_EXPORT Parameter_Types{
 	enum DWRT {PT1,PT2};
 	enum SecondDerivatives {DXDX,DXDY,DXDZ,DYDX,DYDY,DYDZ,DZDX,DZDY,DZDZ};
@@ -34,6 +37,7 @@ struct SURFE_LIB_EXPORT model_parameters{
 	bool advanced_parameters;
 	bool model_global_anisotropy;
 	bool use_smoothing;
+	bool use_uncertainty;
 	double interface_slack; // interface slack
 	double gradient_slack; // gradient slack
 
@@ -41,7 +45,7 @@ struct SURFE_LIB_EXPORT model_parameters{
 	model_parameters() : model_type(Parameter_Types::Single_surface), min_stratigraphic_thickness(0),
 		use_interface_data(true), use_planar_data(true), use_tangent(false), use_inequality(false),
 		basis_type(Parameter_Types::Cubic), shape_parameter(100), polynomial_order(1),
-		advanced_parameters(false), model_global_anisotropy(false), use_smoothing(false), interface_slack(0), gradient_slack(0) {}
+		advanced_parameters(false), model_global_anisotropy(false), use_smoothing(false), use_uncertainty(false), interface_slack(0), gradient_slack(0) {}
 };
 
 struct SURFE_LIB_EXPORT basic_parameters{
@@ -52,6 +56,7 @@ struct SURFE_LIB_EXPORT basic_parameters{
 	unsigned int n_tangent;
 	unsigned int n_constraints;
 	unsigned int n_equality;
+	unsigned int n_bounded_inequality;
 	// basis function parameters
 	bool modified_basis;
 	// polynomial parameters
@@ -59,9 +64,11 @@ struct SURFE_LIB_EXPORT basic_parameters{
 	unsigned int n_poly_terms;
 	// type of problem
 	Parameter_Types::SolverType problem_type;
+	// restricted range constraints - bounded inequalities
+	bool restricted_range;
 	// initialization 
-	basic_parameters() : n_interface(0), n_planar(0), n_inequality(0), n_tangent(0), n_constraints(0), n_equality(0),
-		modified_basis(false), poly_term(true), n_poly_terms(4), problem_type(Parameter_Types::Linear){}
+	basic_parameters() : n_interface(0), n_planar(0), n_inequality(0), n_tangent(0), n_constraints(0), n_equality(0), n_bounded_inequality(0),
+		modified_basis(false), poly_term(true), n_poly_terms(4), problem_type(Parameter_Types::Linear), restricted_range(false){}
 };
 
 #endif

@@ -2,6 +2,7 @@
 #define _modelling_input_h
 
 #include <surfe_lib_module.h>
+#include <modelling_parameters.h>
 
 #include <vector>
 
@@ -51,17 +52,26 @@ class SURFE_LIB_EXPORT Interface : public Point {
 private:
 	double _level;
 	double _residual;
+	double _level_bound[2];
 public:
 	Interface(const double &x_coord,
 		const double &y_coord,
 		const double &z_coord,
 		const double &lvl,
 		const double &c_coord = NULL)
-		: Point(x_coord,y_coord,z_coord,c_coord), _level(lvl) { _residual = 0.0; } 
+		: Point(x_coord,y_coord,z_coord,c_coord), _level(lvl) 
+	{ 
+		_residual = 0.0;
+		_level_bound[0] = 0.0;
+		_level_bound[1] = 0.0;
+	} 
 	double level() const { return _level; }
 	double residual() const { return _residual; }
+	double level_lower_bound() const { return _level_bound[0]; }
+	double level_upper_bound() const { return _level_bound[1]; }
 	void setResidual(const double &res) { _residual = res; }
 	void setLevel(const double &v) { _level = v; }
+	void setLevelBounds(const double &level_uncertainty) { _level_bound[0] = -1.0*level_uncertainty; _level_bound[1] = level_uncertainty; }
 };
 
 class SURFE_LIB_EXPORT Inequality : public Point {
@@ -87,7 +97,7 @@ private:
 	int _polarity;
 	double _normal[3];
 	double _residual;
-	double _normal_error[3][2];
+	double _normal_bound[3][2];
 	bool _compute_strike_dip_polarity_from_normal();
 	bool _compute_normal_from_strike_dip_polarity();
 public:
@@ -129,7 +139,13 @@ public:
 	double nx() const { return _normal[0]; }
 	double ny() const { return _normal[1]; }
 	double nz() const { return _normal[2]; }
-	bool getNormalError(double (&matrix)[3][2]);
+	double nx_lower_bound() const { return _normal_bound[0][0]; }
+	double nx_upper_bound() const { return _normal_bound[0][1]; }
+	double ny_lower_bound() const { return _normal_bound[1][0]; }
+	double ny_upper_bound() const { return _normal_bound[1][1]; }
+	double nz_lower_bound() const { return _normal_bound[2][0]; }
+	double nz_upper_bound() const { return _normal_bound[2][1]; }
+	void setNormalBounds(const double &delta_strike, const double &delta_dip);
 	double residual() const { return _residual; }
 	void setResidual(const double &res) { _residual = res; }
 }; 
@@ -138,6 +154,7 @@ class SURFE_LIB_EXPORT Tangent : public Point {
 private:
 	double _tangent[3];
 	double _residual;
+	double _angle_bound[2];
 public:
 	Tangent (const double &x_coord,
 		const double &y_coord,
@@ -157,7 +174,10 @@ public:
 	double ty() const { return _tangent[1]; }
 	double tz() const { return _tangent[2]; }
 	double residual() const { return _residual; }
+	double angle_lower_bound() const { return _angle_bound[0]; }
+	double angle_upper_bound() const { return _angle_bound[1]; }
 	void setResidual(const double &res) { _residual = res; }
+	void setAngleBounds(const double &angle){ _angle_bound[0] = cos((90 - angle)*D2R); _angle_bound[1] = cos((90 + angle)*D2R); }
 }; 
 
 

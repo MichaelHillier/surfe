@@ -130,11 +130,10 @@ bool Planar::_compute_strike_dip_polarity_from_normal()
 	if ( _normal[2] < 0 ) _polarity = 1;
 	else _polarity = 0;
 
-	double r2d = 57.295779513082320876798154814105;
 	// get dip first 
-	_dip = acos(_normal[2])*r2d; // could do better. e.g. for overturn cases puts _dip > 90. but there formula's for getting normals works so sticking with it for now
+	_dip = acos(_normal[2])*R2D; // could do better. e.g. for overturn cases puts _dip > 90. but there formula's for getting normals works so sticking with it for now
 	// get dip_direction
-	double dip_direction = atan2(_normal[1],_normal[0])*r2d;
+	double dip_direction = atan2(_normal[1],_normal[0])*R2D;
 
 
 	// if negative azimuth get positive angle
@@ -148,12 +147,10 @@ bool Planar::_compute_strike_dip_polarity_from_normal()
 
 bool Planar::_compute_normal_from_strike_dip_polarity()
 {
-	double d2r = 0.01745329251994329576923690768489;
-
 	// Get down dip vector - v
-	double vx = cos(-1.0*(_strike * d2r)) * cos(-1.0*(_dip * d2r));
-	double vy = sin(-1.0*(_strike * d2r)) * cos(-1.0*(_dip * d2r));
-	double vz = sin(-1.0*(_dip * d2r));
+	double vx = cos(-1.0*(_strike * D2R)) * cos(-1.0*(_dip * D2R));
+	double vy = sin(-1.0*(_strike * D2R)) * cos(-1.0*(_dip * D2R));
+	double vz = sin(-1.0*(_dip * D2R));
 
 	// Get strike vector - vp
 	double vpx = -1.0 * vy;
@@ -196,12 +193,10 @@ bool Planar::_compute_normal_from_strike_dip_polarity()
 
 bool Planar::getDipVector( double (&vector)[3] )
 {
-	double d2r = 0.01745329251994329576923690768489;
-
 	// Get down dip vector - v
-	double vx = cos(-1.0*(_strike * d2r)) * cos(-1.0*(_dip * d2r));
-	double vy = sin(-1.0*(_strike * d2r)) * cos(-1.0*(_dip * d2r));
-	double vz = sin(-1.0*(_dip * d2r));
+	double vx = cos(-1.0*(_strike * D2R)) * cos(-1.0*(_dip * D2R));
+	double vy = sin(-1.0*(_strike * D2R)) * cos(-1.0*(_dip * D2R));
+	double vz = sin(-1.0*(_dip * D2R));
 
 	// normalize
 	double length = sqrt(vx*vx + vy*vy + vz*vz);
@@ -218,11 +213,9 @@ bool Planar::getDipVector( double (&vector)[3] )
 
 bool Planar::getStrikeVector( double (&vector)[3] )
 {
-	double d2r = 0.01745329251994329576923690768489;
-
 	// Get strike vector
-	double vx = -sin(-1.0*(_strike * d2r));
-	double vy = cos(-1.0*(_strike * d2r));
+	double vx = -sin(-1.0*(_strike * D2R));
+	double vy = cos(-1.0*(_strike * D2R));
 	double vz = 0;
 
 	vector[0] = vx;
@@ -232,135 +225,96 @@ bool Planar::getStrikeVector( double (&vector)[3] )
 	return true;
 }
 
-bool Planar::getNormalError( double (&matrix)[3][2] )
+void Planar::setNormalBounds(const double &delta_strike, const double &delta_dip )
 {
-	double d2r = 0.01745329251994329576923690768489;
+	// theta = strike
+	// phi = dip
+	// delta_strike = error on strike measurement
+	// delta_dip    = error on dip measurement
 
-	double r = 10.0*d2r; // err
-	double d = _dip*d2r;
-	double s = _strike*d2r;
-	double d1x = (cos(d + r/2.)*cos(r + s)*sin(d + r/2.))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r + s),2)*pow(sin(d + r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2),2));
-	double d1y =  -((cos(d + r/2.)*sin(d + r/2.)*sin(r + s))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r + s),2)*pow(sin(d + r/2.),2) + 
-		pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2),2)));
-	double d1z =  (pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r + s),2)*pow(sin(d + r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2),2));
+	// given the errors on the strike/dip angles a matrix will be computed to hold the lower and upper
+	// bounds on the computed normal components:
+	// nx_lower < nx < nx_upper
+	// ny_lower < ny < ny_upper
+	// nz_lower < nz < nz_upper
+
+	double theta = _strike*D2R;
+	double phi   = _dip*D2R;
+	double dtheta = delta_strike*D2R;
+	double dphi = delta_dip*D2R;
+	
+	double eqn1x = cos(dtheta + theta)*sin(dphi + phi);
+	double eqn1y = -1.0*sin(dtheta + theta)*sin(dphi + phi);
+	double eqn1z = cos(dphi + phi);
 	if ( _polarity == 1 )
 	{
-		d1x*=-1.0;
-		d1y*=-1.0;
-		d1z*=-1.0;
+		eqn1x*=-1.0;
+		eqn1y*=-1.0;
+		eqn1z*=-1.0;
 	}
 
-	double d2x = (cos(d - r/2.)*cos(r - s)*sin(d - r/2.))/
-		sqrt(pow(cos(d - r/2.),2)*pow(cos(r - s),2)*pow(sin(d - r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d - r/2.),2)*pow(sin(r - s),2) + 
-		pow(pow(cos(d - r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2),2));
-	double d2y = (cos(d + r/2.)*sin(d - r/2.)*sin(r - s))/
-		sqrt(pow(cos(d - r/2.),2)*pow(cos(r - s),2)*pow(sin(d - r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d - r/2.),2)*pow(sin(r - s),2) + 
-		pow(pow(cos(d - r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2),2));
-	double d2z = (pow(cos(d - r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2))/
-		sqrt(pow(cos(d - r/2.),2)*pow(cos(r - s),2)*pow(sin(d - r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d - r/2.),2)*pow(sin(r - s),2) + 
-		pow(pow(cos(d - r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2),2));
+	double eqn2x = -1.0*cos(dtheta - theta)*sin(dphi - phi);
+	double eqn2y = -1.0*sin(dtheta - theta)*sin(dphi - phi);
+	double eqn2z = cos(dphi - phi);
 	if ( _polarity == 1 )
 	{
-		d2x*=-1.0;
-		d2y*=-1.0;
-		d2z*=-1.0;
+		eqn2x*=-1.0;
+		eqn2y*=-1.0;
+		eqn2z*=-1.0;
 	}
 
-	double d3x = (cos(d - r/2.)*cos(r + s)*sin(d - r/2.))/
-		sqrt(pow(cos(d - r/2.),2)*pow(cos(r + s),2)*pow(sin(d - r/2.),2) + pow(cos(d - r/2.),2)*pow(sin(d - r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d - r/2.),2)*pow(cos(r + s),2) + pow(cos(d - r/2.),2)*pow(sin(r + s),2),2));
-	double d3y = -((cos(d - r/2.)*sin(d - r/2.)*sin(r + s))/
-		sqrt(pow(cos(d - r/2.),2)*pow(cos(r + s),2)*pow(sin(d - r/2.),2) + 
-		pow(cos(d - r/2.),2)*pow(sin(d - r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d - r/2.),2)*pow(cos(r + s),2) + pow(cos(d - r/2.),2)*pow(sin(r + s),2),2)));
-	double d3z = (pow(cos(d - r/2.),2)*pow(cos(r + s),2) + pow(cos(d - r/2.),2)*pow(sin(r + s),2))/
-		sqrt(pow(cos(d - r/2.),2)*pow(cos(r + s),2)*pow(sin(d - r/2.),2) + pow(cos(d - r/2.),2)*pow(sin(d - r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d - r/2.),2)*pow(cos(r + s),2) + pow(cos(d - r/2.),2)*pow(sin(r + s),2),2));
+	double eqn3x = -1.0*cos(dtheta + theta)*sin(dphi - phi);
+	double eqn3y = sin(dtheta + theta)*sin(dphi - phi);
+	double eqn3z = cos(dphi - phi);
 	if ( _polarity == 1 )
 	{
-		d3x*=-1.0;
-		d3y*=-1.0;
-		d3z*=-1.0;
+		eqn3x*=-1.0;
+		eqn3y*=-1.0;
+		eqn3z*=-1.0;
 	}
 
-	double d4x = (cos(d + r/2.)*cos(r - s)*sin(d + r/2.))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r - s),2)*pow(sin(d + r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r - s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2),2));
-	double d4y = (cos(d + r/2.)*sin(d + r/2.)*sin(r - s))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r - s),2)*pow(sin(d + r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r - s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2),2));
-	double d4z = (pow(cos(d + r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r - s),2)*pow(sin(d + r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r - s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r - s),2) + pow(cos(d + r/2.),2)*pow(sin(r - s),2),2));
-	if ( _polarity == 1 )
+	double eqn4x = cos(dtheta - theta)*sin(dphi + phi);
+	double eqn4y = sin(dtheta - theta)*sin(dphi + phi);
+	double eqn4z = cos(dphi + phi);
+	if ( _polarity == 2 )
 	{
-		d4x*=-1.0;
-		d4y*=-1.0;
-		d4z*=-1.0;
+		eqn4x*=-1.0;
+		eqn4y*=-1.0;
+		eqn4z*=-1.0;
 	}
 
-	double nx_l = d1x;
-	if ( d2x < nx_l) nx_l = d2x;
-	if ( d3x < nx_l) nx_l = d3x;
-	if ( d4x < nx_l) nx_l = d4x;
-	double ny_l = d1y;
-	if ( d2y < ny_l) ny_l = d2y;
-	if ( d3y < ny_l) ny_l = d3y;
-	if ( d4y < ny_l) ny_l = d4y;
-	double nz_l = d1z;
-	if ( d2z < nz_l) nz_l = d2z;
-	if ( d3z < nz_l) nz_l = d3z;
-	if ( d4z < nz_l) nz_l = d4z;
+	double nx_lower = eqn1x;
+	if ( eqn2x < nx_lower) nx_lower = eqn2x;
+	if ( eqn3x < nx_lower) nx_lower = eqn3x;
+	if ( eqn4x < nx_lower) nx_lower = eqn4x;
+	double ny_lower = eqn1y;
+	if ( eqn2y < ny_lower) ny_lower = eqn2y;
+	if ( eqn3y < ny_lower) ny_lower = eqn3y;
+	if ( eqn4y < ny_lower) ny_lower = eqn4y;
+	double nz_lower = eqn1z;
+	if ( eqn2z < nz_lower) nz_lower = eqn2z;
+	if ( eqn3z < nz_lower) nz_lower = eqn3z;
+	if ( eqn4z < nz_lower) nz_lower = eqn4z;
 
-	double nx_u = d1x;
-	if ( d2x > nx_u) nx_u = d2x;
-	if ( d3x > nx_u) nx_u = d3x;
-	if ( d4x > nx_u) nx_u = d4x;
-	double ny_u = d1y;
-	if ( d2y > ny_u) ny_u = d2y;
-	if ( d3y > ny_u) ny_u = d3y;
-	if ( d4y > ny_u) ny_u = d4y;
-	double nz_u = d1z;
-	if ( d2z > nz_u) nz_u = d2z;
-	if ( d3z > nz_u) nz_u = d3z;
-	if ( d4z > nz_u) nz_u = d4z;
+	double nx_upper = eqn1x;
+	if ( eqn2x > nx_upper) nx_upper = eqn2x;
+	if ( eqn3x > nx_upper) nx_upper = eqn3x;
+	if ( eqn4x > nx_upper) nx_upper = eqn4x;
+	double ny_upper = eqn1y;
+	if ( eqn2y > ny_upper) ny_upper = eqn2y;
+	if ( eqn3y > ny_upper) ny_upper = eqn3y;
+	if ( eqn4y > ny_upper) ny_upper = eqn4y;
+	double nz_upper = eqn1z;
+	if ( eqn2z > nz_upper) nz_upper = eqn2z;
+	if ( eqn3z > nz_upper) nz_upper = eqn3z;
+	if ( eqn4z > nz_upper) nz_upper = eqn4z;
 
-	matrix[0][0] = nx_l;
-	matrix[0][1] = nx_u;
-	matrix[1][0] = ny_l;
-	matrix[1][1] = ny_u;
-	matrix[2][0] = nz_l;
-	matrix[2][1] = nz_u;
-
-	r = 0;
-	double nnx = (cos(d + r/2.)*cos(r + s)*sin(d + r/2.))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r + s),2)*pow(sin(d + r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2),2));
-	double nny = -((cos(d + r/2.)*sin(d + r/2.)*sin(r + s))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r + s),2)*pow(sin(d + r/2.),2) + 
-		pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2),2)));
-	double nnz =  (pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2))/
-		sqrt(pow(cos(d + r/2.),2)*pow(cos(r + s),2)*pow(sin(d + r/2.),2) + pow(cos(d + r/2.),2)*pow(sin(d + r/2.),2)*pow(sin(r + s),2) + 
-		pow(pow(cos(d + r/2.),2)*pow(cos(r + s),2) + pow(cos(d + r/2.),2)*pow(sin(r + s),2),2));
-	if ( _polarity == 1 )
-	{
-		nnx*=-1.0;
-		nny*=-1.0;
-		nnz*=-1.0;
-	}
-
-	double nx = _normal[0];
-	double ny = _normal[1];
-	double nz = _normal[2];
-
-	return true;
+	_normal_bound[0][0] = nx_lower;
+	_normal_bound[0][1] = nx_upper;
+	_normal_bound[1][0] = ny_lower;
+	_normal_bound[1][1] = ny_upper;
+	_normal_bound[2][0] = nz_lower;
+	_normal_bound[2][1] = nz_upper;
 }
 
 double distance_btw_pts( const Point &p1, const Point &p2 )
@@ -849,7 +803,6 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals( const std::
 
 	std::vector<int> planar_indices_to_include; // what we are going to function on function exit
 
-	double r2d = 57.29577951308232;
 	double Large_distance = DBL_MAX;
 
 	double largest_residual = 0;
@@ -857,7 +810,7 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals( const std::
 	std::vector < double > large_planar_residuals;
 	std::vector < int > large_planar_residuals_indices;
 	for (int j = 0; j < (int)planar->size(); j++ ){
-		double grad_err = planar->at(j).residual()*r2d;
+		double grad_err = planar->at(j).residual()*R2D;
 		if ( grad_err > angular_uncertainty )
 		{
 			if ( grad_err > largest_residual )
@@ -915,7 +868,7 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals( const std::
 // 				v2.push_back(planar->at(nn_index).ny());
 // 				v2.push_back(planar->at(nn_index).nz());
 // 				Math_methods::angle_btw_2_vectors(v1,v2,angle);
-// 				if ( (angle*r2d) > angular_uncertainty ) planar_indices_to_include.push_back(index);
+// 				if ( (angle*R2D) > angular_uncertainty ) planar_indices_to_include.push_back(index);
 // 			}
 		}
 	}
@@ -935,13 +888,12 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals( const std:
 
 	std::vector<int> tangent_indices_to_include; // what we are going to function on function exit
 
-	double r2d = 57.29577951308232;
 	double Large_distance = 1000000000;
 
 	std::vector < double > large_tangent_residuals;
 	std::vector < int > large_tangent_residuals_indices;
 	for (int j = 0; j < (int)tangent->size(); j++ ){
-		double grad_err = tangent->at(j).residual()*r2d;
+		double grad_err = tangent->at(j).residual()*R2D;
 		if ( grad_err > angular_uncertainty )
 		{
 			large_tangent_residuals.push_back(grad_err);
@@ -990,7 +942,7 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals( const std:
 // 				v2.push_back(tangent->at(nn_index).ty());
 // 				v2.push_back(tangent->at(nn_index).tz());
 // 				Math_methods::angle_btw_2_vectors(v1,v2,angle);
-// 				if ( (angle*r2d) > angular_uncertainty ) tangent_indices_to_include.push_back(index);
+// 				if ( (angle*R2D) > angular_uncertainty ) tangent_indices_to_include.push_back(index);
 // 			}
 		}
 	}
