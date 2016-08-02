@@ -246,42 +246,42 @@ void Planar::setNormalBounds(const double &delta_strike, const double &delta_dip
 	double eqn1x = cos(dtheta + theta)*sin(dphi + phi);
 	double eqn1y = -1.0*sin(dtheta + theta)*sin(dphi + phi);
 	double eqn1z = cos(dphi + phi);
-	if ( _polarity == 1 )
-	{
-		eqn1x*=-1.0;
-		eqn1y*=-1.0;
-		eqn1z*=-1.0;
-	}
+// 	if ( _polarity == 1 )
+// 	{
+// 		eqn1x*=-1.0;
+// 		eqn1y*=-1.0;
+// 		eqn1z*=-1.0;
+// 	}
 
 	double eqn2x = -1.0*cos(dtheta - theta)*sin(dphi - phi);
 	double eqn2y = -1.0*sin(dtheta - theta)*sin(dphi - phi);
 	double eqn2z = cos(dphi - phi);
-	if ( _polarity == 1 )
-	{
-		eqn2x*=-1.0;
-		eqn2y*=-1.0;
-		eqn2z*=-1.0;
-	}
+// 	if ( _polarity == 1 )
+// 	{
+// 		eqn2x*=-1.0;
+// 		eqn2y*=-1.0;
+// 		eqn2z*=-1.0;
+// 	}
 
 	double eqn3x = -1.0*cos(dtheta + theta)*sin(dphi - phi);
 	double eqn3y = sin(dtheta + theta)*sin(dphi - phi);
 	double eqn3z = cos(dphi - phi);
-	if ( _polarity == 1 )
-	{
-		eqn3x*=-1.0;
-		eqn3y*=-1.0;
-		eqn3z*=-1.0;
-	}
+// 	if ( _polarity == 1 )
+// 	{
+// 		eqn3x*=-1.0;
+// 		eqn3y*=-1.0;
+// 		eqn3z*=-1.0;
+// 	}
 
 	double eqn4x = cos(dtheta - theta)*sin(dphi + phi);
 	double eqn4y = sin(dtheta - theta)*sin(dphi + phi);
 	double eqn4z = cos(dphi + phi);
-	if ( _polarity == 2 )
-	{
-		eqn4x*=-1.0;
-		eqn4y*=-1.0;
-		eqn4z*=-1.0;
-	}
+// 	if ( _polarity == 2 )
+// 	{
+// 		eqn4x*=-1.0;
+// 		eqn4y*=-1.0;
+// 		eqn4z*=-1.0;
+// 	}
 
 	double nx_lower = eqn1x;
 	if ( eqn2x < nx_lower) nx_lower = eqn2x;

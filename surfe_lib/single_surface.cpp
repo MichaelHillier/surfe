@@ -517,16 +517,19 @@ bool Single_Surface::get_inequality_matrix( const MatrixXd &interpolation_matrix
 	// below inequality constraints have to be put in terms of s(x) >= level
 	// so if s(x) <= level => -1.0*s(x) >= -1.0*level
 	// for single surface level is always 0. so, -1.0*s(x) > 0 
-	for (int j = 0; j < inequality_matrix.rows(); j++ ){
-		for (int k = 0; k < inequality_matrix.cols(); k++ ){
-			if (b_input.inequality->at(j).level() > 0) inequality_matrix(j,k) = interpolation_matrix(j,k);
-			else inequality_matrix(j,k) = -interpolation_matrix(j,k);
+	int n_ie = b_parameters.n_inequality;
+	if ( n_ie != 0)
+	{
+		for (int j = 0; j < inequality_matrix.rows(); j++ ){
+			for (int k = 0; k < inequality_matrix.cols(); k++ ){
+				if (b_input.inequality->at(j).level() > 0) inequality_matrix(j,k) = interpolation_matrix(j,k);
+				else inequality_matrix(j,k) = -interpolation_matrix(j,k);
+			}
 		}
 	}
 
 	if (b_parameters.restricted_range)
 	{
-		int n_ie = b_parameters.n_inequality;
 		int n_i = b_parameters.n_interface;
 		int n_p = b_parameters.n_planar;
 		int n_t = b_parameters.n_tangent;
@@ -595,6 +598,7 @@ bool Single_Surface::process_input_data()
 		if (!b_input.get_interface_data()) return false;
 	}
 
+	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(10.0); 
 	for (int j = 0; j < (int)b_input.planar->size(); j++ ) b_input.planar->at(j).setNormalBounds(10.0,5.0);
 
 	return true;
