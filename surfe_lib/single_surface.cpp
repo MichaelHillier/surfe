@@ -145,13 +145,14 @@ bool Single_Surface::setup_system_solver()
 	// 3) Smoothing -> maybe use least squares / right now we are doing matrix smoothing
 
 	int n_ie  = b_parameters.n_inequality;
-	int n_bie = 2*b_parameters.n_bounded_inequality; // 2x b/c you have a lower AND upper bound per constraint pt
+	int n_bie = b_parameters.n_bounded_inequality;
 	int n_e   = b_parameters.n_equality;
 	int n_c   = b_parameters.n_constraints;
 	if (b_parameters.problem_type == Parameter_Types::Quadratic)
 	{
-		VectorXd inequality_values(n_ie + n_bie);
-		if ((n_ie + n_bie) != 0) get_inequality_values(inequality_values);
+		VectorXd b(n_c);
+		VectorXd r(n_c);
+		if (n_c != 0) get_inequality_values(b,r);
 
 		VectorXd equality_values(n_e);
 		if ( n_e != 0 )	get_equality_values(equality_values);
@@ -159,8 +160,8 @@ bool Single_Surface::setup_system_solver()
 		MatrixXd interpolation_matrix(n_c,n_c);
 		if (!get_interpolation_matrix(interpolation_matrix)) return false;
 
-		MatrixXd inequality_matrix(n_ie + n_bie,n_c);
-		if ((n_ie + n_bie) != 0)
+		MatrixXd inequality_matrix(n_c,n_c);
+		if ( n_c != 0)
 		{
 			if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
 		}
@@ -171,7 +172,7 @@ bool Single_Surface::setup_system_solver()
 			if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
 		}
 
-		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
+		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,b);
 		if(!qpc->solve()) return false;
 		solver = qpc;
 		//check_interpolant();
@@ -587,6 +588,61 @@ bool Single_Surface::get_inequality_values( VectorXd &inequality_values )
 			inequality_values(2*n_i + 6*n_p + 2*j + 1) = -b_input.tangent->at(j).angle_upper_bound(); // -Ax >= -angle_upper_bound
 		}
 	}
+	return true;
+}
+
+bool Single_Surface::get_inequality_values( VectorXd &b,VectorXd &r )
+{
+	int n_ie = b_parameters.n_inequality;
+	int n_i = b_parameters.n_interface;
+	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
+
+	// inequality/rock type data
+	if ( n_ie != 0)
+	{
+		// compute fill distance
+		double fill_distance = 0.0;
+		find_fill_distance(b_input,fill_distance);
+		for (int j = 0; j < n_ie; j++ ){
+			if (b_input.inequality->at(j).level() > 0) // stratigraphically above
+			{
+				b(j) = 0.0;
+				r(j) = fill_distance;
+			}
+			else // stratigraphically below
+			{
+				b(j) = -fill_distance;
+				r(j) =  fill_distance;
+			}
+		}
+	}
+
+	// interface data
+	for (int j = 0; j < n_i; j++ ){
+		b(n_ie + j) = b_input.itrface->at(j).level_lower_bound();
+		r(n_ie + j) = b_input.itrface->at(j).level_upper_bound() - b_input.itrface->at(j).level_lower_bound();
+	}
+
+	// planar data
+	for (int j = 0; j < n_p; j++ ){
+		// x-component
+		b(n_ie + n_i + 3*j + 0) = b_input.planar->at(j).nx_lower_bound();
+		r(n_ie + n_i + 3*j + 0) = b_input.planar->at(j).nx_upper_bound() - b_input.planar->at(j).nx_lower_bound();
+		// y-component
+		b(n_ie + n_i + 3*j + 1) = b_input.planar->at(j).ny_lower_bound();
+		r(n_ie + n_i + 3*j + 1) = b_input.planar->at(j).ny_upper_bound() - b_input.planar->at(j).ny_lower_bound();
+		// z-component
+		b(n_ie + n_i + 3*j + 2) = b_input.planar->at(j).nz_lower_bound();
+		r(n_ie + n_i + 3*j + 2) = b_input.planar->at(j).nz_upper_bound() - b_input.planar->at(j).nz_lower_bound();
+	}
+
+	// tangent data
+	for (int j = 0; j < n_t; j++ ){
+		b(n_ie + n_i + 3*n_p + j) = b_input.tangent->at(j).angle_lower_bound();
+		r(n_ie + n_i + 3*n_p + j) = b_input.tangent->at(j).angle_upper_bound() - b_input.tangent->at(j).angle_lower_bound();
+	}
+
 	return true;
 }
 

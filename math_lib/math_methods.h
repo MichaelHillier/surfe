@@ -11,6 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
+#include <Eigen/LU>
 
 using namespace Eigen;
 
@@ -33,6 +34,11 @@ public:
 		const Matrix <T, Dynamic, 1> &b,
 		const Matrix <T, Dynamic, 1> &d,
 		Matrix <T, Dynamic, 1> &fvalues);
+	static bool quadratic_solver_loqo(const Matrix <double, Dynamic, Dynamic> &H,
+		const Matrix <double, Dynamic, Dynamic> &A,
+		const Matrix <double, Dynamic, 1> &b,
+		const Matrix <double, Dynamic, 1> &r,
+		Matrix <double, Dynamic, 1> &fvalues);
 };
 
 template <class T>
