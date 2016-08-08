@@ -22,6 +22,11 @@ private:
 	template <class T> static void _rot(std::vector< std::vector < T > > &a, const T &s, const T &tau, const int &i, const int &j, const int &k, const int &l);
 	static double _get_double(const double &d) { return d;}
 	static double _get_double(const mpf_class &d) { return d.get_d(); }
+	double _find_step(const VectorXd &da, const VectorXd &a);
+	double _find_positivity_step( const VectorXd &da, const VectorXd &a,
+		                          const VectorXd &db, const VectorXd &b,
+								  const VectorXd &dc, const VectorXd &c,
+								  const VectorXd &dd, const VectorXd &d);
 public:
 	template <class T> static bool sort_vector_w_index(std::vector<T> &arr, std::vector<int> &brr);
 	template <class T> static T max_element_wrt_zero(const T &a, const T &b);
@@ -34,11 +39,12 @@ public:
 		const Matrix <T, Dynamic, 1> &b,
 		const Matrix <T, Dynamic, 1> &d,
 		Matrix <T, Dynamic, 1> &fvalues);
-	static bool quadratic_solver_loqo(const Matrix <double, Dynamic, Dynamic> &H,
-		const Matrix <double, Dynamic, Dynamic> &A,
-		const Matrix <double, Dynamic, 1> &b,
-		const Matrix <double, Dynamic, 1> &r,
-		Matrix <double, Dynamic, 1> &fvalues);
+	bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, const VectorXd &b, const VectorXd &r, VectorXd &fvalues );
+// 	static bool quadratic_solver_loqo(const Matrix <double, Dynamic, Dynamic> &H,
+// 		const Matrix <double, Dynamic, Dynamic> &A,
+// 		const Matrix <double, Dynamic, 1> &b,
+// 		const Matrix <double, Dynamic, 1> &r,
+// 		Matrix <double, Dynamic, 1> &fvalues);
 };
 
 template <class T>
@@ -313,14 +319,14 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		}
 	}
 
-	std::ofstream out("E:\interpolation_mat.txt");
-	out.precision(15);
-	for (int j = 0; j < n + na + 2*nc; j++ ){
-		for (int k = 0; k < n + na + 2*nc; k++ ){
-			out<<"  "<<KKT(j,k).get_d();
-		}
-		out<<endl;
-	}
+// 	std::ofstream out("E:\interpolation_mat.txt");
+// 	out.precision(15);
+// 	for (int j = 0; j < n + na + 2*nc; j++ ){
+// 		for (int k = 0; k < n + na + 2*nc; k++ ){
+// 			out<<"  "<<KKT(j,k).get_d();
+// 		}
+// 		out<<endl;
+// 	}
 
 	//////////////////////////////////////////////
 	// Determine Starting Point for the iterate //
