@@ -6,8 +6,9 @@ double Math_methods::_find_step( const VectorXd &da, const VectorXd &a )
 	int n = da.rows();
 	double max = DBL_MIN;
 	for (int j = 0; j < n; j++ ){
-		double alpha = -da[j]/(a[j]*0.95);
-		if ( alpha > max && alpha < 1) max = alpha;
+		double alpha = std::max(abs(da[j]/a[j])/0.95,1.0);
+		if ( alpha > max ) max = alpha;
+		//std::cout<<" alpha = "<<alpha<<" max= "<<max<<std::endl;
 	}
 	return max;
 }
@@ -39,23 +40,25 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 {
 	int n = (int)H.rows();
 
+	//double max_ele = H.maxCoeff();
+
 	MatrixXd KKT(2*n,2*n);
 	VectorXd c(n);
 	c.setZero();
 	VectorXd rhs(2*n);
 	rhs << c, b;
-	std::cout<<" rhs:\n"<< rhs << std::endl;
+	//std::cout<<" rhs:\n"<< rhs << std::endl;
 	
 	KKT << -(H + MatrixXd::Identity(n,n)), A.transpose(), A, MatrixXd::Identity(n,n);
-	std::cout<<" Initial KKT matrix:\n"<< KKT << std::endl;
+	//std::cout<<" Initial KKT matrix:\n"<< KKT << std::endl;
 
 	VectorXd soln(2*n);
 	soln = KKT.partialPivLu().solve(rhs);
-	std::cout<<" Soln from Initial KKT matrix:\n"<< soln << std::endl;
+	//std::cout<<" Soln from Initial KKT matrix:\n"<< soln << std::endl;
 	VectorXd x(n);
-	x = soln.segment(0,n-1);
+	x = soln.head(n);
 	VectorXd y(n);
-	y = soln.segment(n,2*n - 1); 
+	y = soln.tail(n);
     VectorXd g(n);
 	VectorXd z(n);
 	VectorXd t(n);
@@ -74,18 +77,18 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		p(j) = std::max(abs(r(j) - w(j)),100.0);
 		q(j) = v(j);
 	}
-	MatrixXd DebugMatrixV(n,10);
-	DebugMatrixV.col(0) = x;
-	DebugMatrixV.col(1) = y;
-	DebugMatrixV.col(2) = g;
-	DebugMatrixV.col(3) = z;
-	DebugMatrixV.col(4) = t;
-	DebugMatrixV.col(5) = s;
-	DebugMatrixV.col(6) = v;
-	DebugMatrixV.col(7) = w;
-	DebugMatrixV.col(8) = p;
-	DebugMatrixV.col(9) = q;
-	std::cout<<" Current Variable matrix:\n"<< DebugMatrixV << std::endl;
+// 	MatrixXd DebugMatrixV(n,10);
+// 	DebugMatrixV.col(0) = x;
+// 	DebugMatrixV.col(1) = y;
+// 	DebugMatrixV.col(2) = g;
+// 	DebugMatrixV.col(3) = z;
+// 	DebugMatrixV.col(4) = t;
+// 	DebugMatrixV.col(5) = s;
+// 	DebugMatrixV.col(6) = v;
+// 	DebugMatrixV.col(7) = w;
+// 	DebugMatrixV.col(8) = p;
+// 	DebugMatrixV.col(9) = q;
+// 	std::cout<<" Current Variable matrix:\n"<< DebugMatrixV << std::endl;
 
 	double mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q))/4*n; 
 
@@ -98,7 +101,6 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
  	MatrixXd T(n,n);
  	MatrixXd P(n,n);
  	MatrixXd Q(n,n);
-	Q = q.asDiagonal();
 	// below matrices are computed after predictor step
 	MatrixXd dG(n,n);
 	MatrixXd dV(n,n);
@@ -135,21 +137,54 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 	VectorXd dw(n);
 	VectorXd dp(n);
 	VectorXd dq(n);
-	MatrixXd DebugMatrixStepV(n,10);
+	//MatrixXd DebugMatrixStepV(n,10);
 
 	bool converged = false;
+	double last_iterations_sig_fig = 0.0;
+	VectorXd iter_minus_one_x = x;
+	int iter = 0;
 	while (!converged)
 	{
+		iter++;
+// 		MatrixXd DebugV(n,10);
+// 		DebugV.col(0) = x;
+// 		DebugV.col(1) = y;
+// 		DebugV.col(2) = g;
+// 		DebugV.col(3) = z;
+// 		DebugV.col(4) = t;
+// 		DebugV.col(5) = s;
+// 		DebugV.col(6) = v;
+// 		DebugV.col(7) = w;
+// 		DebugV.col(8) = p;
+// 		DebugV.col(9) = q;
+// 		std::cout<<" Current Variable matrix (x,y,g,z,t,s,v,w,p,q):\n"<< DebugV << std::endl;
+
 		double primal_obj = 0.5*x.transpose()*H*x;
 		double   dual_obj = b.dot(y) - 0.5*x.transpose()*H*x - r.dot(q);
 
-		double sigfig = std::max(-std::log10(abs(primal_obj - dual_obj)/(abs(primal_obj) + 1)),0.0);
+		double sigfig = std::max(-std::log10(abs(primal_obj - dual_obj)/(abs(primal_obj) + 1.0)),0.0);
 
-		if ( sigfig > 6 )
+		double primal_infeasibility = sqrt(rho.dot(rho) + tau.dot(tau) + alpha.dot(alpha) + nu.dot(nu))/(sqrt(b.dot(b)) + 1.0);
+		double  dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
+
+		std::cout<<" Iteration["<<iter<<"]"<<std::endl;
+		std::cout<<"	Primal_obj = "<< primal_obj << std::endl;
+		std::cout<<"	Dual_obj = "<< dual_obj << std::endl;
+		std::cout<<"	Significant figures = "<< sigfig << std::endl;
+		std::cout<<"	Primal Infeasibility = "<< primal_infeasibility <<std::endl;
+		std::cout<<"	Dual Infeasibility = "<< dual_infeasibilitiy<<std::endl;
+
+		if ( sigfig > 6 || sigfig < last_iterations_sig_fig )
 		{
 			converged = true;
+
+			if ( sigfig < last_iterations_sig_fig ) fvalues = iter_minus_one_x; // this occurs when there is a stall due to a weak duality gap
+			else fvalues = x; // strong duality gap
 			break;
 		}
+
+		last_iterations_sig_fig = sigfig;
+		iter_minus_one_x = x;
  
 		G = g.asDiagonal();
 		Z = z.asDiagonal();
@@ -182,15 +217,39 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		alphah = alpha - P*Q.inverse()*gamma_q;
 		nuh = nu + G*Z.inverse()*gamma_z;
 
+// 		MatrixXd RHSV(n,14);
+// 		RHSV.col(0) = rho;
+// 		RHSV.col(1) = nu;
+// 		RHSV.col(2) = alpha;
+// 		RHSV.col(3) = sigma;
+// 		RHSV.col(4) = tau;
+// 		RHSV.col(5) = beta;
+// 		RHSV.col(6) = gamma_z;
+// 		RHSV.col(7) = gamma_w;
+// 		RHSV.col(8) = gamma_s;
+// 		RHSV.col(9) = gamma_q;
+// 		RHSV.col(10) = tauh;
+// 		RHSV.col(11) = betah;
+// 		RHSV.col(12) = alphah;
+// 		RHSV.col(13) = nuh;
+// 		std::cout<<" Current RHS matrix (rho,nu,alpha,sigma,tau,beta,gamma_z,gamma_w,gamma_s,gamma_q,tauh,betah,alphah,nuh):\n"<< RHSV << std::endl;
+
 		rhs << (sigma - D*(nuh + S.inverse()*T*tauh)),(rho - E*(betah - P.inverse()*Q*alphah));
 
 		KKT << -(H + D), A.transpose(), A, E;
+// 		std::cout<<" Predictor KKT matrix:\n"<< KKT << std::endl;
+// 		std::cout<<" Predictor rhs:\n"<< rhs << std::endl;
 
 		soln = KKT.partialPivLu().solve(rhs);
 
 		// get "delta" variables for predictor system ...
-		dx = soln.segment(0,n-1);
-		dy = soln.segment(n,2*n - 1); 
+		dx = soln.head(n);
+		dy = soln.tail(n); 
+
+// 		std::cout<<" Soln from Predictor KKT matrix:\n"<< soln << std::endl;
+// 		std::cout<<" dx:\n"<< dx << std::endl;
+// 		std::cout<<" dy:\n"<< dy << std::endl;
+
 		dw = -E*(betah -P.inverse()*Q*alphah +dy);
 		dt = -D*S.inverse()*T*(G*Z.inverse()*tauh - nuh + dx);
 		dz = G.inverse()*Z*(nuh - dx - dt);
@@ -201,17 +260,17 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		dg = G*Z.inverse()*(gamma_z - dz);
 
 		// Debug
-		DebugMatrixStepV.col(0) = dx;
-		DebugMatrixStepV.col(1) = dy;
-		DebugMatrixStepV.col(2) = dg;
-		DebugMatrixStepV.col(3) = dz;
-		DebugMatrixStepV.col(4) = dt;
-		DebugMatrixStepV.col(5) = ds;
-		DebugMatrixStepV.col(6) = dv;
-		DebugMatrixStepV.col(7) = dw;
-		DebugMatrixStepV.col(8) = dp;
-		DebugMatrixStepV.col(9) = dq;
-		std::cout<<" Current Step Variable matrix (after predictor step):\n"<< DebugMatrixStepV << std::endl;
+// 		DebugMatrixStepV.col(0) = dx;
+// 		DebugMatrixStepV.col(1) = dy;
+// 		DebugMatrixStepV.col(2) = dg;
+// 		DebugMatrixStepV.col(3) = dz;
+// 		DebugMatrixStepV.col(4) = dt;
+// 		DebugMatrixStepV.col(5) = ds;
+// 		DebugMatrixStepV.col(6) = dv;
+// 		DebugMatrixStepV.col(7) = dw;
+// 		DebugMatrixStepV.col(8) = dp;
+// 		DebugMatrixStepV.col(9) = dq;
+// 		std::cout<<" Current Step Variable matrix (after predictor step) (dx,dy,dg,dz,dt,ds,dv,dw,dp,dq):\n"<< DebugMatrixStepV << std::endl;
 
 		// compute step lengths for primal and dual systems
 		double alpha_p = _find_positivity_step(dg,g,dw,w,dt,t,dp,p);
@@ -222,6 +281,8 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 
 		// update mu
 		mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q))*(fraction)/4*n;
+		std::cout<<"	mu (predictor) = "<<mu<<std::endl;
+
 
 		// update rhs variables rho,nu,alpha,sigma,tau,beta,gamma's
 		// first compute dG,dV,dT,and dP matrices from dg,dv,dt, and dp vectors above
@@ -240,11 +301,19 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 
 		rhs << (sigma - D*(nuh + S.inverse()*T*tauh)),(rho - E*(betah - P.inverse()*Q*alphah));
 
+// 		std::cout<<" Corrector KKT matrix:\n"<< KKT << std::endl;
+// 		std::cout<<" Corrector rhs:\n"<< rhs << std::endl;
+
 		soln = KKT.partialPivLu().solve(rhs);
 
 		// get "delta" variables for corrector system ...
-		dx = soln.segment(0,n-1);
-		dy = soln.segment(n,2*n - 1); 
+		dx = soln.head(n);
+		dy = soln.tail(n);
+
+// 		std::cout<<" Soln from Corrector KKT matrix:\n"<< soln << std::endl;
+// 		std::cout<<" dx:\n"<< dx << std::endl;
+// 		std::cout<<" dy:\n"<< dy << std::endl;
+
 		dw = -E*(betah -P.inverse()*Q*alphah +dy);
 		dt = -D*S.inverse()*T*(G*Z.inverse()*tauh - nuh + dx);
 		dz = G.inverse()*Z*(nuh - dx - dt);
@@ -255,23 +324,34 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		dg = G*Z.inverse()*(gamma_z - dz);
 
 		// Debug
-		DebugMatrixStepV.col(0) = dx;
-		DebugMatrixStepV.col(1) = dy;
-		DebugMatrixStepV.col(2) = dg;
-		DebugMatrixStepV.col(3) = dz;
-		DebugMatrixStepV.col(4) = dt;
-		DebugMatrixStepV.col(5) = ds;
-		DebugMatrixStepV.col(6) = dv;
-		DebugMatrixStepV.col(7) = dw;
-		DebugMatrixStepV.col(8) = dp;
-		DebugMatrixStepV.col(9) = dq;
-		std::cout<<" Current Step Variable matrix (after corrector step):\n"<< DebugMatrixStepV << std::endl;
+// 		DebugMatrixStepV.col(0) = dx;
+// 		DebugMatrixStepV.col(1) = dy;
+// 		DebugMatrixStepV.col(2) = dg;
+// 		DebugMatrixStepV.col(3) = dz;
+// 		DebugMatrixStepV.col(4) = dt;
+// 		DebugMatrixStepV.col(5) = ds;
+// 		DebugMatrixStepV.col(6) = dv;
+// 		DebugMatrixStepV.col(7) = dw;
+// 		DebugMatrixStepV.col(8) = dp;
+// 		DebugMatrixStepV.col(9) = dq;
+// 		std::cout<<" Current Step Variable matrix (after corrector step) (dx,dy,dg,dz,dt,ds,dv,dw,dp,dq):\n"<< DebugMatrixStepV << std::endl;
 
 		// compute step lengths for primal and dual systems
 		alpha_p = _find_positivity_step(dg,g,dw,w,dt,t,dp,p);
 		alpha_d = _find_positivity_step(dz,z,dv,v,ds,s,dq,q);
 
 		// update solution
+// 		x += alpha_p*dx;
+// 		g += alpha_p*dg;
+// 		w += alpha_p*dw;
+// 		t += alpha_p*dt;
+// 		p += alpha_p*dp;
+// 
+// 		y += alpha_d*dy;
+// 		z += alpha_d*dz;
+// 		v += alpha_d*dv;
+// 		s += alpha_d*ds;
+// 		q += alpha_d*dq;
 		x += (1/alpha_p)*dx;
 		g += (1/alpha_p)*dg;
 		w += (1/alpha_p)*dw;

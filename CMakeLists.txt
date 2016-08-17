@@ -52,4 +52,4 @@ target_include_directories(surfe_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/surfe_li
 include_directories(${GMP_INCLUDE_DIR})
 
 target_link_libraries(math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
-target_link_libraries(surfe_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
+target_link_libraries(surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})

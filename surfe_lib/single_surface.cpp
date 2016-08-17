@@ -163,7 +163,8 @@ bool Single_Surface::setup_system_solver()
 		MatrixXd inequality_matrix(n_c,n_c);
 		if ( n_c != 0)
 		{
-			if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
+			inequality_matrix = interpolation_matrix;
+			//if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
 		}
 
 		MatrixXd equality_matrix(n_e,n_c);
@@ -172,7 +173,8 @@ bool Single_Surface::setup_system_solver()
 			if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
 		}
 
-		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,b);
+		//Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,b);
+		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,inequality_matrix,b,r);
 		if(!qpc->solve()) return false;
 		solver = qpc;
 		//check_interpolant();
@@ -193,6 +195,13 @@ bool Single_Surface::setup_system_solver()
 		if (!llu->solve()) return false;
 		solver = llu;
 	}
+
+// 	Kernel *parent_kernel = this->kernel;
+// 	for (int j = 0; j < 20000000; j++ ){
+// 		Kernel *kernel_j = this->kernel->clone();
+// 		delete kernel_j;
+// 		int stop = 1;
+// 	}
 
 	return true;
 }
@@ -654,7 +663,7 @@ bool Single_Surface::process_input_data()
 		if (!b_input.get_interface_data()) return false;
 	}
 
-	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(10.0); 
+	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(20.0); 
 	for (int j = 0; j < (int)b_input.planar->size(); j++ ) b_input.planar->at(j).setNormalBounds(10.0,5.0);
 
 	return true;

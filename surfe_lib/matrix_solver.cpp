@@ -80,15 +80,21 @@ Matrix <mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_get_hessian
 
 bool Quadratic_Predictor_Corrector::solve()
 {
-	int n = (int)_hessian_matrix.rows();
+	//int n = (int)_hessian_matrix.rows();
 
-	Matrix <mpf_class, Dynamic, 1> fvalues(n);
+	int n  = (int)_H.rows();
+
+	//Matrix <mpf_class, Dynamic, 1> fvalues(n);
 
 	//if (!validate_matrix_systems()) return false;
 
-	if (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues)) return false;
+	//if (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues)) return false;
 
-	weights = _convert_mpf_vector_2_double(fvalues);
+	VectorXd w(n);
+	if (!Math_methods::quadratic_solver_loqo(_H,_A,_b,_r,w)) return false;
+
+	weights = w;
+	//weights = _convert_mpf_vector_2_double(fvalues);
 
 	return true;
 }
