@@ -18,7 +18,7 @@ public:
 		: _x(x_coord), _y(y_coord), _z(z_coord), _c(c_coord)
 	{
 		_scalar_field = NULL;
-		for (int j = 0; j < 3; j++ ) _field_normal[j] = NULL; 
+		for (int j = 0; j < 3; j++ ) _field_normal[j] = NULL;
 	}
 	double x() const { return _x; }
 	double y() const { return _y; }

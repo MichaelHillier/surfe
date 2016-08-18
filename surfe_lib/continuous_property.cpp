@@ -218,7 +218,7 @@ bool Continuous_Property::measure_residuals( Basic_input &input )
 		v2.push_back(input.tangent->at(j).ny_interp());
 		v2.push_back(input.tangent->at(j).nz_interp());
 		Math_methods::angle_btw_2_vectors<double>(v1,v2,angle);
-		input.planar->at(j).setResidual( angle);
+		input.tangent->at(j).setResidual( angle);
 	}
 
 	return true;
