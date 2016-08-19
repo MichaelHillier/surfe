@@ -118,11 +118,21 @@ bool GRBF_Modelling_Methods::run_algorithm()
 {
 	clock_t tstart=clock();
 	cout<<" Starting SURFE algorithm "<<endl;
+	cout<<" Processing input data...";
 	if ( !process_input_data()    ) return false;
+	cout<<"done!"<<endl;
+	cout<<" Get method parameters...";
 	if ( !get_method_parameters() ) return false;
+	cout<<"done!"<<endl;
+	cout<<" Setup basis functions...";
 	if ( !setup_basis_functions() ) return false;
+	cout<<"done!"<<endl;
+	cout<<" Solve mathematical problem...";
 	if ( !setup_system_solver()   ) return false;
+	cout<<"done!"<<endl;
+	cout<<" Evaluate scalar interpolant at grid nodes...";
 	if ( !evaluate_scalar_interpolant()  ) return false;
+	cout<<"done!"<<endl;
 	cout<<" Total computation time = "<<((double)clock()-tstart)/CLOCKS_PER_SEC<<endl;
 
 	return true;

@@ -2937,144 +2937,153 @@ double Modified_Kernel::basis_tangent_planar( const Parameter_Types::FirstDeriva
 
 VectorXd Poly_Zero::basis()
 {
-	VectorXd v;
-
 	if (!_truncated)
 	{
-		v.resize(1);
+		VectorXd v(1);
 		v(0) = 1.0;
+		return v;
 	}
-	else v.resize(0);
-	return v;
+	else
+	{
+		VectorXd v;
+		return v;
+	}
 }
 
 VectorXd Poly_Zero::dx()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(1);
+		VectorXd v(1);
 		v(0) = 0.0;
+		return v;
 	}
-	else v.resize(0);
-	return v;
+	else
+	{
+		VectorXd v;
+		return v;
+	}
 }
 
 VectorXd Poly_Zero::dy()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(1);
+		VectorXd v(1);
 		v(0) = 0.0;
+		return v;
 	}
-	else v.resize(0);
-	return v;
+	else
+	{
+		VectorXd v;
+		return v;
+	}
 }
 
 VectorXd Poly_Zero::dz()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(1);
+		VectorXd v(1);
 		v(0) = 0.0;
+		return v;
 	}
-	else v.resize(0);
-	return v;
+	else
+	{
+		VectorXd v;
+		return v;
+	}
 }
 
 VectorXd Poly_First::basis()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(4);
+		VectorXd v(4);
 		v(0) = _p->x();
 		v(1) = _p->y();
 		v(2) = _p->z();
 		v(3) = 1.0;
+		return v;
 	}
 	else
 	{
-		v.resize(3);
+		VectorXd v(3);
 		v(0) = _p->x();
 		v(1) = _p->y();
 		v(2) = _p->z();
+		return v;
 	}
-	return v;
 }
 
 VectorXd  Poly_First::dx()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(4);
+		VectorXd v(4);
 		v(0) = 1.0;
 		v(1) = 0.0;
 		v(2) = 0.0;
 		v(3) = 0.0;
+		return v;
 	}
 	else
 	{
-		v.resize(3);
+		VectorXd v(3);
 		v(0) = 1.0;
 		v(1) = 0.0;
 		v(2) = 0.0;
+		return v;
 	}
-	return v;
 }
 
 VectorXd  Poly_First::dy()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(4);
+		VectorXd v(4);
 		v(0) = 0.0;
 		v(1) = 1.0;
 		v(2) = 0.0;
 		v(3) = 0.0;
+		return v;
 	}
 	else
 	{
-		v.resize(3);
+		VectorXd v(3);
 		v(0) = 0.0;
 		v(1) = 1.0;
 		v(2) = 0.0;
-		v(3) = 0.0;
+		return v;
 	}
-	return v;
 }
 
 VectorXd  Poly_First::dz()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(4);
+		VectorXd v(4);
 		v(0) = 0.0;
 		v(1) = 0.0;
 		v(2) = 1.0;
 		v(3) = 0.0;
+		return v;
 	}
 	else
 	{
-		v.resize(4);
+		VectorXd v(3);
 		v(0) = 0.0;
 		v(1) = 0.0;
 		v(2) = 1.0;
+		return v;
 	}
-	return v;
 }
 
 VectorXd  Poly_Second::basis()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(10);
+		VectorXd v(10);
 		v(0) = _p->x() * _p->x();
 		v(1) = _p->y() * _p->y();
 		v(2) = _p->z() * _p->z();
@@ -3085,10 +3094,11 @@ VectorXd  Poly_Second::basis()
 		v(7) = _p->y();
 		v(8) = _p->z();
 		v(9) = 1.0;
+		return v;
 	}
 	else
 	{
-		v.resize(9);
+		VectorXd v(9);
 		v(0) = _p->x() * _p->x();
 		v(1) = _p->y() * _p->y();
 		v(2) = _p->z() * _p->z();
@@ -3098,16 +3108,15 @@ VectorXd  Poly_Second::basis()
 		v(6) = _p->x();
 		v(7) = _p->y();
 		v(8) = _p->z();
+		return v;
 	}
-	return v;
 }
 
 VectorXd Poly_Second::dx()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(10);
+		VectorXd v(10);
 		v(0) = 2.0 * _p->x();
 		v(1) = 0.0;
 		v(2) = 0.0;
@@ -3118,10 +3127,11 @@ VectorXd Poly_Second::dx()
 		v(7) = 0.0;
 		v(8) = 0.0;
 		v(9) = 0.0;
+		return v;
 	}
 	else
 	{
-		v.resize(9);
+		VectorXd v(9);
 		v(0) = 2.0 * _p->x();
 		v(1) = 0.0;
 		v(2) = 0.0;
@@ -3131,16 +3141,15 @@ VectorXd Poly_Second::dx()
 		v(6) = 1.0;
 		v(7) = 0.0;
 		v(8) = 0.0;
+		return v;
 	}
-	return v;
 }
 
 VectorXd Poly_Second::dy()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(10);
+		VectorXd v(10);
 		v(0) = 0.0;
 		v(1) = 2.0 * _p->y();
 		v(2) = 0.0;
@@ -3151,10 +3160,11 @@ VectorXd Poly_Second::dy()
 		v(7) = 1.0;
 		v(8) = 0.0;
 		v(9) = 0.0;
+		return v;
 	}
 	else
 	{
-		v.resize(9);
+		VectorXd v(9);
 		v(0) = 0.0;
 		v(1) = 2.0 * _p->y();
 		v(2) = 0.0;
@@ -3164,16 +3174,15 @@ VectorXd Poly_Second::dy()
 		v(6) = 0.0;
 		v(7) = 1.0;
 		v(8) = 0.0;
+		return v;
 	}
-	return v;
 }
 
 VectorXd Poly_Second::dz()
 {
-	VectorXd v;
 	if (!_truncated)
 	{
-		v.resize(10);
+		VectorXd v(10);
 		v(0) = 0.0;
 		v(1) = 0.0;
 		v(2) = 2.0 * _p->z();
@@ -3184,10 +3193,11 @@ VectorXd Poly_Second::dz()
 		v(7) = 0.0;
 		v(8) = 1.0;
 		v(9) = 0.0;
+		return v;
 	}
 	else
 	{
-		v.resize(9);
+		VectorXd v(9);
 		v(0) = 0.0;
 		v(1) = 0.0;
 		v(2) = 2.0 * _p->z();
@@ -3197,6 +3207,6 @@ VectorXd Poly_Second::dz()
 		v(6) = 0.0;
 		v(7) = 0.0;
 		v(8) = 1.0;
+		return v;
 	}
-	return v;
 }
