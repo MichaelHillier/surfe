@@ -141,6 +141,10 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 
 	bool converged = false;
 	double last_iterations_sig_fig = 0.0;
+	double primal_infeasibility = sqrt(rho.dot(rho) + tau.dot(tau) + alpha.dot(alpha) + nu.dot(nu))/(sqrt(b.dot(b)) + 1.0);
+	double  dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
+	double last_primal_infeasibility = primal_infeasibility;
+	double   last_dual_infeasibility = dual_infeasibilitiy;
 	VectorXd iter_minus_one_x = x;
 	int iter = 0;
 	while (!converged)
@@ -164,8 +168,8 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 
 		double sigfig = std::max(-std::log10(abs(primal_obj - dual_obj)/(abs(primal_obj) + 1.0)),0.0);
 
-		double primal_infeasibility = sqrt(rho.dot(rho) + tau.dot(tau) + alpha.dot(alpha) + nu.dot(nu))/(sqrt(b.dot(b)) + 1.0);
-		double  dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
+		primal_infeasibility = sqrt(rho.dot(rho) + tau.dot(tau) + alpha.dot(alpha) + nu.dot(nu))/(sqrt(b.dot(b)) + 1.0);
+		dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
 
 		std::cout<<" Iteration["<<iter<<"]"<<std::endl;
 		std::cout<<"	Primal_obj = "<< primal_obj << std::endl;
@@ -183,7 +187,15 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 			break;
 		}
 
+		if (iter > 10 && primal_infeasibility > last_primal_infeasibility)
+		{
+			converged = true;
+			fvalues = iter_minus_one_x;
+		}
+
 		last_iterations_sig_fig = sigfig;
+		last_primal_infeasibility = primal_infeasibility;
+		last_dual_infeasibility = dual_infeasibilitiy;
 		iter_minus_one_x = x;
  
 		G = g.asDiagonal();

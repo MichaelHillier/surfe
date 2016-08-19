@@ -663,8 +663,8 @@ bool Single_Surface::process_input_data()
 		if (!b_input.get_interface_data()) return false;
 	}
 
-	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(20.0); 
-	for (int j = 0; j < (int)b_input.planar->size(); j++ ) b_input.planar->at(j).setNormalBounds(10.0,5.0);
+	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(500.0); 
+	for (int j = 0; j < (int)b_input.planar->size(); j++ ) b_input.planar->at(j).setNormalBounds(30.0,25.0);
 
 	return true;
 }
