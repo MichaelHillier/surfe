@@ -177,6 +177,21 @@ bool Single_Surface::setup_system_solver()
 		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,inequality_matrix,b,r);
 		if(!qpc->solve()) return false;
 		solver = qpc;
+
+		for (int j = 0; j < b_input.itrface->size(); j++ ){
+			cout<<" Interface["<<j<<"]: "<<endl;
+			eval_scalar_interpolant_at_point(b_input.itrface->at(j));
+			cout<<"	Scalar field = "<<b_input.itrface->at(j).scalar_field()<<endl;
+		}
+
+		for (int j = 0; j < b_input.planar->size(); j++ ){
+			eval_vector_interpolant_at_point(b_input.planar->at(j));
+			double vf[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
+			cout<<" Planar["<<j<<"]: "<<endl;
+			cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
+			cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
+			cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
+		}
 		//check_interpolant();
 	}
 	else // Linear 
@@ -663,8 +678,16 @@ bool Single_Surface::process_input_data()
 		if (!b_input.get_interface_data()) return false;
 	}
 
-	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(500.0); 
-	for (int j = 0; j < (int)b_input.planar->size(); j++ ) b_input.planar->at(j).setNormalBounds(30.0,25.0);
+	cout<<" Number of interface points = "<<b_input.itrface->size()<<endl;
+	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(50.0); 
+	for (int j = 0; j < (int)b_input.planar->size(); j++ ){
+		b_input.planar->at(j).setNormalBounds(30.0,45.0);
+		//else b_input.planar->at(j).setNormalBounds(20.0,45.0);
+		cout<<" Planar["<<j<<"] Bounds: "<<endl;
+		cout<<"	nx: "<<b_input.planar->at(j).nx_lower_bound()<<" <= "<<b_input.planar->at(j).nx()<<" <= "<<b_input.planar->at(j).nx_upper_bound()<<endl;
+		cout<<"	ny: "<<b_input.planar->at(j).ny_lower_bound()<<" <= "<<b_input.planar->at(j).ny()<<" <= "<<b_input.planar->at(j).ny_upper_bound()<<endl;
+		cout<<"	nz: "<<b_input.planar->at(j).nz_lower_bound()<<" <= "<<b_input.planar->at(j).nz()<<" <= "<<b_input.planar->at(j).nz_upper_bound()<<endl;
+	}
 
 	return true;
 }

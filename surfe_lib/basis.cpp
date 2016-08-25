@@ -80,8 +80,10 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 
     // might have to check eval(0) smallest eigenvalue
 	// if there are normals sampled from a perfect cylinderical fold
+	if ( eVals(0) < 1e-8 ) eVals(0) = 0.0001;
 	// eval(0) = ~1e-16 machine precision.
 	// perhaps set to eval(0) = 0.0001 ...
+
 
 	Matrix3f ISQR;
 	ISQR(0,0) = 1;

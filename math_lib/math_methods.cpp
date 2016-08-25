@@ -47,7 +47,7 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 	c.setZero();
 	VectorXd rhs(2*n);
 	rhs << c, b;
-	//std::cout<<" rhs:\n"<< rhs << std::endl;
+	std::cout<<" rhs:\n"<< rhs << std::endl;
 	
 	KKT << -(H + MatrixXd::Identity(n,n)), A.transpose(), A, MatrixXd::Identity(n,n);
 	//std::cout<<" Initial KKT matrix:\n"<< KKT << std::endl;
@@ -77,18 +77,18 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		p(j) = std::max(abs(r(j) - w(j)),100.0);
 		q(j) = v(j);
 	}
-// 	MatrixXd DebugMatrixV(n,10);
-// 	DebugMatrixV.col(0) = x;
-// 	DebugMatrixV.col(1) = y;
-// 	DebugMatrixV.col(2) = g;
-// 	DebugMatrixV.col(3) = z;
-// 	DebugMatrixV.col(4) = t;
-// 	DebugMatrixV.col(5) = s;
-// 	DebugMatrixV.col(6) = v;
-// 	DebugMatrixV.col(7) = w;
-// 	DebugMatrixV.col(8) = p;
-// 	DebugMatrixV.col(9) = q;
-// 	std::cout<<" Current Variable matrix:\n"<< DebugMatrixV << std::endl;
+	MatrixXd DebugMatrixV(n,10);
+	DebugMatrixV.col(0) = x;
+	DebugMatrixV.col(1) = y;
+	DebugMatrixV.col(2) = g;
+	DebugMatrixV.col(3) = z;
+	DebugMatrixV.col(4) = t;
+	DebugMatrixV.col(5) = s;
+	DebugMatrixV.col(6) = v;
+	DebugMatrixV.col(7) = w;
+	DebugMatrixV.col(8) = p;
+	DebugMatrixV.col(9) = q;
+	std::cout<<" Current Variable matrix:\n"<< DebugMatrixV << std::endl;
 
 	double mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q))/4*n; 
 
@@ -145,6 +145,8 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 	double  dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
 	double last_primal_infeasibility = primal_infeasibility;
 	double   last_dual_infeasibility = dual_infeasibilitiy;
+	double last_primal = 0;
+	double last_dual = 0;
 	VectorXd iter_minus_one_x = x;
 	int iter = 0;
 	while (!converged)
@@ -186,16 +188,24 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 			else fvalues = x; // strong duality gap
 			break;
 		}
-
-		if (iter > 10 && primal_infeasibility > last_primal_infeasibility)
+		if ( dual_obj > primal_obj )
 		{
-			converged = true;
-			fvalues = iter_minus_one_x;
+				converged = true;
+				fvalues = iter_minus_one_x;
+				break;
 		}
+
+// 		if (iter > 10 && primal_infeasibility > last_primal_infeasibility)
+// 		{
+// 			converged = true;
+// 			fvalues = iter_minus_one_x;
+// 		}
 
 		last_iterations_sig_fig = sigfig;
 		last_primal_infeasibility = primal_infeasibility;
 		last_dual_infeasibility = dual_infeasibilitiy;
+		last_primal = primal_obj;
+		last_dual = dual_obj;
 		iter_minus_one_x = x;
  
 		G = g.asDiagonal();
@@ -272,28 +282,30 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		dg = G*Z.inverse()*(gamma_z - dz);
 
 		// Debug
-// 		DebugMatrixStepV.col(0) = dx;
+//  		DebugMatrixStepV.col(0) = dx;
 // 		DebugMatrixStepV.col(1) = dy;
-// 		DebugMatrixStepV.col(2) = dg;
-// 		DebugMatrixStepV.col(3) = dz;
-// 		DebugMatrixStepV.col(4) = dt;
-// 		DebugMatrixStepV.col(5) = ds;
-// 		DebugMatrixStepV.col(6) = dv;
-// 		DebugMatrixStepV.col(7) = dw;
-// 		DebugMatrixStepV.col(8) = dp;
-// 		DebugMatrixStepV.col(9) = dq;
-// 		std::cout<<" Current Step Variable matrix (after predictor step) (dx,dy,dg,dz,dt,ds,dv,dw,dp,dq):\n"<< DebugMatrixStepV << std::endl;
+//  		DebugMatrixStepV.col(2) = dg;
+//  		DebugMatrixStepV.col(3) = dz;
+//  		DebugMatrixStepV.col(4) = dt;
+//  		DebugMatrixStepV.col(5) = ds;
+//  		DebugMatrixStepV.col(6) = dv;
+//  		DebugMatrixStepV.col(7) = dw;
+//  		DebugMatrixStepV.col(8) = dp;
+//  		DebugMatrixStepV.col(9) = dq;
+//  		std::cout<<" Current Step Variable matrix (after predictor step) (dx,dy,dg,dz,dt,ds,dv,dw,dp,dq):\n"<< DebugMatrixStepV << std::endl;
 
 		// compute step lengths for primal and dual systems
 		double alpha_p = _find_positivity_step(dg,g,dw,w,dt,t,dp,p);
 		double alpha_d = _find_positivity_step(dz,z,dv,v,ds,s,dq,q);
+		//std::cout<<" predictor alpha_p = "<<alpha_p <<" alpha_d= "<<alpha_d << std::endl;
 		// alpha_pd will be the maximum of the two above values
 		double alpha_pd = std::max(alpha_p,alpha_d);
+		//std::cout<<" alpha_pd = "<<alpha_pd << std::endl;
 		double fraction = pow(((alpha_pd - 1.0)/(alpha_pd + 10.0)),2);
 
 		// update mu
-		mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q))*(fraction)/4*n;
-		std::cout<<"	mu (predictor) = "<<mu<<std::endl;
+		mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q))*(fraction)/(4*n);
+		std::cout<<"	mu (predictor) = "<<mu<<" fraction = "<<fraction<< std::endl;
 
 
 		// update rhs variables rho,nu,alpha,sigma,tau,beta,gamma's
@@ -352,18 +364,9 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		alpha_p = _find_positivity_step(dg,g,dw,w,dt,t,dp,p);
 		alpha_d = _find_positivity_step(dz,z,dv,v,ds,s,dq,q);
 
+		//std::cout<<" alpha_p= "<<alpha_p<<" alpha_d= "<<alpha_d<<std::endl; 
+
 		// update solution
-// 		x += alpha_p*dx;
-// 		g += alpha_p*dg;
-// 		w += alpha_p*dw;
-// 		t += alpha_p*dt;
-// 		p += alpha_p*dp;
-// 
-// 		y += alpha_d*dy;
-// 		z += alpha_d*dz;
-// 		v += alpha_d*dv;
-// 		s += alpha_d*ds;
-// 		q += alpha_d*dq;
 		x += (1/alpha_p)*dx;
 		g += (1/alpha_p)*dg;
 		w += (1/alpha_p)*dw;
