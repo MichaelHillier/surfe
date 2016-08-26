@@ -312,12 +312,12 @@ void Planar::setNormalBounds(const double &delta_strike, const double &delta_dip
 	double l_lower = sqrt(nx_lower*nx_lower + ny_lower*ny_lower + nz_lower*nz_lower); // length of lower bound vector
 	double l_upper = sqrt(nx_upper*nx_upper + ny_upper*ny_upper + nz_upper*nz_upper); // length of upper bound vector
 
-	_normal_bound[0][0] = nx_lower*10;
-	_normal_bound[0][1] = nx_upper*10;
-	_normal_bound[1][0] = ny_lower*10;
-	_normal_bound[1][1] = ny_upper*10;
-	_normal_bound[2][0] = nz_lower*10;
-	_normal_bound[2][1] = nz_upper*10;
+	_normal_bound[0][0] = nx_lower/l_lower;
+	_normal_bound[0][1] = nx_upper/l_upper;
+	_normal_bound[1][0] = ny_lower/l_lower;
+	_normal_bound[1][1] = ny_upper/l_upper;
+	_normal_bound[2][0] = nz_lower/l_lower;
+	_normal_bound[2][1] = nz_upper/l_upper;
 }
 
 double distance_btw_pts( const Point &p1, const Point &p2 )

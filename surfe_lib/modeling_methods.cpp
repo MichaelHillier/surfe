@@ -117,6 +117,14 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 bool GRBF_Modelling_Methods::run_algorithm()
 {
 	clock_t tstart=clock();
+
+	// set OpenMP parameters
+	const int nthreads = omp_get_max_threads();
+	omp_set_dynamic(false);
+	if (nthreads >= 8) omp_set_num_threads(nthreads - 2);
+	else omp_set_num_threads(nthreads - 1);
+	///////////////////////////////////////
+
 	cout<<" Starting SURFE algorithm "<<endl;
 	if ( !process_input_data()    ) return false;
 	if ( !get_method_parameters() ) return false;
