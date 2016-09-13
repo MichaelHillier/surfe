@@ -83,7 +83,7 @@ public:
 		_A = inequality_matrix;
 		_b = constraints;
 		_r = constraints_ranges;
-// 
+
 //  		std::ofstream file1("HessianM.txt");
 // 		std::ofstream file2("IEM.txt");
 // 		if (file1)
@@ -97,10 +97,10 @@ public:
 // 			file2.close();
 // 		}
 // 		// Debug
-// 		cout<<" Hessian matrix:\n"<< _H << endl;
-// 		cout<<" Inequality matrix:\n"<< _A << endl;
+//  		cout<<" Hessian matrix:\n"<< _H << endl;
+//  		cout<<" Inequality matrix:\n"<< _A << endl;
 // 		cout<<" Constraints :\n"<< _b << endl;
-// 		cout<<" Constraint ranges :\n"<< _r <<endl;
+//  		cout<<" Constraint ranges :\n"<< _r <<endl;
 		// end debug
 	}
 	bool solve();

@@ -192,6 +192,16 @@ bool Single_Surface::setup_system_solver()
 			cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
 			cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
 		}
+		for (int j = 0; j < b_input.tangent->size(); j++ ){
+			eval_vector_interpolant_at_point(b_input.tangent->at(j));
+			double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
+			cout<<" Tangent["<<j<<"]: "<<endl;
+			cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
+			cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
+			cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
+			cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
+				b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
+		}
 		//check_interpolant();
 	}
 	else // Linear 
@@ -512,6 +522,8 @@ void Single_Surface::eval_vector_interpolant_at_point( Point &p )
 	double ny = elemsum_1_y + elemsum_2_y + elemsum_3_y + poly_y;
 	double nz = elemsum_1_z + elemsum_2_z + elemsum_3_z + poly_z;
 	p.set_vector_field(nx,ny,nz);
+	double length = sqrt(nx*nx + ny*ny + nz*nz);
+	p.set_scalar_field(length);
 	delete kernel_j;
 }
 
@@ -681,13 +693,23 @@ bool Single_Surface::process_input_data()
 	cout<<" Number of interface points = "<<b_input.itrface->size()<<endl;
 	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(50.0); 
 	for (int j = 0; j < (int)b_input.planar->size(); j++ ){
-		b_input.planar->at(j).setNormalBounds(30.0,45.0);
+		b_input.planar->at(j).setNormalBounds(20,10.0);
 		//else b_input.planar->at(j).setNormalBounds(20.0,45.0);
 		cout<<" Planar["<<j<<"] Bounds: "<<endl;
 		cout<<"	nx: "<<b_input.planar->at(j).nx_lower_bound()<<" <= "<<b_input.planar->at(j).nx()<<" <= "<<b_input.planar->at(j).nx_upper_bound()<<endl;
 		cout<<"	ny: "<<b_input.planar->at(j).ny_lower_bound()<<" <= "<<b_input.planar->at(j).ny()<<" <= "<<b_input.planar->at(j).ny_upper_bound()<<endl;
 		cout<<"	nz: "<<b_input.planar->at(j).nz_lower_bound()<<" <= "<<b_input.planar->at(j).nz()<<" <= "<<b_input.planar->at(j).nz_upper_bound()<<endl;
 	}
+
+	for (int j = 0; j <(int)b_input.planar->size(); j++ ){
+		Tangent a_tangent_pt(b_input.planar->at(j).x(),b_input.planar->at(j).y(),b_input.planar->at(j).z(),b_input.planar->at(j).nx(),b_input.planar->at(j).ny(),b_input.planar->at(j).nz());
+		a_tangent_pt.setAngleBounds(10.0);
+		b_input.tangent->push_back(a_tangent_pt);
+		cout<<" Tangent["<<j<<"] Bounds: "<<endl;
+		cout<<"	Lower bound: "<<b_input.tangent->at(j).angle_lower_bound()<<" Upper bound "<<b_input.tangent->at(j).angle_upper_bound()<<endl;
+	}
+
+	b_input.planar->clear();
 
 	return true;
 }

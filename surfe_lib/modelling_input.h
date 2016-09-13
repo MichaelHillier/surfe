@@ -177,7 +177,7 @@ public:
 	double angle_lower_bound() const { return _angle_bound[0]; }
 	double angle_upper_bound() const { return _angle_bound[1]; }
 	void setResidual(const double &res) { _residual = res; }
-	void setAngleBounds(const double &angle){ _angle_bound[0] = cos((90 - angle)*D2R); _angle_bound[1] = cos((90 + angle)*D2R); }
+	void setAngleBounds(const double &angle){ _angle_bound[0] = cos(abs(angle)*D2R); _angle_bound[1] = 1.0; }
 }; 
 
 

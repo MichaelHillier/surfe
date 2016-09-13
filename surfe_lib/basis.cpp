@@ -2308,6 +2308,14 @@ double Modified_Kernel::basis_pt_tangent()
 		t1z += p1(j) * b1z;  
 		t2z += p2z(j) * b2;
 		t3z += p1(j) * p2z(j);
+
+// 		cout<<" t1x = "<<t1x.get_d()<<" p1(j)*b1x= "<< p1(j).get_d() * b1x.get_d()<<" p1(j)= "<<p1(j).get_d()<<" b1x= "<<b1x.get_d()<<endl;
+// 		cout<<" t1y = "<<t1y.get_d()<<" p1(j)*b1y= "<< p1(j).get_d() * b1y.get_d()<<" p1(j)= "<<p1(j).get_d()<<" b1y= "<<b1y.get_d()<<endl;
+// 		cout<<" t1z = "<<t1z.get_d()<<" p1(j)*b1z= "<< p1(j).get_d() * b1z.get_d()<<" p1(j)= "<<p1(j).get_d()<<" b1z= "<<b1z.get_d()<<endl;
+// 
+// 		cout<<" t2x = "<<t2x.get_d()<<" p2x(j)*b2= "<< p2x(j).get_d() * b2.get_d()<<" p2x(j)= "<<p2x(j).get_d()<<" b2= "<<b2.get_d()<<endl;
+// 		cout<<" t2y = "<<t2y.get_d()<<" p2y(j)*b2= "<< p2y(j).get_d() * b2.get_d()<<" p2y(j)= "<<p2y(j).get_d()<<" b2= "<<b2.get_d()<<endl;
+// 		cout<<" t2z = "<<t2z.get_d()<<" p2z(j)*b2= "<< p2z(j).get_d() * b2.get_d()<<" p2z(j)= "<<p2z(j).get_d()<<" b2= "<<b2.get_d()<<endl;
 		for (int k = 0; k < 4; k++ ){
 			if (k != j)
 			{
@@ -2330,7 +2338,12 @@ double Modified_Kernel::basis_pt_tangent()
 	Tangent *t = static_cast<Tangent*>(this->p2());
 	mpf_class sum = dx * t->tx() + dy * t->ty() + dz * t->tz();
 
-	delete t;
+// 	cout<<" dx_p2= "<<this->_aRBFKernel->dx_p2()<<" t1x= "<<t1x.get_d()<<" t2x= "<<t2x.get_d()<<" t3x= "<<t3x.get_d()<<" t4x= "<<t4x.get_d()<<endl;
+// 	cout<<" dy_p2= "<<this->_aRBFKernel->dy_p2()<<" t1y= "<<t1y.get_d()<<" t2y= "<<t2y.get_d()<<" t3y= "<<t3y.get_d()<<" t4y= "<<t4y.get_d()<<endl;
+// 	cout<<" dz_p2= "<<this->_aRBFKernel->dz_p2()<<" t1z= "<<t1z.get_d()<<" t2z= "<<t2z.get_d()<<" t3z= "<<t3z.get_d()<<" t4z= "<<t4z.get_d()<<endl;
+// 	cout<<" dx= "<<dx.get_d()<<" dy= "<<dy.get_d()<<" dz= "<<dz.get_d()<<endl;
+// 	cout<<" tangent("<<t->tx()<<","<<t->ty()<<","<<t->tz()<<")"<<endl;
+
 	return sum.get_d();
 }
 
@@ -2345,11 +2358,11 @@ double Modified_Kernel::basis_tangent_pt()
 	Matrix <mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
 
 	for (int j = 0; j < 4; j++){
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2x(this->_aRBFKernel->dx_p1());
 		mpf_class b2y(this->_aRBFKernel->dy_p1());
 		mpf_class b2z(this->_aRBFKernel->dz_p1());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
 		mpf_class b1(this->_aRBFKernel->basis());
 		// for dx component
 		t1x += p1x(j) * b1;  
@@ -2363,6 +2376,14 @@ double Modified_Kernel::basis_tangent_pt()
 		t1z += p1z(j) * b1;  
 		t2z += p2(j) * b2z;
 		t3z += p1z(j) * p2(j);
+
+// 		cout<<" t1x = "<<t1x.get_d()<<" p1x(j)*b1= "<< p1x(j).get_d() * b1.get_d()<<" p1x(j)= "<<p1x(j).get_d()<<" b1= "<<b1.get_d()<<endl;
+// 		cout<<" t1y = "<<t1y.get_d()<<" p1y(j)*b1= "<< p1y(j).get_d() * b1.get_d()<<" p1y(j)= "<<p1y(j).get_d()<<" b1= "<<b1.get_d()<<endl;
+// 		cout<<" t1z = "<<t1z.get_d()<<" p1z(j)*b1= "<< p1z(j).get_d() * b1.get_d()<<" p1z(j)= "<<p1z(j).get_d()<<" b1= "<<b1.get_d()<<endl;
+// 
+// 		cout<<" t2x = "<<t2x.get_d()<<" p2(j)*b2x= "<< p2(j).get_d() * b2x.get_d()<<" p2(j)= "<<p2(j).get_d()<<" b2x= "<<b2x.get_d()<<endl;
+// 		cout<<" t2y = "<<t2y.get_d()<<" p2(j)*b2y= "<< p2(j).get_d() * b2y.get_d()<<" p2(j)= "<<p2(j).get_d()<<" b2y= "<<b2y.get_d()<<endl;
+// 		cout<<" t2z = "<<t2z.get_d()<<" p2(j)*b2z= "<< p2(j).get_d() * b2z.get_d()<<" p2(j)= "<<p2(j).get_d()<<" b2z= "<<b2z.get_d()<<endl;
 		for (int k = 0; k < 4; k++ ){
 			if ( k != j)
 			{
@@ -2385,7 +2406,12 @@ double Modified_Kernel::basis_tangent_pt()
 	Tangent *t = static_cast<Tangent*>(this->p1());
 	mpf_class sum = dx * t->tx() + dy * t->ty() + dz * t->tz();
 
-	delete t;
+// 	cout<<" dx_p1= "<<this->_aRBFKernel->dx_p1()<<" t1x= "<<t1x.get_d()<<" t2x= "<<t2x.get_d()<<" t3x= "<<t3x.get_d()<<" t4x= "<<t4x.get_d()<<endl;
+// 	cout<<" dy_p1= "<<this->_aRBFKernel->dy_p1()<<" t1y= "<<t1y.get_d()<<" t2y= "<<t2y.get_d()<<" t3y= "<<t3y.get_d()<<" t4y= "<<t4y.get_d()<<endl;
+// 	cout<<" dz_p1= "<<this->_aRBFKernel->dz_p1()<<" t1z= "<<t1z.get_d()<<" t2z= "<<t2z.get_d()<<" t3z= "<<t3z.get_d()<<" t4z= "<<t4z.get_d()<<endl;
+// 	cout<<" dx= "<<dx.get_d()<<" dy= "<<dy.get_d()<<" dz= "<<dz.get_d()<<endl;
+// 	cout<<" tangent("<<t->tx()<<","<<t->ty()<<","<<t->tz()<<")"<<endl;
+
 	return sum.get_d();
 }
 
@@ -2600,7 +2626,7 @@ double Modified_Kernel::basis_tangent_tangent()
 					  t1->ty()*t2->tx()*yx + t1->ty()*t2->ty()*yy + t1->ty()*t2->tz()*yz + 
 					  t1->tz()*t2->tx()*zx + t1->tz()*t2->ty()*zy + t1->tz()*t2->tz()*zz;
 
-	delete t1,t2;
+	//delete t1,t2;
 	return value.get_d();
 }
 
@@ -2657,7 +2683,7 @@ double Modified_Kernel::basis_planar_tangent( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xx + t->ty()*xy + t->tz()*xz;
 
-		delete t;
+		//delete t;
 		return value.get_d();
 	}
 	else if (fd == Parameter_Types::DY)
@@ -2711,7 +2737,7 @@ double Modified_Kernel::basis_planar_tangent( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*yx + t->ty()*yy + t->tz()*yz;
 
-		delete t;
+		//delete t;
 		return value.get_d();
 	}
 	else // fd == DZ
@@ -2765,7 +2791,7 @@ double Modified_Kernel::basis_planar_tangent( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*zx + t->ty()*zy + t->tz()*zz;
 
-		delete t;
+		//delete t;
 		return value.get_d();
 	}
 }
@@ -2824,7 +2850,7 @@ double Modified_Kernel::basis_tangent_planar( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xx + t->ty()*yx + t->tz()*zx;
 
-		delete t;
+		//delete t;
 		return value.get_d();
 	}
 	else if (fd == Parameter_Types::DY)
@@ -2878,7 +2904,7 @@ double Modified_Kernel::basis_tangent_planar( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xy + t->ty()*yy + t->tz()*zy;
 
-		delete t;
+		//delete t;
 		return value.get_d();
 	}
 	else // fd == DZ
@@ -2932,7 +2958,7 @@ double Modified_Kernel::basis_tangent_planar( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xz + t->ty()*yz + t->tz()*zz;
 
-		delete t;
+		//delete t;
 		return value.get_d();
 	}
 }

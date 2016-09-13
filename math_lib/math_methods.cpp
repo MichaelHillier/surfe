@@ -38,6 +38,8 @@ double Math_methods::RandomDouble( const double &min, const double&max )
 
 bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, const VectorXd &b, const VectorXd &r, VectorXd &fvalues )
 {
+	// minimize f = 1/2 xT H x
+	// s.t. b <= Ax <= b + r
 	int n = (int)H.rows();
 
 	//double max_ele = H.maxCoeff();
