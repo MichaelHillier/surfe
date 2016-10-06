@@ -235,7 +235,7 @@ bool Continuous_Property::append_greedy_input(Basic_input &input )
 	std::vector < int > large_planar_residuals_indices;
 	for (int j = 0; j < (int)input.planar->size(); j++ ){
 		double grad_err = input.planar->at(j).residual()*r2d;
-		if ( grad_err > m_parameters.gradient_slack )
+		if ( grad_err > m_parameters.angular_uncertainty )
 		{
 			large_planar_residuals.push_back( grad_err );
 			large_planar_residuals_indices.push_back(j);
@@ -249,7 +249,7 @@ bool Continuous_Property::append_greedy_input(Basic_input &input )
 	}
 	// TANGENT Observations
 	for (int j = 0; j < (int)input.tangent->size(); j++){
-		if ( input.tangent->at(j).residual()*r2d > m_parameters.gradient_slack )
+		if ( input.tangent->at(j).residual()*r2d > m_parameters.angular_uncertainty )
 		{
 			this->b_input.tangent->push_back(input.tangent->at(j));
 			return true;
@@ -260,7 +260,7 @@ bool Continuous_Property::append_greedy_input(Basic_input &input )
 	std::vector < int > large_interface_residuals_indices;
 	for (int j = 0; j < (int)input.itrface->size(); j++){
 		double interface_err = input.itrface->at(j).residual();
-		if ( interface_err > m_parameters.interface_slack )
+		if ( interface_err > m_parameters.interface_uncertainty )
 		{
 			large_interface_residuals.push_back(interface_err);
 			large_interface_residuals_indices.push_back(j);

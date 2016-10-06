@@ -110,15 +110,11 @@ bool Single_Surface::get_method_parameters()
 	// Total number of constraints ...
 	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	if (m_parameters.use_uncertainty)
-	{
-		b_parameters.restricted_range = true;
-		b_parameters.n_bounded_inequality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
-	}
+	if (m_parameters.use_restricted_range) b_parameters.restricted_range = true;
 	else b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
-	if (b_parameters.n_inequality != 0 || b_parameters.n_bounded_inequality != 0)
+	if (b_parameters.n_inequality != 0 || m_parameters.use_restricted_range != 0)
 	{
 		b_parameters.poly_term = false;
 		b_parameters.modified_basis = true;
@@ -145,63 +141,50 @@ bool Single_Surface::setup_system_solver()
 	// 3) Smoothing -> maybe use least squares / right now we are doing matrix smoothing
 
 	int n_ie  = b_parameters.n_inequality;
-	int n_bie = b_parameters.n_bounded_inequality;
 	int n_e   = b_parameters.n_equality;
 	int n_c   = b_parameters.n_constraints;
 	if (b_parameters.problem_type == Parameter_Types::Quadratic)
 	{
-		VectorXd b(n_c);
-		VectorXd r(n_c);
-		if (n_c != 0) get_inequality_values(b,r);
-
-		VectorXd equality_values(n_e);
-		if ( n_e != 0 )	get_equality_values(equality_values);
-
-		MatrixXd interpolation_matrix(n_c,n_c);
-		if (!get_interpolation_matrix(interpolation_matrix)) return false;
-
-		MatrixXd inequality_matrix(n_c,n_c);
-		if ( n_c != 0)
+		if (b_parameters.restricted_range)
 		{
+			VectorXd b(n_c);
+			VectorXd r(n_c);
+			get_inequality_values(b,r);
+
+			MatrixXd interpolation_matrix(n_c,n_c);
+			if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+			MatrixXd inequality_matrix(n_c,n_c);
 			inequality_matrix = interpolation_matrix;
-			//if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
-		}
 
-		MatrixXd equality_matrix(n_e,n_c);
-		if ( n_e != 0)
+			Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,inequality_matrix,b,r);
+			if(!qpc->solve()) return false;
+			solver = qpc;
+		}
+		else
 		{
+			VectorXd inequality_values(n_ie);
+			get_inequality_values(inequality_values);
+
+			VectorXd equality_values(n_e);
+			get_equality_values(equality_values);
+
+			MatrixXd interpolation_matrix(n_c,n_c);
+			if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+			MatrixXd inequality_matrix(n_ie,n_c);
+			if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
+
+			MatrixXd equality_matrix(n_e,n_c);
 			if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
+
+			Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
+			if(!qpc->solve()) return false;
+			solver = qpc;
 		}
 
-		//Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,b);
-		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,inequality_matrix,b,r);
-		if(!qpc->solve()) return false;
-		solver = qpc;
+		if (!convert_modified_kernel_to_rbf_kernel()) return false;
 
-		for (int j = 0; j < b_input.itrface->size(); j++ ){
-			cout<<" Interface["<<j<<"]: "<<endl;
-			eval_scalar_interpolant_at_point(b_input.itrface->at(j));
-			cout<<"	Scalar field = "<<b_input.itrface->at(j).scalar_field()<<endl;
-		}
-
-		for (int j = 0; j < b_input.planar->size(); j++ ){
-			eval_vector_interpolant_at_point(b_input.planar->at(j));
-			double vf[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
-			cout<<" Planar["<<j<<"]: "<<endl;
-			cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
-			cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
-			cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
-		}
-		for (int j = 0; j < b_input.tangent->size(); j++ ){
-			eval_vector_interpolant_at_point(b_input.tangent->at(j));
-			double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
-			cout<<" Tangent["<<j<<"]: "<<endl;
-			cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
-			cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
-			cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
-			cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
-				b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
-		}
 		//check_interpolant();
 	}
 	else // Linear 
@@ -213,20 +196,12 @@ bool Single_Surface::setup_system_solver()
 		MatrixXd interpolation_matrix(n_e + n_p, n_e + n_p);
 		if (!get_interpolation_matrix(interpolation_matrix)) return false;
 
-		//cout<< "Interpolation Matrix: "<<endl;
-        //cout << interpolation_matrix <<endl;
-
 		Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
 		if (!llu->solve()) return false;
 		solver = llu;
 	}
 
-// 	Kernel *parent_kernel = this->kernel;
-// 	for (int j = 0; j < 20000000; j++ ){
-// 		Kernel *kernel_j = this->kernel->clone();
-// 		delete kernel_j;
-// 		int stop = 1;
-// 	}
+	//check_interpolant();
 
 	return true;
 }
@@ -346,7 +321,7 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 	// For the first iteration only consider adding additional planar constraints
 	// These additional constraints could force large changes in the scalar field
 	// which could consequently pass closely to interface points not yet included
-	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 	else
 	{
 		#pragma omp parallel sections 
@@ -354,17 +329,17 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 			#pragma omp section
 			{
 				// PLANAR Observations
-				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 			}
 			#pragma omp section
 			{
 				// TANGENT Observations
-				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 			}
 			#pragma omp section
 			{
 				// INTERFACE Observations
-				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, b_input.GetInterfaceAvgNNDist());
+				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_uncertainty, b_input.GetInterfaceAvgNNDist());
 			}
 			#pragma omp section
 			{
@@ -405,6 +380,78 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 
 	if ( pI2i != 0 || tI2i != 0 || itrI2i != 0 || ieI2i != 0) return true;
 	else return false;
+}
+
+bool Single_Surface::convert_modified_kernel_to_rbf_kernel()
+{
+	if (rbf_kernel == NULL || kernel == NULL) return false;
+
+	// prep for linear prob...
+	// set the constraints...
+	for (int j = 0; j < b_input.inequality->size(); j++ ){
+		Evaluation_Point test_point(b_input.inequality->at(j).x(),b_input.inequality->at(j).y(),b_input.inequality->at(j).z());
+		// debug
+		// cout<<" Inequality["<<j<<"]: "<<endl;
+		eval_scalar_interpolant_at_point(test_point);
+		// cout<<"	Scalar field = "<<test_point.scalar_field()<<endl;
+		Interface itr_point(test_point.x(),test_point.y(),test_point.z(),test_point.scalar_field());
+		b_input.itrface->push_back(itr_point);
+	}
+	b_input.inequality->clear();
+	for (int j = 0; j < b_input.itrface->size(); j++ ){
+		Evaluation_Point test_point(b_input.itrface->at(j).x(),b_input.itrface->at(j).y(),b_input.itrface->at(j).z());
+		// debug
+		//cout<<" Interface["<<j<<"]: "<<endl;
+		eval_scalar_interpolant_at_point(test_point);
+		//cout<<"	Scalar field = "<<test_point.scalar_field()<<endl;
+		b_input.itrface->at(j).setLevel(test_point.scalar_field());
+	}
+	for (int j = 0; j < b_input.planar->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.planar->at(j));
+		// debug
+// 		cout<<" Planar["<<j<<"]: "<<endl;
+// 		cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
+// 		cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
+// 		cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
+		double normal[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
+		b_input.planar->at(j).setNormal(normal[0],normal[1],normal[2]);
+	}
+	for (int j = 0; j < b_input.tangent->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.tangent->at(j));
+// 		cout<<" Tangent["<<j<<"]: "<<endl;
+// 		cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
+// 		cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
+// 		cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
+// 		cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
+// 			b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
+		double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
+		double inner_product = vf[0]*b_input.tangent->at(j).tx() + vf[1]*b_input.tangent->at(j).ty() + vf[2]*b_input.tangent->at(j).tz();
+		b_input.tangent->at(j).setInnerProductConstraint(inner_product);
+	}
+
+	// switch from modified kernel to normal rbf kernel
+	kernel = rbf_kernel;
+
+	int n_p = b_parameters.n_poly_terms;
+	if (m_parameters.use_restricted_range) b_parameters.restricted_range = false;
+	b_parameters.n_interface = (int)b_input.itrface->size();
+	b_parameters.n_inequality = (int)b_input.inequality->size();
+	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.poly_term = true;
+	b_parameters.modified_basis = false;
+	b_parameters.problem_type = Parameter_Types::Linear;
+	int n_e = b_parameters.n_equality;
+	VectorXd equality_values(n_e + n_p);
+	get_equality_values(equality_values);
+
+	MatrixXd interpolation_matrix(n_e + n_p, n_e + n_p);
+	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
+	if (!llu->solve()) return false;
+	solver = llu;
+
+	return true;
 }
 
 void Single_Surface::eval_scalar_interpolant_at_point( Point &p )
@@ -534,13 +581,13 @@ bool Single_Surface::get_equality_values( VectorXd &equality_values )
 	int l = 0;
 	int m = 0;
 
-	for (j = 0; j < (int)b_input.itrface->size(); j++) equality_values(j) = 0.0;
+	for (j = 0; j < (int)b_input.itrface->size(); j++) equality_values(j) = b_input.itrface->at(j).level();
 	for (k = 0; k < (int)b_input.planar->size(); k++){
 		equality_values(3 * k + j)     = b_input.planar->at(k).nx();
 		equality_values(3 * k + j + 1) = b_input.planar->at(k).ny();
 		equality_values(3 * k + j + 2) = b_input.planar->at(k).nz();
 	}
-	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) = 0.0;
+	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) = b_input.tangent->at(l).inner_product_constraint();
 	if (b_parameters.poly_term) for (m = 0; m < (int)b_parameters.n_poly_terms; m++) equality_values(m + l + 3 * k + j) = 0.0;
 
 	return true;
@@ -690,26 +737,22 @@ bool Single_Surface::process_input_data()
 		if (!b_input.get_interface_data()) return false;
 	}
 
-	cout<<" Number of interface points = "<<b_input.itrface->size()<<endl;
-	for (int j = 0; j < (int)b_input.itrface->size();j++ ) b_input.itrface->at(j).setLevelBounds(50.0); 
-	for (int j = 0; j < (int)b_input.planar->size(); j++ ){
-		b_input.planar->at(j).setNormalBounds(20,10.0);
-		//else b_input.planar->at(j).setNormalBounds(20.0,45.0);
-		cout<<" Planar["<<j<<"] Bounds: "<<endl;
-		cout<<"	nx: "<<b_input.planar->at(j).nx_lower_bound()<<" <= "<<b_input.planar->at(j).nx()<<" <= "<<b_input.planar->at(j).nx_upper_bound()<<endl;
-		cout<<"	ny: "<<b_input.planar->at(j).ny_lower_bound()<<" <= "<<b_input.planar->at(j).ny()<<" <= "<<b_input.planar->at(j).ny_upper_bound()<<endl;
-		cout<<"	nz: "<<b_input.planar->at(j).nz_lower_bound()<<" <= "<<b_input.planar->at(j).nz()<<" <= "<<b_input.planar->at(j).nz_upper_bound()<<endl;
+	if (m_parameters.use_restricted_range)
+	{
+		for (int j = 0; j < (int)b_input.itrface->size();j++ ){
+			b_input.itrface->at(j).setLevelBounds(m_parameters.interface_uncertainty); 
+			cout<<" Oncontact["<<j<<"] Bounds: "<<endl;
+			cout<<"	"<<b_input.itrface->at(j).level_lower_bound()<<" <= 0 <= "<<b_input.itrface->at(j).level_upper_bound()<<endl;
+		}
+		for (int j = 0; j < (int)b_input.planar->size(); j++ ){
+			b_input.planar->at(j).setNormalBounds(m_parameters.angular_uncertainty,m_parameters.angular_uncertainty/2); // Need more ROBUST METHOD. Try large statistical sampling from von Mises spherical distribution
+ 			cout<<" Planar["<<j<<"] Bounds: "<<endl;
+ 			cout<<"	nx: "<<b_input.planar->at(j).nx_lower_bound()<<" <= "<<b_input.planar->at(j).nx()<<" <= "<<b_input.planar->at(j).nx_upper_bound()<<endl;
+ 			cout<<"	ny: "<<b_input.planar->at(j).ny_lower_bound()<<" <= "<<b_input.planar->at(j).ny()<<" <= "<<b_input.planar->at(j).ny_upper_bound()<<endl;
+ 			cout<<"	nz: "<<b_input.planar->at(j).nz_lower_bound()<<" <= "<<b_input.planar->at(j).nz()<<" <= "<<b_input.planar->at(j).nz_upper_bound()<<endl;
+		}
+		for (int j = 0; j <(int)b_input.tangent->size(); j++ ) b_input.tangent->at(j).setAngleBounds(m_parameters.angular_uncertainty);
 	}
-
-	for (int j = 0; j <(int)b_input.planar->size(); j++ ){
-		Tangent a_tangent_pt(b_input.planar->at(j).x(),b_input.planar->at(j).y(),b_input.planar->at(j).z(),b_input.planar->at(j).nx(),b_input.planar->at(j).ny(),b_input.planar->at(j).nz());
-		a_tangent_pt.setAngleBounds(10.0);
-		b_input.tangent->push_back(a_tangent_pt);
-		cout<<" Tangent["<<j<<"] Bounds: "<<endl;
-		cout<<"	Lower bound: "<<b_input.tangent->at(j).angle_lower_bound()<<" Upper bound "<<b_input.tangent->at(j).angle_upper_bound()<<endl;
-	}
-
-	b_input.planar->clear();
 
 	return true;
 }

@@ -25,6 +25,7 @@ public:
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) {return true;}
 	bool measure_residuals(Basic_input &input);
 	bool append_greedy_input(Basic_input &input);
+	bool convert_modified_kernel_to_rbf_kernel() { return true; } // To IMPLEMENT
 	GRBF_Modelling_Methods *clone() { return new Continuous_Property(*this); }
 	// Attributes
 	Polynomial_Basis *p_basis;

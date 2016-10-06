@@ -28,6 +28,7 @@ public:
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input);
 	bool measure_residuals(Basic_input &input);
 	bool append_greedy_input(Basic_input &input);
+	bool convert_modified_kernel_to_rbf_kernel() { return true; } // Doesn't really apply to this method...
 	GRBF_Modelling_Methods *clone() { return new Lajaunie_Approach(*this); }
 	// Attributes
 	Polynomial_Basis *p_basis;

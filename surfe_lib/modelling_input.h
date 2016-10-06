@@ -1,4 +1,4 @@
-#ifndef _modelling_input_h
+﻿#ifndef _modelling_input_h
 #define _modelling_input_h
 
 #include <surfe_lib_module.h>
@@ -148,6 +148,7 @@ public:
 	void setNormalBounds(const double &delta_strike, const double &delta_dip);
 	double residual() const { return _residual; }
 	void setResidual(const double &res) { _residual = res; }
+	void setNormal(const double &nx, const double &ny, const double &nz) { _normal[0] = nx; _normal[1] = ny; _normal[2] = nz; }
 }; 
 
 class SURFE_LIB_EXPORT Tangent : public Point {
@@ -155,6 +156,7 @@ private:
 	double _tangent[3];
 	double _residual;
 	double _angle_bound[2];
+	double _inner_product_constraint;
 public:
 	Tangent (const double &x_coord,
 		const double &y_coord,
@@ -169,6 +171,7 @@ public:
 		_tangent[1] = ty;
 		_tangent[2] = tz;
 		_residual = 0.0;
+		_inner_product_constraint = 0.0; // default value 0.0 means that the angle b/t the gradient of the scalar field and tangent vector is 90 degrees.
 	}
 	double tx() const { return _tangent[0]; }
 	double ty() const { return _tangent[1]; }
@@ -176,8 +179,26 @@ public:
 	double residual() const { return _residual; }
 	double angle_lower_bound() const { return _angle_bound[0]; }
 	double angle_upper_bound() const { return _angle_bound[1]; }
+	double inner_product_constraint() const { return _inner_product_constraint; }
 	void setResidual(const double &res) { _residual = res; }
-	void setAngleBounds(const double &angle){ _angle_bound[0] = cos(abs(angle)*D2R); _angle_bound[1] = 1.0; }
+	void setAngleBounds(const double &angle)
+	{
+		// t . del s = Cos(ϴ)*||t||*||del s||
+		// ||t|| = 1
+		// 0 <= ||del s|| <= + inf (but in reality ~ 2)
+		double a = cos((90.0 - angle)*D2R)*2.0;
+		if (a < 0)
+		{
+			_angle_bound[0] = a;
+			_angle_bound[1] = 0; 
+		}
+		else
+		{
+			_angle_bound[0] = 0;
+			_angle_bound[1] = a; 
+		} 
+	}
+	void setInnerProductConstraint(const double &ip_constraint) { _inner_product_constraint = ip_constraint; }
 }; 
 
 

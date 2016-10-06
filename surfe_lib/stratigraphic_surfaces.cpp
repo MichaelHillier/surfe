@@ -22,7 +22,14 @@ bool Stratigraphic_Surfaces::_get_increment_pairs()
 	_n_sequenced_inequality_pairs = 0;
 	for (int j = 0; j < (int)b_input.inequality->size(); j++ ){
 		std::vector < std::vector <Point> > strati_seq_ine_pairs = _get_lithostratigraphic_increment_pairs_for_inequality_point(b_input.inequality->at(j));
-		for (int k = 0; k < (int)strati_seq_ine_pairs.size(); k++ ) _increment_pairs->push_back(strati_seq_ine_pairs[k]);
+		for (int k = 0; k < (int)strati_seq_ine_pairs.size(); k++ ){
+			Interface a_itr_pt1(strati_seq_ine_pairs.at(k)[0].x(),strati_seq_ine_pairs.at(k)[0].y(),strati_seq_ine_pairs.at(k)[0].z(),0.0);
+			Interface a_itr_pt2(strati_seq_ine_pairs.at(k)[1].x(),strati_seq_ine_pairs.at(k)[1].y(),strati_seq_ine_pairs.at(k)[1].z(),0.0);
+			std::vector < Interface > pair;
+			pair.push_back(a_itr_pt1);
+			pair.push_back(a_itr_pt2);
+			_increment_pairs->push_back(pair);
+		}
 		int j_size = (int)strati_seq_ine_pairs.size();
 		_n_sequenced_inequality_pairs += j_size;
 	}
@@ -31,7 +38,7 @@ bool Stratigraphic_Surfaces::_get_increment_pairs()
 	for (int j = 0; j < (int)b_input.interface_point_lists->size(); j++) _n_interface_pairs += ((int)b_input.interface_point_lists->at(j).size() - 1);
 	for (int j = 0; j < (int)b_input.interface_point_lists->size(); j++ ){
 		for (int k = 0; k < ((int)b_input.interface_point_lists->at(j).size() - 1); k++){
-			std::vector<Point> interface_incr_p;
+			std::vector<Interface> interface_incr_p;
 			interface_incr_p.push_back(b_input.interface_point_lists->at(j)[0]);
 			interface_incr_p.push_back(b_input.interface_point_lists->at(j)[k + 1]);
 			_increment_pairs->push_back(interface_incr_p);
@@ -127,7 +134,7 @@ Stratigraphic_Surfaces::Stratigraphic_Surfaces(const model_parameters& m_p, cons
 	m_parameters = m_p;
 	b_input = basic_i;
 
-	_increment_pairs = new std::vector < std::vector < Point > >();
+	_increment_pairs = new std::vector < std::vector < Interface > >();
 	_n_increment_pairs = 0;
 	_n_sequenced_interface_pairs = 0;
 	_n_sequenced_inequality_pairs = 0;
@@ -176,13 +183,16 @@ bool Stratigraphic_Surfaces::get_equality_values( VectorXd &equality_values )
 	int j = 0;
 	int k = 0;
 	int l = 0;
-	for (j = 0; j < _n_interface_pairs; j++ ) equality_values(j) =  0.0;
+	int m = 0;
+
+	for (j = 0; j < _n_interface_pairs; j++ ) equality_values(j) =  _increment_pairs->at(j)[0].level() - _increment_pairs->at(j)[1].level();
 	for (k = 0; k < (int)b_input.planar->size(); k++){
 		equality_values(3 * k + j) = b_input.planar->at(j).nx();
 		equality_values(3 * k + j + 1) = b_input.planar->at(j).ny();
 		equality_values(3 * k + j + 2) = b_input.planar->at(j).nz();
 	}
-	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) = 0.0;
+	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) =  b_input.tangent->at(l).inner_product_constraint();
+	if (b_parameters.poly_term) for (m = 0; m < (int)b_parameters.n_poly_terms; m++) equality_values(m + l + 3 * k + j) = 0.0;
 
 	return true;
 }
@@ -360,6 +370,78 @@ bool Stratigraphic_Surfaces::setup_system_solver()
 	solver = qpc;
 
 	if (!_update_interface_iso_values()) return false;
+
+	return true;
+}
+
+bool Stratigraphic_Surfaces::convert_modified_kernel_to_rbf_kernel()
+{
+	if (rbf_kernel == NULL || kernel == NULL) return false;
+
+// 	// prep for linear prob...
+// 	// set the constraints...
+// 	for (int j = 0; j < b_input.inequality->size(); j++ ){
+// 		Evaluation_Point test_point(b_input.inequality->at(j).x(),b_input.inequality->at(j).y(),b_input.inequality->at(j).z());
+// 		// debug
+// 		// cout<<" Inequality["<<j<<"]: "<<endl;
+// 		eval_scalar_interpolant_at_point(test_point);
+// 		// cout<<"	Scalar field = "<<test_point.scalar_field()<<endl;
+// 		Interface itr_point(test_point.x(),test_point.y(),test_point.z(),test_point.scalar_field());
+// 		b_input.itrface->push_back(itr_point);
+// 	}
+// 	b_input.inequality->clear();
+// 	for (int j = 0; j < b_input.itrface->size(); j++ ){
+// 		Evaluation_Point test_point(b_input.itrface->at(j).x(),b_input.itrface->at(j).y(),b_input.itrface->at(j).z());
+// 		// debug
+// 		//cout<<" Interface["<<j<<"]: "<<endl;
+// 		eval_scalar_interpolant_at_point(test_point);
+// 		//cout<<"	Scalar field = "<<test_point.scalar_field()<<endl;
+// 		b_input.itrface->at(j).setLevel(test_point.scalar_field());
+// 	}
+// 	for (int j = 0; j < b_input.planar->size(); j++ ){
+// 		eval_vector_interpolant_at_point(b_input.planar->at(j));
+// 		// debug
+// 		// 		cout<<" Planar["<<j<<"]: "<<endl;
+// 		// 		cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
+// 		// 		cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
+// 		// 		cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
+// 		double normal[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
+// 		b_input.planar->at(j).setNormal(normal[0],normal[1],normal[2]);
+// 	}
+// 	for (int j = 0; j < b_input.tangent->size(); j++ ){
+// 		eval_vector_interpolant_at_point(b_input.tangent->at(j));
+// 		// 		cout<<" Tangent["<<j<<"]: "<<endl;
+// 		// 		cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
+// 		// 		cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
+// 		// 		cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
+// 		// 		cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
+// 		// 			b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
+// 		double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
+// 		double inner_product = vf[0]*b_input.tangent->at(j).tx() + vf[1]*b_input.tangent->at(j).ty() + vf[2]*b_input.tangent->at(j).tz();
+// 		b_input.tangent->at(j).setInnerProductConstraint(inner_product);
+// 	}
+// 
+// 	// switch from modified kernel to normal rbf kernel
+// 	kernel = rbf_kernel;
+// 
+// 	int n_p = b_parameters.n_poly_terms;
+// 	if (m_parameters.use_restricted_range) b_parameters.restricted_range = false;
+// 	b_parameters.n_interface = (int)b_input.itrface->size();
+// 	b_parameters.n_inequality = (int)b_input.inequality->size();
+// 	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
+// 	b_parameters.poly_term = true;
+// 	b_parameters.modified_basis = false;
+// 	b_parameters.problem_type = Parameter_Types::Linear;
+// 	int n_e = b_parameters.n_equality;
+// 	VectorXd equality_values(n_e + n_p);
+// 	get_equality_values(equality_values);
+// 
+// 	MatrixXd interpolation_matrix(n_e + n_p, n_e + n_p);
+// 	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+// 
+// 	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
+// 	if (!llu->solve()) return false;
+// 	solver = llu;
 
 	return true;
 }

@@ -17,7 +17,7 @@ private:
 	int _n_sequenced_interface_pairs;
 	int _n_sequenced_inequality_pairs;
 	int _n_interface_pairs;
-	std::vector < std::vector < Point > > *_increment_pairs;
+	std::vector < std::vector < Interface > > *_increment_pairs;
 public:
 	// Constructor/Destructor
 	Stratigraphic_Surfaces(const model_parameters& m_p, const Basic_input& basic_i);
@@ -35,6 +35,7 @@ public:
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) { return true; } // TO implement
 	bool measure_residuals(Basic_input &input) { return true; } // TO implement
 	bool append_greedy_input(Basic_input &input) { return true; } // TO implement
+	bool convert_modified_kernel_to_rbf_kernel();
 	GRBF_Modelling_Methods *clone() { return new Stratigraphic_Surfaces(*this); }
 	// Attributes
 	Polynomial_Basis *p_basis;

@@ -83,6 +83,36 @@ bool GRBF_Modelling_Methods::setup_basis_functions()
 	return true;
 }
 
+bool GRBF_Modelling_Methods::check_interpolant()
+{
+	for (int j = 0; j < b_input.itrface->size(); j++ ){
+		cout<<" Interface["<<j<<"]: "<<endl;
+		eval_scalar_interpolant_at_point(b_input.itrface->at(j));
+		cout<<"	Scalar field = "<<b_input.itrface->at(j).scalar_field()<<endl;
+	}
+
+	for (int j = 0; j < b_input.planar->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.planar->at(j));
+		double vf[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
+		cout<<" Planar["<<j<<"]: "<<endl;
+		cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
+		cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
+		cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
+	}
+	for (int j = 0; j < b_input.tangent->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.tangent->at(j));
+		double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
+		cout<<" Tangent["<<j<<"]: "<<endl;
+		cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
+		cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
+		cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
+		cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
+			b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
+	}
+
+	return true;
+}
+
 bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 {
 	if (solver == NULL) return false;
@@ -204,7 +234,7 @@ GRBF_Modelling_Methods * GRBF_Modelling_Methods::get_method( const model_paramet
 bool GRBF_Modelling_Methods::run_greedy_algorithm()
 {
 	// check if there are non-zero errors permitted on the data
-	if (m_parameters.interface_slack == 0 && m_parameters.gradient_slack == 0) return false;
+	if (m_parameters.interface_uncertainty == 0 && m_parameters.angular_uncertainty == 0) return false;
 
 	GRBF_Modelling_Methods *greedy_method = get_method(m_parameters,b_input);
 

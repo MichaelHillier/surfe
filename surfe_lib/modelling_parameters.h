@@ -36,16 +36,16 @@ struct SURFE_LIB_EXPORT model_parameters{
 
 	bool advanced_parameters;
 	bool model_global_anisotropy;
-	bool use_smoothing;
-	bool use_uncertainty;
-	double interface_slack; // interface slack
-	double gradient_slack; // gradient slack
+	bool use_greedy;
+	bool use_restricted_range;
+	double interface_uncertainty;
+	double angular_uncertainty;
 
 	// initialization ...
 	model_parameters() : model_type(Parameter_Types::Single_surface), min_stratigraphic_thickness(0),
 		use_interface_data(true), use_planar_data(true), use_tangent(false), use_inequality(false),
 		basis_type(Parameter_Types::Cubic), shape_parameter(100), polynomial_order(1),
-		advanced_parameters(false), model_global_anisotropy(false), use_smoothing(false), use_uncertainty(false), interface_slack(0), gradient_slack(0) {}
+		advanced_parameters(false), model_global_anisotropy(false), use_greedy(false), use_restricted_range(false), interface_uncertainty(0), angular_uncertainty(0) {}
 };
 
 struct SURFE_LIB_EXPORT basic_parameters{
@@ -56,7 +56,6 @@ struct SURFE_LIB_EXPORT basic_parameters{
 	unsigned int n_tangent;
 	unsigned int n_constraints;
 	unsigned int n_equality;
-	unsigned int n_bounded_inequality;
 	// basis function parameters
 	bool modified_basis;
 	// polynomial parameters
@@ -64,11 +63,11 @@ struct SURFE_LIB_EXPORT basic_parameters{
 	unsigned int n_poly_terms;
 	// type of problem
 	Parameter_Types::SolverType problem_type;
-	// restricted range constraints - bounded inequalities
-	bool restricted_range;
+	//bool greedy; // greedy algorithm
+	bool restricted_range; // restricted range constraints - bounded inequalities
 	// initialization 
-	basic_parameters() : n_interface(0), n_planar(0), n_inequality(0), n_tangent(0), n_constraints(0), n_equality(0), n_bounded_inequality(0),
-		modified_basis(false), poly_term(true), n_poly_terms(4), problem_type(Parameter_Types::Linear), restricted_range(false){}
+	basic_parameters() : n_interface(0), n_planar(0), n_inequality(0), n_tangent(0), n_constraints(0), n_equality(0),
+		modified_basis(false), poly_term(true), n_poly_terms(4), problem_type(Parameter_Types::Linear),restricted_range(false){}
 };
 
 #endif

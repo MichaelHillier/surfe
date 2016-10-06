@@ -321,21 +321,21 @@ bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
 	// which could consequently pass closely to interface points not yet included
 
 
-// 	planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+// 	planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 // 	if (planar_indices_to_include.size() != 0 )
 // 	{
 // 		this->b_input.planar->push_back(input.planar->at(planar_indices_to_include[0]));
 // 		input.planar->erase(input.planar->begin() + planar_indices_to_include[0]);
 // 		return true;
 // 	}
-// 	interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, b_input.GetInterfaceAvgNNDist());
+// 	interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_uncertainty, b_input.GetInterfaceAvgNNDist());
 // 	if (interface_indices_to_include.size() != 0 )
 // 	{
 // 		this->b_input.itrface->push_back(input.itrface->at(interface_indices_to_include[0]));
 // 		input.itrface->erase(input.itrface->begin() + interface_indices_to_include[0]);
 // 		return true;
 // 	}
-	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 	else
 	{
 #pragma omp parallel sections 
@@ -343,17 +343,17 @@ bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
 #pragma omp section
 			{
 				// PLANAR Observations
-				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 			}
 #pragma omp section
 			{
 				// TANGENT Observations
-				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, b_input.GetTangentAvgNNDist());
+				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.angular_uncertainty, b_input.GetTangentAvgNNDist());
 			}
 #pragma omp section
 			{
 				// INTERFACE Observations
-				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, b_input.GetInterfaceAvgNNDist());
+				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_uncertainty, b_input.GetInterfaceAvgNNDist());
 			}
 #pragma omp section
 			{
