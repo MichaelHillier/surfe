@@ -33,15 +33,16 @@ struct SURFE_LIB_EXPORT model_parameters{
 
 	bool advanced_parameters;
 	bool model_global_anisotropy;
-	bool use_smoothing;
-	double interface_slack; // interface slack
-	double gradient_slack; // gradient slack
+	bool use_greedy;
+	bool use_restricted_range;
+	double interface_uncertainty; // interface slack
+	double angular_uncertainty; // gradient slack
 
 	// initialization ...
 	model_parameters() : model_type(Parameter_Types::Single_surface), min_stratigraphic_thickness(0),
 		use_interface_data(true), use_planar_data(true), use_tangent(false), use_inequality(false),
 		basis_type(Parameter_Types::Cubic), shape_parameter(100), polynomial_order(1),
-		advanced_parameters(false), model_global_anisotropy(false), use_smoothing(false), interface_slack(0), gradient_slack(0) {}
+		advanced_parameters(false), model_global_anisotropy(false), use_greedy(false), use_restricted_range(false), interface_uncertainty(0), angular_uncertainty(0) {}
 };
 
 struct SURFE_LIB_EXPORT basic_parameters{

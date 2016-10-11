@@ -205,7 +205,7 @@ GRBF_Modelling_Methods * GRBF_Modelling_Methods::get_method( const model_paramet
 bool GRBF_Modelling_Methods::run_greedy_algorithm()
 {
 	// check if there are non-zero errors permitted on the data
-	if (m_parameters.interface_slack == 0 && m_parameters.gradient_slack == 0) return false;
+	if (m_parameters.interface_uncertainty == 0 && m_parameters.angular_uncertainty == 0) return false;
 
 	GRBF_Modelling_Methods *greedy_method = get_method(m_parameters,b_input);
 

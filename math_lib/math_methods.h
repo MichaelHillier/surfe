@@ -423,7 +423,8 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		}
 		//calculate mu
 		mu = zTs / nc;
-		//double mu_d = _get_double(mu); // debug
+		double mu_d = _get_double(mu); // debug
+		cout<<" mu["<<iter<<"]= "<<mu_d<<endl;
 		if (iter > 5 && mu > prev_mu) return false;
 		prev_mu = mu;
 		if (mu < 0.00000001)

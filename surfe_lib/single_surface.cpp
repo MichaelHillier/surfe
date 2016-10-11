@@ -146,7 +146,7 @@ bool Single_Surface::setup_system_solver()
 	{
 		VectorXd inequality_values(n_ie);
 		get_inequality_values(inequality_values);
-
+		
 		VectorXd equality_values(n_e);
 		get_equality_values(equality_values);
 
@@ -162,6 +162,7 @@ bool Single_Surface::setup_system_solver()
 		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
 		if(!qpc->solve()) return false;
 		solver = qpc;
+
 		//check_interpolant();
 	}
 	else // Linear 
@@ -179,6 +180,30 @@ bool Single_Surface::setup_system_solver()
 		Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
 		if (!llu->solve()) return false;
 		solver = llu;
+	}
+
+	for (int j = 0; j < b_input.itrface->size(); j++ ){
+		cout<<" Interface["<<j<<"]: "<<endl;
+		eval_scalar_interpolant_at_point(b_input.itrface->at(j));
+		cout<<"	Scalar field = "<<b_input.itrface->at(j).scalar_field()<<endl;
+	}
+	for (int j = 0; j < b_input.planar->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.planar->at(j));
+		double vf[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
+		cout<<" Planar["<<j<<"]: "<<endl;
+		cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
+		cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
+		cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
+	}
+	for (int j = 0; j < b_input.tangent->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.tangent->at(j));
+		double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
+		cout<<" Tangent["<<j<<"]: "<<endl;
+		cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
+		cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
+		cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
+		cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
+			b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
 	}
 
 	return true;
@@ -299,7 +324,7 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 	// For the first iteration only consider adding additional planar constraints
 	// These additional constraints could force large changes in the scalar field
 	// which could consequently pass closely to interface points not yet included
-	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+	if (_iteration == 0) planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 	else
 	{
 		#pragma omp parallel sections 
@@ -307,17 +332,17 @@ bool Single_Surface::append_greedy_input(Basic_input &input)
 			#pragma omp section
 			{
 				// PLANAR Observations
-				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+				planar_indices_to_include = Get_Planar_STL_Vector_Indices_With_Large_Residuals(input.planar, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 			}
 			#pragma omp section
 			{
 				// TANGENT Observations
-				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.gradient_slack, b_input.GetPlanarAvgNNDist());
+				tangent_indices_to_include = Get_Tangent_STL_Vector_Indices_With_Large_Residuals(input.tangent, m_parameters.angular_uncertainty, b_input.GetPlanarAvgNNDist());
 			}
 			#pragma omp section
 			{
 				// INTERFACE Observations
-				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_slack, b_input.GetInterfaceAvgNNDist());
+				interface_indices_to_include = Get_Interface_STL_Vector_Indices_With_Large_Residuals(input.itrface, m_parameters.interface_uncertainty, b_input.GetInterfaceAvgNNDist());
 			}
 			#pragma omp section
 			{

@@ -4,9 +4,13 @@
 #include <gmpxx.h>
 
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 #include <Eigen/Core>
 
 using namespace Eigen;
+using namespace std;
 
 class System_Solver {
 public:
@@ -63,6 +67,13 @@ public:
 		_inequality_vector = _convert_double_vector_2_mpf(inequality_vector);
 
 		_hessian_matrix = _get_hessian_matrix(_interpolation_matrix);
+
+		std::ofstream file1("InterpolationMatrixTest.txt");
+		if (file1)
+		{
+			file1 << interpolation_matrix <<"\n";
+			file1.close();
+		}
 	}
 	bool solve();
 	bool validate_matrix_systems();
