@@ -82,13 +82,18 @@ bool Quadratic_Predictor_Corrector::solve()
 {
 	int n = (int)_hessian_matrix.rows();
 
-	Matrix <mpf_class, Dynamic, 1> fvalues(n);
+	//Matrix <mpf_class, Dynamic, 1> fvalues(n);
+	Matrix <double, Dynamic, 1> fvalues(n);
 
 	//if (!validate_matrix_systems()) return false;
 
-	if (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues)) return false;
+	//if (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues)) return false;
 
-	weights = _convert_mpf_vector_2_double(fvalues);
+	if (!Math_methods::quadratic_solver(_hessian_matrixD,_equality_matrixD,_inequality_matrixD,_equality_vectorD,_inequality_vectorD,fvalues)) return false;
+
+	//weights = _convert_mpf_vector_2_double(fvalues);
+
+	weights = fvalues;
 
 	return true;
 }

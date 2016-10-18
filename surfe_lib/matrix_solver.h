@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 #include <Eigen/Core>
 
 using namespace Eigen;
@@ -42,6 +43,11 @@ class Quadratic_Predictor_Corrector : public System_Solver {
 private:
 	mpf_class _largest_element;
 	MatrixXd _interpolation_matrixD;
+	MatrixXd _hessian_matrixD;
+	MatrixXd _equality_matrixD;
+	MatrixXd _inequality_matrixD;
+	VectorXd _equality_vectorD;
+	VectorXd _inequality_vectorD;
 	Matrix <mpf_class, Dynamic, Dynamic> _hessian_matrix;
 	Matrix <mpf_class, Dynamic, Dynamic> _interpolation_matrix;
 	Matrix <mpf_class, Dynamic, Dynamic> _equality_matrix;
@@ -60,20 +66,26 @@ public:
 								  const VectorXd inequality_vector)
 	{
 		_interpolation_matrixD = interpolation_matrix;
-		_interpolation_matrix = _convert_double_matrix_2_mpf(interpolation_matrix);
-		_equality_matrix = _convert_double_matrix_2_mpf(equality_matrix);
-		_inequality_matrix = _convert_double_matrix_2_mpf(inequality_matrix);
-		_equality_vector = _convert_double_vector_2_mpf(equality_vector);
-		_inequality_vector = _convert_double_vector_2_mpf(inequality_vector);
-
-		_hessian_matrix = _get_hessian_matrix(_interpolation_matrix);
-
-		std::ofstream file1("InterpolationMatrixTest.txt");
-		if (file1)
-		{
-			file1 << interpolation_matrix <<"\n";
-			file1.close();
-		}
+		_hessian_matrixD = 2.0*interpolation_matrix;
+		_equality_matrixD = equality_matrix;
+		_inequality_matrixD = inequality_matrix;
+		_equality_vectorD = equality_vector;
+		_inequality_vectorD = inequality_vector;
+// 		_interpolation_matrix = _convert_double_matrix_2_mpf(interpolation_matrix);
+// 		_equality_matrix = _convert_double_matrix_2_mpf(equality_matrix);
+// 		_inequality_matrix = _convert_double_matrix_2_mpf(inequality_matrix);
+// 		_equality_vector = _convert_double_vector_2_mpf(equality_vector);
+// 		_inequality_vector = _convert_double_vector_2_mpf(inequality_vector);
+// 
+// 		_hessian_matrix = _get_hessian_matrix(_interpolation_matrix);
+// 
+// 		std::ofstream file1("InterpolationMatrixTest3.txt");
+// 		file1.precision(15);
+// 		if (file1)
+// 		{
+// 			file1 << interpolation_matrix <<"\n";
+// 			file1.close();
+// 		}
 	}
 	bool solve();
 	bool validate_matrix_systems();

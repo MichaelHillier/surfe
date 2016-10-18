@@ -452,7 +452,7 @@ private:
 public:
 	Lagrangian_Polynomial_Basis(const std::vector < std::vector < Interface > > &interface_point_lists)
 	{
-		mpf_set_default_prec(128);
+		mpf_set_default_prec(128.0);
 		if (_get_unisolvent_subset(interface_point_lists)) _initialize_basis();
 		else
 		{
@@ -470,6 +470,7 @@ class Modified_Kernel : public Kernel {
 public:
 	Modified_Kernel(RBFKernel* arbfkernel, const std::vector < std::vector < Interface > > &interface_point_lists)
 	{ 
+		mpf_set_default_prec(128.0);
 		_aRBFKernel = arbfkernel;
 		_aLPB = new Lagrangian_Polynomial_Basis(interface_point_lists);
 	}

@@ -425,7 +425,11 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		mu = zTs / nc;
 		double mu_d = _get_double(mu); // debug
 		cout<<" mu["<<iter<<"]= "<<mu_d<<endl;
-		if (iter > 5 && mu > prev_mu) return false;
+		if (iter > 5 && mu > prev_mu)
+		{
+			cout<<" QPP did not converge. Due to precision problem..."<<endl;
+			return false;
+		}
 		prev_mu = mu;
 		if (mu < 0.00000001)
 		{

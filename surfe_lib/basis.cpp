@@ -1965,9 +1965,10 @@ void Lagrangian_Polynomial_Basis::_initialize_basis()
 	mpf_class y4 = unisolvent_subset_points[3].y();
 	mpf_class z4 = unisolvent_subset_points[3].z();
 
-	mpf_class d = (x2*y3*z1 - x2*y4*z1 - x1*y3*z2 + x1*y4*z2 - x2*y1*z3 + x1*y2*z3 - x1*y4*z3 + x2*y4*z3 + 
-		x4*(y2*z1 - y3*z1 - y1*z2 + y3*z2 + y1*z3 - y2*z3) + x2*y1*z4 - x1*y2*z4 + x1*y3*z4 - x2*y3*z4 + 
-		x3*(y4*z1 + y1*z2 - y4*z2 - y1*z4 + y2*(-z1 + z4)));
+	mpf_class d = (x1*(y4*z2 - y3*z2 + y2*z3 - y4*z3 - y2*z4 + y3*z4) + 
+		           x2*(y3*z1 - y4*z1 - y1*z3 + y4*z3 + y1*z4 - y3*z4) + 
+				   x3*(y4*z1 + y1*z2 - y4*z2 - y1*z4 - y2*z1 + y2*z4) +
+		           x4*(y2*z1 - y3*z1 - y1*z2 + y3*z2 + y1*z3 - y2*z3));
 
 	_polynomial_constants.resize(16);
 
@@ -1995,8 +1996,8 @@ void Lagrangian_Polynomial_Basis::_initialize_basis()
 	_polynomial_constants(14) = ( (-(x2*z1) + x3*z1 + x1*z2 - x3*z2 - x1*z3 + x2*z3)/d ); // y coef
 	_polynomial_constants(15) = ( (x2*y1 - x3*y1 - x1*y2 + x3*y2 + x1*y3 - x2*y3)/d ); // z coef
 
-	//std::vector<double> poly_const_double;
-	//for (int j = 0; j< 16;j++) poly_const_double.push_back(_polynomial_constants[j].get_d());
+// 	std::vector<double> poly_const_double;
+// 	for (int j = 0; j< 16;j++) poly_const_double.push_back(_polynomial_constants[j].get_d());
 
 	_derivative_polynomial_constants.resize(3,4);
 
