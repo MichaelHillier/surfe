@@ -2358,12 +2358,12 @@ double Modified_Kernel::basis_tangent_pt()
 	Matrix <mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
 
 	for (int j = 0; j < 4; j++){
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		mpf_class b1(this->_aRBFKernel->basis());
 		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2x(this->_aRBFKernel->dx_p1());
 		mpf_class b2y(this->_aRBFKernel->dy_p1());
 		mpf_class b2z(this->_aRBFKernel->dz_p1());
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
-		mpf_class b1(this->_aRBFKernel->basis());
 		// for dx component
 		t1x += p1x(j) * b1;  
 		t2x += p2(j) * b2x;
@@ -2626,7 +2626,6 @@ double Modified_Kernel::basis_tangent_tangent()
 					  t1->ty()*t2->tx()*yx + t1->ty()*t2->ty()*yy + t1->ty()*t2->tz()*yz + 
 					  t1->tz()*t2->tx()*zx + t1->tz()*t2->ty()*zy + t1->tz()*t2->tz()*zz;
 
-	//delete t1,t2;
 	return value.get_d();
 }
 
@@ -2683,7 +2682,6 @@ double Modified_Kernel::basis_planar_tangent( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xx + t->ty()*xy + t->tz()*xz;
 
-		//delete t;
 		return value.get_d();
 	}
 	else if (fd == Parameter_Types::DY)
@@ -2737,7 +2735,6 @@ double Modified_Kernel::basis_planar_tangent( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*yx + t->ty()*yy + t->tz()*yz;
 
-		//delete t;
 		return value.get_d();
 	}
 	else // fd == DZ
@@ -2791,7 +2788,6 @@ double Modified_Kernel::basis_planar_tangent( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*zx + t->ty()*zy + t->tz()*zz;
 
-		//delete t;
 		return value.get_d();
 	}
 }
@@ -2850,7 +2846,6 @@ double Modified_Kernel::basis_tangent_planar( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xx + t->ty()*yx + t->tz()*zx;
 
-		//delete t;
 		return value.get_d();
 	}
 	else if (fd == Parameter_Types::DY)
@@ -2904,7 +2899,6 @@ double Modified_Kernel::basis_tangent_planar( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xy + t->ty()*yy + t->tz()*zy;
 
-		//delete t;
 		return value.get_d();
 	}
 	else // fd == DZ
@@ -2958,7 +2952,6 @@ double Modified_Kernel::basis_tangent_planar( const Parameter_Types::FirstDeriva
 
 		mpf_class value = t->tx()*xz + t->ty()*yz + t->tz()*zz;
 
-		//delete t;
 		return value.get_d();
 	}
 }

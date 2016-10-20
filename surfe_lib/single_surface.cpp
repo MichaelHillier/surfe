@@ -185,7 +185,7 @@ bool Single_Surface::setup_system_solver()
 
 		if (!convert_modified_kernel_to_rbf_kernel()) return false;
 
-		//check_interpolant();
+		check_interpolant();
 	}
 	else // Linear 
 	{
@@ -388,6 +388,9 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel()
 
 	// prep for linear prob...
 	// set the constraints...
+	// temp container for interface points needed for cases where inequalities are used
+	// b/c inequalities are turned into 'interface points' (they do not actually represent horizon interfaces points though)
+	std::vector<Interface> *temp_itr = new std::vector<Interface>();
 	for (int j = 0; j < b_input.inequality->size(); j++ ){
 		Evaluation_Point test_point(b_input.inequality->at(j).x(),b_input.inequality->at(j).y(),b_input.inequality->at(j).z());
 		// debug
@@ -395,9 +398,8 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel()
 		eval_scalar_interpolant_at_point(test_point);
 		// cout<<"	Scalar field = "<<test_point.scalar_field()<<endl;
 		Interface itr_point(test_point.x(),test_point.y(),test_point.z(),test_point.scalar_field());
-		b_input.itrface->push_back(itr_point);
+		temp_itr->push_back(itr_point);
 	}
-	b_input.inequality->clear();
 	for (int j = 0; j < b_input.itrface->size(); j++ ){
 		Evaluation_Point test_point(b_input.itrface->at(j).x(),b_input.itrface->at(j).y(),b_input.itrface->at(j).z());
 		// debug
@@ -405,6 +407,9 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel()
 		eval_scalar_interpolant_at_point(test_point);
 		//cout<<"	Scalar field = "<<test_point.scalar_field()<<endl;
 		b_input.itrface->at(j).setLevel(test_point.scalar_field());
+
+		Interface itr_point(test_point.x(),test_point.y(),test_point.z(),test_point.scalar_field());
+		temp_itr->push_back(itr_point);
 	}
 	for (int j = 0; j < b_input.planar->size(); j++ ){
 		eval_vector_interpolant_at_point(b_input.planar->at(j));
@@ -431,6 +436,10 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel()
 
 	// switch from modified kernel to normal rbf kernel
 	kernel = rbf_kernel;
+
+	b_input.inequality->clear();
+	b_input.itrface->clear();
+	b_input.itrface = temp_itr;
 
 	int n_p = b_parameters.n_poly_terms;
 	if (m_parameters.use_restricted_range) b_parameters.restricted_range = false;
@@ -751,7 +760,11 @@ bool Single_Surface::process_input_data()
  			cout<<"	ny: "<<b_input.planar->at(j).ny_lower_bound()<<" <= "<<b_input.planar->at(j).ny()<<" <= "<<b_input.planar->at(j).ny_upper_bound()<<endl;
  			cout<<"	nz: "<<b_input.planar->at(j).nz_lower_bound()<<" <= "<<b_input.planar->at(j).nz()<<" <= "<<b_input.planar->at(j).nz_upper_bound()<<endl;
 		}
-		for (int j = 0; j <(int)b_input.tangent->size(); j++ ) b_input.tangent->at(j).setAngleBounds(m_parameters.angular_uncertainty);
+		for (int j = 0; j <(int)b_input.tangent->size(); j++ ){
+			b_input.tangent->at(j).setAngleBounds(m_parameters.angular_uncertainty);
+			cout<<" Tangent["<<j<<"] Bounds: "<<endl;
+			cout<<"	"<<b_input.tangent->at(j).angle_lower_bound()<<" <= "<<b_input.tangent->at(j).inner_product_constraint()<<" <= "<<b_input.tangent->at(j).angle_upper_bound()<<endl;
+		}
 	}
 
 	return true;
