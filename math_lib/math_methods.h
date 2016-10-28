@@ -41,11 +41,6 @@ public:
 		const Matrix <T, Dynamic, 1> &d,
 		Matrix <T, Dynamic, 1> &fvalues);
 	static bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, const VectorXd &b, const VectorXd &r, VectorXd &fvalues );
-// 	static bool quadratic_solver_loqo(const Matrix <double, Dynamic, Dynamic> &H,
-// 		const Matrix <double, Dynamic, Dynamic> &A,
-// 		const Matrix <double, Dynamic, 1> &b,
-// 		const Matrix <double, Dynamic, 1> &r,
-// 		Matrix <double, Dynamic, 1> &fvalues);
 };
 
 template <class T>
@@ -93,9 +88,9 @@ T Math_methods::_find_step_length(const Matrix <T, Dynamic, 1> &a, const Matrix 
 	Matrix <T, Dynamic, 1> alpha_a(n);
 	Matrix <T, Dynamic, 1> alpha_b(n);
 	for (int j = 0; j < n; j++){
-		cout<<" z["<<j<<"]= "<<b[j].get_d()<<endl;
-		cout<<" s["<<j<<"]= "<<a[j].get_d()<<endl;
-		cout<<" ["<<j<<"] dz_aff = "<<db[j].get_d()<<" ds_aff= "<<da[j].get_d()<<endl;
+		//cout<<" z["<<j<<"]= "<<b[j].get_d()<<endl;
+		//cout<<" s["<<j<<"]= "<<a[j].get_d()<<endl;
+		//cout<<" ["<<j<<"] dz_aff = "<<db[j].get_d()<<" ds_aff= "<<da[j].get_d()<<endl;
 		// do alpha_b first ...
 		if (b(j) > 0.0) alpha_b(j) =  b(j) / db(j) ;
 		else alpha_b(j) = -1.0*b(j) / db(j);
@@ -105,12 +100,12 @@ T Math_methods::_find_step_length(const Matrix <T, Dynamic, 1> &a, const Matrix 
 
 		if (alpha_b(j) < min_alpha_b && alpha_b(j) > 0.00000000000001) min_alpha_b = alpha_b(j);
 		if (alpha_a(j) < min_alpha_a && alpha_a(j) > 0.00000000000001) min_alpha_a = alpha_a(j);
-		cout<<" alpha_s["<<j<<"]= "<<alpha_a[j].get_d()<<endl;
-		cout<<" alpha_z["<<j<<"]= "<<alpha_b[j].get_d()<<endl;
+		//cout<<" alpha_s["<<j<<"]= "<<alpha_a[j].get_d()<<endl;
+		//cout<<" alpha_z["<<j<<"]= "<<alpha_b[j].get_d()<<endl;
 		//cout<<" max_alpha_s = "<<max_alpha_a.get_d()<<endl;
 		//cout<<" max_alpha_z = "<<max_alpha_b.get_d()<<endl;
-		cout<<" min_alpha_s = "<<min_alpha_a.get_d()<<endl;
-		cout<<" min_alpha_z = "<<min_alpha_b.get_d()<<endl;
+		//cout<<" min_alpha_s = "<<min_alpha_a.get_d()<<endl;
+		//cout<<" min_alpha_z = "<<min_alpha_b.get_d()<<endl;
 	}
 
 	if (min_alpha_b < min_alpha_a) alpha = min_alpha_b;
@@ -364,9 +359,9 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 	}
 	dvector = KKT_predictor.partialPivLu().solve(solution_vector);
 
-	for (int j = 0; j < n + na + 2 * nc; j++ ){
-		cout<<" dvector["<<j<<"]= "<<dvector[j].get_d()<<endl;
-	}
+// 	for (int j = 0; j < n + na + 2 * nc; j++ ){
+// 		cout<<" dvector["<<j<<"]= "<<dvector[j].get_d()<<endl;
+// 	}
 
 	for (int j = 0; j < n;  j++) dx(j) = dvector(j);
 	for (int j = 0; j < na; j++) dy(j) = dvector(j + n);
@@ -379,19 +374,19 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 	// (x,y,z,s)->(x,y,z,s) + (dx_aff,dy_aff,dz_aff,ds_aff)
 	for (int j = 0; j < n; j++){
 		x(j) += dx(j);
-		cout<<" x["<<j<<"]= "<<dx(j).get_d()<<endl;
+		//cout<<" x["<<j<<"]= "<<dx(j).get_d()<<endl;
 	}
 	for (int j = 0; j < na; j++){ 
 		y(j) += dy(j);
-		cout<<" y["<<j<<"]= "<<dy(j).get_d()<<endl;
+		//cout<<" y["<<j<<"]= "<<dy(j).get_d()<<endl;
 	}
 	for (int j = 0; j < nc; j++) {
 		z(j) += dz(j);
-		cout<<" z["<<j<<"]= "<<dz(j).get_d()<<endl;
+		//cout<<" z["<<j<<"]= "<<dz(j).get_d()<<endl;
 	}
 	for (int j = 0; j < nc; j++) {
 		s(j) += ds(j);
-		cout<<" s["<<j<<"]= "<<ds(j).get_d()<<endl;
+		//cout<<" s["<<j<<"]= "<<ds(j).get_d()<<endl;
 	}
 
 	// above iterate likely infeasible
@@ -459,7 +454,7 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		}
 		//calculate mu
 		mu = zTs / nc;
-		cout<<" mu = "<<mu.get_d() <<endl;
+		cout<<" mu["<<iter<<"] = "<<mu.get_d() <<endl;
 		//double mu_d = _get_double(mu); // debug
 		if (iter > 5 && mu > prev_mu) return false;
 		prev_mu = mu;
@@ -480,9 +475,9 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		}
 		dvector = KKT_predictor.partialPivLu().solve(solution_vector);
 
-		for (int j = 0; j < n + na + 2 * nc; j++ ){
-			cout<<" dvector_pred["<<j<<"]= "<<dvector[j].get_d()<<endl;
-		}
+// 		for (int j = 0; j < n + na + 2 * nc; j++ ){
+// 			cout<<" dvector_pred["<<j<<"]= "<<dvector[j].get_d()<<endl;
+// 		}
 
 
 		// get step vectors...
@@ -490,15 +485,15 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 			dz_aff(j) = dvector(j + n + na);
 			ds_aff(j) = dvector(j + n + na + nc);
 		}
-		for (int j = 0; j < nc; j++) {
-			cout<<" dz_aff["<<j<<"] = "<<dz_aff(j).get_d()<<endl;
-		}
-		for (int j = 0; j < nc; j++) {
-			cout<<" ds_aff["<<j<<"] = "<<ds_aff(j).get_d()<<endl;
-		}
+// 		for (int j = 0; j < nc; j++) {
+// 			cout<<" dz_aff["<<j<<"] = "<<dz_aff(j).get_d()<<endl;
+// 		}
+// 		for (int j = 0; j < nc; j++) {
+// 			cout<<" ds_aff["<<j<<"] = "<<ds_aff(j).get_d()<<endl;
+// 		}
 
 		alpha = _find_step_length(s, ds_aff, z, dz_aff);
-		cout<< " alpha = "<<alpha.get_d()<<endl;
+		//cout<< " alpha = "<<alpha.get_d()<<endl;
 
 		// calculate mu_aff
 		elemsum = 0.0;
@@ -524,9 +519,9 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 		}
 		dvector_corr = KKT_corrector.partialPivLu().solve(solution_vector);
 
-		for (int j = 0; j < n + na + 2 * nc; j++ ){
-			cout<<" dvector_corr["<<j<<"]= "<<dvector_corr[j].get_d()<<endl;
-		}
+// 		for (int j = 0; j < n + na + 2 * nc; j++ ){
+// 			cout<<" dvector_corr["<<j<<"]= "<<dvector_corr[j].get_d()<<endl;
+// 		}
 
 
 		// get step vectors from corrector step...
@@ -539,16 +534,16 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 				ds(j) = dvector_corr(j + n + na + nc);
 			}
 		}
-		for (int j = 0; j < nc; j++) {
-			cout<<" dz["<<j<<"] = "<<dz(j).get_d()<<endl;
-		}
-		for (int j = 0; j < nc; j++) {
-			cout<<" ds["<<j<<"] = "<<ds(j).get_d()<<endl;
-		}
+// 		for (int j = 0; j < nc; j++) {
+// 			cout<<" dz["<<j<<"] = "<<dz(j).get_d()<<endl;
+// 		}
+// 		for (int j = 0; j < nc; j++) {
+// 			cout<<" ds["<<j<<"] = "<<ds(j).get_d()<<endl;
+// 		}
 
 		alpha = _find_step_length(s, ds, z, dz);
 
-		cout<< " alpha = "<<alpha.get_d()<<endl;
+		//cout<< " alpha = "<<alpha.get_d()<<endl;
 
 		// update x,y,z,s vectors using alpha step
 		for (int j = 0; j < n; j++) x(j) += alpha*dx(j);

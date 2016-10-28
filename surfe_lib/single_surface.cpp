@@ -157,7 +157,7 @@ bool Single_Surface::setup_system_solver()
 			MatrixXd inequality_matrix(n_c,n_c);
 			inequality_matrix = interpolation_matrix;
 
-			Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,inequality_matrix,b,r);
+			Quadratic_Predictor_Corrector_LOQO *qpc = new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix,inequality_matrix,b,r);
 			if(!qpc->solve()) return false;
 			solver = qpc;
 		}
@@ -182,10 +182,6 @@ bool Single_Surface::setup_system_solver()
 			if(!qpc->solve()) return false;
 			solver = qpc;
 		}
-
-		if (!convert_modified_kernel_to_rbf_kernel()) return false;
-
-		check_interpolant();
 	}
 	else // Linear 
 	{

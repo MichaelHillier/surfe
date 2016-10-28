@@ -121,6 +121,11 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 		if ((int)solver->weights.size() == 0) return false;
 		else
 		{
+			if (b_parameters.modified_basis)
+			{
+				if (!convert_modified_kernel_to_rbf_kernel()) return false;
+			}
+
 			int N = (int)b_input.evaluation_pts->size();
 			int add = 0;
 			int vv = round((double)N / 72.0); // 72.0 is the width of the progress bar 

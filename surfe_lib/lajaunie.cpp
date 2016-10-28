@@ -17,7 +17,7 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block( MatrixXd &poly_matrix )
 
 	p_basis = create_polynomial_basis(m_parameters.polynomial_order);
 
-	if ((int)poly_matrix.size() != b_parameters.n_poly_terms ) return false;
+	if ((int)poly_matrix.rows() != b_parameters.n_poly_terms ) return false;
 
 	// for Interface Increment Pair Constraints:
 	for (int j = 0; j < (int)_increment_pairs->size();j++ ){
@@ -76,7 +76,7 @@ bool Lajaunie_Approach::_insert_polynomial_matrix_blocks_in_interpolation_matrix
 	}
 
 	for (int j = 0; j < (int)poly_matrix.rows(); j++ ){
-		for (int k = 0; k < (int)poly_matrix.cols(); k++ ){
+		for (int k = 0; k < (int)poly_matrix.rows(); k++ ){
 			interpolation_matrix(n_ip + 3*n_p + n_t + j,n_ip + 3*n_p + n_t + k) = 0;
 		}
 	}
@@ -156,7 +156,7 @@ bool Lajaunie_Approach::process_input_data()
 bool Lajaunie_Approach::setup_system_solver()
 {
 	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
-	VectorXd equality_values;
+	VectorXd equality_values(n);
 	get_equality_values(equality_values);
 	MatrixXd interpolation_matrix(n, n);
 	if (!get_interpolation_matrix(interpolation_matrix)) return false;
@@ -406,9 +406,9 @@ bool Lajaunie_Approach::get_equality_values( VectorXd &equality_values )
 	int m = 0;
 	for (j = 0; j < _n_increment_pair; j++ ) equality_values(j) = 0.0;
 	for (k = 0; k < (int)b_input.planar->size(); k++){
-		equality_values(3 * k + j)     = b_input.planar->at(j).nx();
-		equality_values(3 * k + j + 1) = b_input.planar->at(j).ny();
-		equality_values(3 * k + j + 2) = b_input.planar->at(j).nz();
+		equality_values(3 * k + j)     = b_input.planar->at(k).nx();
+		equality_values(3 * k + j + 1) = b_input.planar->at(k).ny();
+		equality_values(3 * k + j + 2) = b_input.planar->at(k).nz();
 	}
 	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) = 0.0;
 	if (b_parameters.poly_term) for (m = 0; m < (int)b_parameters.n_poly_terms; m++ ) equality_values(m + l + 3 * k + j) = 0.0;

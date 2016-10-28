@@ -43,10 +43,6 @@ class Quadratic_Predictor_Corrector : public System_Solver {
 private:
 	mpf_class _largest_element;
 	MatrixXd _interpolation_matrixD;
-	MatrixXd _H;
-	MatrixXd _A;
-	VectorXd _b;
-	VectorXd _r;
 	Matrix <mpf_class, Dynamic, Dynamic> _hessian_matrix;
 	Matrix <mpf_class, Dynamic, Dynamic> _interpolation_matrix;
 	Matrix <mpf_class, Dynamic, Dynamic> _equality_matrix;
@@ -71,9 +67,52 @@ public:
 		_equality_vector = _convert_double_vector_2_mpf(equality_vector);
 		_inequality_vector = _convert_double_vector_2_mpf(inequality_vector);
 
+// 		std::ofstream file1("interpM.txt");
+// 		std::ofstream file2("ieM.txt");
+// 		std::ofstream file3("ieV.txt");
+// 		std::ofstream file4("eM.txt");
+// 		std::ofstream file5("eV.txt");
+// 		if (file1)
+// 		{
+// 			file1 << interpolation_matrix <<"\n";
+// 			file1.close();
+// 		}
+// 		if (file2)
+// 		{
+// 			file2 << inequality_matrix <<"\n";
+// 			file2.close();
+// 		}
+// 		if (file3)
+// 		{
+// 			file3 << inequality_vector <<"\n";
+// 			file3.close();
+// 		}
+// 		if (file4)
+// 		{
+// 			file4 << equality_matrix <<"\n";
+// 			file4.close();
+// 		}
+// 		if (file5)
+// 		{
+// 			file5 << equality_vector <<"\n";
+// 			file5.close();
+// 		}
+
 		_hessian_matrix = _get_hessian_matrix(_interpolation_matrix);
 	}
-	Quadratic_Predictor_Corrector(
+	bool solve();
+	bool validate_matrix_systems();
+
+};
+
+class Quadratic_Predictor_Corrector_LOQO : public System_Solver {
+private:
+	MatrixXd _H;
+	MatrixXd _A;
+	VectorXd _b;
+	VectorXd _r;
+public:
+	Quadratic_Predictor_Corrector_LOQO(
 		const MatrixXd &interpolation_matrix,
 		const MatrixXd &inequality_matrix,
 		const VectorXd &constraints,
@@ -84,28 +123,15 @@ public:
 		_b = constraints;
 		_r = constraints_ranges;
 
-//  		std::ofstream file1("HessianM.txt");
-// 		std::ofstream file2("IEM.txt");
-// 		if (file1)
-// 		{
-// 			file1 << _H <<"\n";
-// 			file1.close();
-// 		}
-// 		if (file2)
-// 		{
-// 			file2 << _A <<"\n";
-// 			file2.close();
-// 		}
-// 		// Debug
-//  		cout<<" Hessian matrix:\n"<< _H << endl;
-//  		cout<<" Inequality matrix:\n"<< _A << endl;
-// 		cout<<" Constraints :\n"<< _b << endl;
-//  		cout<<" Constraint ranges :\n"<< _r <<endl;
+		// 		// Debug
+		//  		cout<<" Hessian matrix:\n"<< _H << endl;
+		//  		cout<<" Inequality matrix:\n"<< _A << endl;
+		// 		cout<<" Constraints :\n"<< _b << endl;
+		//  		cout<<" Constraint ranges :\n"<< _r <<endl;
 		// end debug
 	}
 	bool solve();
 	bool validate_matrix_systems();
-
 };
 
 #endif

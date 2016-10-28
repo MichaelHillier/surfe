@@ -12,6 +12,8 @@ private:
 	std::vector < std::vector < Point > > _get_lithostratigraphic_increment_pairs_for_inequality_point(const Inequality &ie_pt);
 	double _get_closest_horizon_level_above_given_level(const double &given_level,const std::vector<double> &horizon_levels);
 	double _get_closest_horizon_level_below_given_level(const double &given_level,const std::vector<double> &horizon_levels);
+	bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
+	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
 	// Attributes
 	int _n_increment_pairs;
 	int _n_sequenced_interface_pairs;
@@ -23,6 +25,7 @@ public:
 	Stratigraphic_Surfaces(const model_parameters& m_p, const Basic_input& basic_i);
 	~Stratigraphic_Surfaces(){};
 	// Methods
+	Polynomial_Basis *create_polynomial_basis(const int &poly_order);
 	bool get_interpolation_matrix(MatrixXd &interpolation_matrix);
 	bool get_equality_values(VectorXd &equality_values);
 	bool get_inequality_matrix(const MatrixXd &interpolation_matrix, MatrixXd &inequality_matrix);

@@ -80,21 +80,15 @@ Matrix <mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_get_hessian
 
 bool Quadratic_Predictor_Corrector::solve()
 {
-	//int n = (int)_hessian_matrix.rows();
+	int n = (int)_hessian_matrix.rows();
 
-	int n  = (int)_H.rows();
-
-	//Matrix <mpf_class, Dynamic, 1> fvalues(n);
+	Matrix <mpf_class, Dynamic, 1> fvalues(n);
 
 	//if (!validate_matrix_systems()) return false;
 
-	//if (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues)) return false;
+	if (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues)) return false;
 
-	VectorXd w(n);
-	if (!Math_methods::quadratic_solver_loqo(_H,_A,_b,_r,w)) return false;
-
-	weights = w;
-	//weights = _convert_mpf_vector_2_double(fvalues);
+	weights = _convert_mpf_vector_2_double(fvalues);
 
 	return true;
 }
@@ -104,6 +98,28 @@ bool Quadratic_Predictor_Corrector::validate_matrix_systems()
 	if (!_interpolation_matrixD.allFinite()) return false;
 
 	LLT<MatrixXd> lltofMatrix(_interpolation_matrixD);
+	if (lltofMatrix.info() == NumericalIssue) return false;
+
+	return true;
+}
+
+bool Quadratic_Predictor_Corrector_LOQO::solve()
+{
+	int n  = (int)_H.rows();
+
+	VectorXd w(n);
+	if (!Math_methods::quadratic_solver_loqo(_H,_A,_b,_r,w)) return false;
+
+	weights = w;
+
+	return true;
+}
+
+bool Quadratic_Predictor_Corrector_LOQO::validate_matrix_systems()
+{
+	if (!_H.allFinite()) return false;
+
+	LLT<MatrixXd> lltofMatrix(_H);
 	if (lltofMatrix.info() == NumericalIssue) return false;
 
 	return true;
