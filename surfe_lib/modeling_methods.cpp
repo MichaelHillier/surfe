@@ -83,6 +83,36 @@ bool GRBF_Modelling_Methods::setup_basis_functions()
 	return true;
 }
 
+bool GRBF_Modelling_Methods::check_interpolant()
+{
+	for (int j = 0; j < b_input.itrface->size(); j++ ){
+		cout<<" Interface["<<j<<"]: "<<endl;
+		eval_scalar_interpolant_at_point(b_input.itrface->at(j));
+		cout<<"	Scalar field = "<<b_input.itrface->at(j).scalar_field()<<endl;
+	}
+
+	for (int j = 0; j < b_input.planar->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.planar->at(j));
+		double vf[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
+		cout<<" Planar["<<j<<"]: "<<endl;
+		cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
+		cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
+		cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
+	}
+	for (int j = 0; j < b_input.tangent->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.tangent->at(j));
+		double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
+		cout<<" Tangent["<<j<<"]: "<<endl;
+		cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
+		cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
+		cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
+		cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
+			b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
+	}
+
+	return true;
+}
+
 bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 {
 	if (solver == NULL) return false;
@@ -91,6 +121,11 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 		if ((int)solver->weights.size() == 0) return false;
 		else
 		{
+			if (b_parameters.modified_basis)
+			{
+				if (!convert_modified_kernel_to_rbf_kernel()) return false;
+			}
+
 			int N = (int)b_input.evaluation_pts->size();
 			int add = 0;
 			int vv = round((double)N / 72.0); // 72.0 is the width of the progress bar 
@@ -99,6 +134,7 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 			#pragma omp parallel for schedule(dynamic)
 			for (int j = 0; j < N; j++ ){
 				eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
+				//eval_vector_interpolant_at_point(b_input.evaluation_pts->at(j));
 				if ( j % vv == 0 )
 				{
 #pragma omp atomic
@@ -117,6 +153,14 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 bool GRBF_Modelling_Methods::run_algorithm()
 {
 	clock_t tstart=clock();
+
+	// set OpenMP parameters
+	const int nthreads = omp_get_max_threads();
+	omp_set_dynamic(false);
+	if (nthreads >= 8) omp_set_num_threads(nthreads - 2);
+	else omp_set_num_threads(nthreads - 1);
+	///////////////////////////////////////
+
 	cout<<" Starting SURFE algorithm "<<endl;
 	cout<<" Processing input data...";
 	if ( !process_input_data()    ) return false;

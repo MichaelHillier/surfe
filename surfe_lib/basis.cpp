@@ -80,8 +80,10 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 
     // might have to check eval(0) smallest eigenvalue
 	// if there are normals sampled from a perfect cylinderical fold
+	if ( eVals(0) < 1e-8 ) eVals(0) = 0.0001;
 	// eval(0) = ~1e-16 machine precision.
 	// perhaps set to eval(0) = 0.0001 ...
+
 
 	Matrix3f ISQR;
 	ISQR(0,0) = 1;
@@ -1714,6 +1716,9 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector < std
 	// NOTE : Currently only supporting 1st order polynomials ( have p(x) = A*x + B*y + C*z + D )
 	// Tried implementing 2nd order however it is not practical
 	// e.g. finding the algrebraic solution in mathematical (via Thomas algo) resulted in ~ 100 page equation.  
+	// the requirement here is that the selected points are unisolvent - e.g. not co-planar
+	// current the below method is not sophisticated and looks for special cases where all points lie on the x/y/z planes
+	// these are just a subset all all the possible co-planarity cases.
 
 	// use interface_point_lists data
 	if ((int)interface_point_lists.size() == 0) return false;
@@ -2307,6 +2312,14 @@ double Modified_Kernel::basis_pt_tangent()
 		t1z += p1(j) * b1z;  
 		t2z += p2z(j) * b2;
 		t3z += p1(j) * p2z(j);
+
+// 		cout<<" t1x = "<<t1x.get_d()<<" p1(j)*b1x= "<< p1(j).get_d() * b1x.get_d()<<" p1(j)= "<<p1(j).get_d()<<" b1x= "<<b1x.get_d()<<endl;
+// 		cout<<" t1y = "<<t1y.get_d()<<" p1(j)*b1y= "<< p1(j).get_d() * b1y.get_d()<<" p1(j)= "<<p1(j).get_d()<<" b1y= "<<b1y.get_d()<<endl;
+// 		cout<<" t1z = "<<t1z.get_d()<<" p1(j)*b1z= "<< p1(j).get_d() * b1z.get_d()<<" p1(j)= "<<p1(j).get_d()<<" b1z= "<<b1z.get_d()<<endl;
+// 
+// 		cout<<" t2x = "<<t2x.get_d()<<" p2x(j)*b2= "<< p2x(j).get_d() * b2.get_d()<<" p2x(j)= "<<p2x(j).get_d()<<" b2= "<<b2.get_d()<<endl;
+// 		cout<<" t2y = "<<t2y.get_d()<<" p2y(j)*b2= "<< p2y(j).get_d() * b2.get_d()<<" p2y(j)= "<<p2y(j).get_d()<<" b2= "<<b2.get_d()<<endl;
+// 		cout<<" t2z = "<<t2z.get_d()<<" p2z(j)*b2= "<< p2z(j).get_d() * b2.get_d()<<" p2z(j)= "<<p2z(j).get_d()<<" b2= "<<b2.get_d()<<endl;
 		for (int k = 0; k < 4; k++ ){
 			if (k != j)
 			{

@@ -107,3 +107,25 @@ bool Quadratic_Predictor_Corrector::validate_matrix_systems()
 
 	return true;
 }
+
+bool Quadratic_Predictor_Corrector_LOQO::solve()
+{
+	int n  = (int)_H.rows();
+
+	VectorXd w(n);
+	if (!Math_methods::quadratic_solver_loqo(_H,_A,_b,_r,w)) return false;
+
+	weights = w;
+
+	return true;
+}
+
+bool Quadratic_Predictor_Corrector_LOQO::validate_matrix_systems()
+{
+	if (!_H.allFinite()) return false;
+
+	LLT<MatrixXd> lltofMatrix(_H);
+	if (lltofMatrix.info() == NumericalIssue) return false;
+
+	return true;
+}

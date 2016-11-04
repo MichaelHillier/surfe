@@ -3,6 +3,9 @@
 
 #include <surfe_lib_module.h>
 
+#define D2R 0.01745329251994329576923690768489 // degrees to radians conversion factor
+#define R2D 57.295779513082320876798154814105  // radians to degrees conversion factor
+
 struct SURFE_LIB_EXPORT Parameter_Types{
 	enum DWRT {PT1,PT2};
 	enum SecondDerivatives {DXDX,DXDY,DXDZ,DYDX,DYDY,DYDZ,DZDX,DZDY,DZDZ};
@@ -35,8 +38,8 @@ struct SURFE_LIB_EXPORT model_parameters{
 	bool model_global_anisotropy;
 	bool use_greedy;
 	bool use_restricted_range;
-	double interface_uncertainty; // interface slack
-	double angular_uncertainty; // gradient slack
+	double interface_uncertainty;
+	double angular_uncertainty;
 
 	// initialization ...
 	model_parameters() : model_type(Parameter_Types::Single_surface), min_stratigraphic_thickness(0),
@@ -60,9 +63,11 @@ struct SURFE_LIB_EXPORT basic_parameters{
 	unsigned int n_poly_terms;
 	// type of problem
 	Parameter_Types::SolverType problem_type;
+	//bool greedy; // greedy algorithm
+	bool restricted_range; // restricted range constraints - bounded inequalities
 	// initialization 
 	basic_parameters() : n_interface(0), n_planar(0), n_inequality(0), n_tangent(0), n_constraints(0), n_equality(0),
-		modified_basis(false), poly_term(true), n_poly_terms(4), problem_type(Parameter_Types::Linear){}
+		modified_basis(false), poly_term(true), n_poly_terms(4), problem_type(Parameter_Types::Linear),restricted_range(false){}
 };
 
 #endif

@@ -28,6 +28,7 @@ public:
 	bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) { return true; } // TO implement
 	bool measure_residuals(Basic_input &input) { return true; } // TO implement
 	bool append_greedy_input(Basic_input &input) { return true; } // TO implement
+	bool convert_modified_kernel_to_rbf_kernel() { return true; } // TO IMPLEMENT
 	GRBF_Modelling_Methods *clone() { return new Vector_Field(*this); }
 };
 

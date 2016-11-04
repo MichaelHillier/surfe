@@ -476,9 +476,9 @@ public:
 	}
 	// copy constructor
 	Modified_Kernel( const Modified_Kernel& source) : _aRBFKernel(source._aRBFKernel->clone()), _aLPB(source._aLPB){}
-	virtual ~Modified_Kernel() 
+	~Modified_Kernel() 
 	{ 
-		delete this->_aRBFKernel; 
+		delete this->_aRBFKernel;
 	}
 	double basis_pt_pt();
 	double basis_pt_planar_x();

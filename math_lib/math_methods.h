@@ -1,6 +1,7 @@
 #ifndef math_methods_h
 #define math_methods_h
 
+#include <math_lib_module.h>
 #include <gmpxx.h>
 
 #include <vector>
@@ -11,16 +12,22 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
+#include <Eigen/LU>
 
 using namespace Eigen;
 
-class Math_methods{
+class MATH_LIB_EXPORT Math_methods{
 private:
 	template <class T> static T _find_step_length(const Matrix <T, Dynamic, 1> &a, const Matrix <T, Dynamic, 1> &da,
 		const Matrix <T, Dynamic, 1> &b, const Matrix <T, Dynamic, 1> &db);
 	template <class T> static void _rot(std::vector< std::vector < T > > &a, const T &s, const T &tau, const int &i, const int &j, const int &k, const int &l);
 	static double _get_double(const double &d) { return d;}
 	static double _get_double(const mpf_class &d) { return d.get_d(); }
+	static double _find_step(const VectorXd &da, const VectorXd &a);
+	static double _find_positivity_step( const VectorXd &da, const VectorXd &a,
+		                          const VectorXd &db, const VectorXd &b,
+								  const VectorXd &dc, const VectorXd &c,
+								  const VectorXd &dd, const VectorXd &d);
 public:
 	template <class T> static bool sort_vector_w_index(std::vector<T> &arr, std::vector<int> &brr);
 	template <class T> static T max_element_wrt_zero(const T &a, const T &b);
@@ -33,6 +40,7 @@ public:
 		const Matrix <T, Dynamic, 1> &b,
 		const Matrix <T, Dynamic, 1> &d,
 		Matrix <T, Dynamic, 1> &fvalues);
+	static bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, const VectorXd &b, const VectorXd &r, VectorXd &fvalues );
 };
 
 template <class T>
@@ -342,15 +350,17 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 	}
 	dvector = KKT_predictor.partialPivLu().solve(solution_vector);
 
-	for (int j = 0; j < n; j++){
-		dx(j) = dvector(j);
-		if (j < na) dy(j) = dvector(j + n);
-		if (j < nc)
-		{
-			dz(j) = dvector(j + n + na);
-			ds(j) = dvector(j + n + na + nc);
-		}
+// 	for (int j = 0; j < n + na + 2 * nc; j++ ){
+// 		cout<<" dvector["<<j<<"]= "<<dvector[j].get_d()<<endl;
+// 	}
+
+	for (int j = 0; j < n;  j++) dx(j) = dvector(j);
+	for (int j = 0; j < na; j++) dy(j) = dvector(j + n);
+	for (int j = 0; j < nc; j++){
+		dz(j) = dvector(j + n + na);
+		ds(j) = dvector(j + n + na + nc);
 	}
+
 	// Update iterate using full affine scaling
 	// (x,y,z,s)->(x,y,z,s) + (dx_aff,dy_aff,dz_aff,ds_aff)
 	for (int j = 0; j < n; j++) x(j) += dx(j);

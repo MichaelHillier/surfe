@@ -36,6 +36,7 @@ public:
 	Basic_input get_b_input() const { return b_input; }
 	std::vector<double> *get_interface_iso_values() const { return b_input.interface_iso_values; }
 	bool setup_basis_functions();
+	bool check_interpolant();
 	bool evaluate_scalar_interpolant();
 	bool evaluate_vector_interpolant();
 	bool run_algorithm();
@@ -51,6 +52,7 @@ public:
 	virtual bool get_minimial_and_excluded_input(Basic_input &greedy_input, Basic_input &excluded_input) = 0;
 	virtual bool measure_residuals(Basic_input &input) = 0;
 	virtual bool append_greedy_input(Basic_input &input) = 0;
+	virtual bool convert_modified_kernel_to_rbf_kernel() = 0;
 	virtual GRBF_Modelling_Methods *clone() = 0;
 	// Attributes
 	System_Solver *solver;
