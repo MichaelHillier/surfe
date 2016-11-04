@@ -213,7 +213,8 @@ private:
 	void _get_distinct_interface_iso_values();
 	void _get_interface_points();
 	bool _interface_points_are_coplanar(){ return true; } // Not implemented yet. should be tested when 2nd order polynomials are used. Also when unisolvent points are used this should be called.
-
+	// inequality
+	std::vector<double> _get_distinct_inequality_iso_values();
 public:
 	Basic_input()
 	{
@@ -258,6 +259,10 @@ public:
 	std::vector < std::vector < Interface > > *interface_point_lists;
 	std::vector < Interface > *interface_test_points;
 	bool get_interface_data(); // fills interface_iso_values, interface_point_lists, interface_test_points data structures
+
+	// validation
+	bool check_input_data();
+
 	bool get_local_anisotropy() { return true; } // TO IMPLEMENT using planar data extract local tensors for every planar point. 
 
 	// spatial analysis

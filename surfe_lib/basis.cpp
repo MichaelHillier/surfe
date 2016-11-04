@@ -1716,6 +1716,9 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector < std
 	// NOTE : Currently only supporting 1st order polynomials ( have p(x) = A*x + B*y + C*z + D )
 	// Tried implementing 2nd order however it is not practical
 	// e.g. finding the algrebraic solution in mathematical (via Thomas algo) resulted in ~ 100 page equation.  
+	// the requirement here is that the selected points are unisolvent - e.g. not co-planar
+	// current the below method is not sophisticated and looks for special cases where all points lie on the x/y/z planes
+	// these are just a subset all all the possible co-planarity cases.
 
 	// use interface_point_lists data
 	if ((int)interface_point_lists.size() == 0) return false;

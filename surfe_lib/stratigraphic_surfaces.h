@@ -30,6 +30,7 @@ public:
 	bool get_equality_values(VectorXd &equality_values);
 	bool get_inequality_matrix(const MatrixXd &interpolation_matrix, MatrixXd &inequality_matrix);
 	bool get_inequality_values(VectorXd &inequality_values);
+	bool get_inequality_values(VectorXd &b, VectorXd &r);
 	void eval_scalar_interpolant_at_point(Point &p);
 	void eval_vector_interpolant_at_point(Point &p);
 	bool get_method_parameters();

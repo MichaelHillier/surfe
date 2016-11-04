@@ -228,8 +228,12 @@ bool Stratigraphic_Surfaces::get_method_parameters()
 	// Total number of constraints ...
 	b_parameters.n_constraints = _n_increment_pairs + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = _n_interface_pairs + 3*b_parameters.n_planar + b_parameters.n_tangent;
-	b_parameters.n_inequality = _n_sequenced_interface_pairs + _n_sequenced_inequality_pairs;
+	if (m_parameters.use_restricted_range) b_parameters.restricted_range = true;
+	else
+	{
+		b_parameters.n_equality = _n_interface_pairs + 3*b_parameters.n_planar + b_parameters.n_tangent;
+		b_parameters.n_inequality = _n_sequenced_interface_pairs + _n_sequenced_inequality_pairs;
+	}
 
 	// polynomial parameters ...
 	b_parameters.poly_term = false;
@@ -249,6 +253,23 @@ bool Stratigraphic_Surfaces::process_input_data()
 	{
 		if (!b_input.get_interface_data()) return false;
 		if (!_get_increment_pairs()) return false;
+		if (!b_input.check_input_data()) return false;
+	}
+
+	if (m_parameters.use_restricted_range)
+	{
+		for (int j = 0; j < (int)b_input.planar->size(); j++ ){
+			b_input.planar->at(j).setNormalBounds(m_parameters.angular_uncertainty,m_parameters.angular_uncertainty/2); // Need more ROBUST METHOD. Try large statistical sampling from von Mises spherical distribution
+			cout<<" Planar["<<j<<"] Bounds: "<<endl;
+			cout<<"	nx: "<<b_input.planar->at(j).nx_lower_bound()<<" <= "<<b_input.planar->at(j).nx()<<" <= "<<b_input.planar->at(j).nx_upper_bound()<<endl;
+			cout<<"	ny: "<<b_input.planar->at(j).ny_lower_bound()<<" <= "<<b_input.planar->at(j).ny()<<" <= "<<b_input.planar->at(j).ny_upper_bound()<<endl;
+			cout<<"	nz: "<<b_input.planar->at(j).nz_lower_bound()<<" <= "<<b_input.planar->at(j).nz()<<" <= "<<b_input.planar->at(j).nz_upper_bound()<<endl;
+		}
+		for (int j = 0; j <(int)b_input.tangent->size(); j++ ){
+			b_input.tangent->at(j).setAngleBounds(m_parameters.angular_uncertainty);
+			cout<<" Tangent["<<j<<"] Bounds: "<<endl;
+			cout<<"	"<<b_input.tangent->at(j).angle_lower_bound()<<" <= "<<b_input.tangent->at(j).inner_product_constraint()<<" <= "<<b_input.tangent->at(j).angle_upper_bound()<<endl;
+		}
 	}
 	return true;
 }
@@ -282,6 +303,55 @@ bool Stratigraphic_Surfaces::get_inequality_values( VectorXd &inequality_values 
 	int k = 0;
 	for (j = 0; j < _n_sequenced_interface_pairs; j++ ) inequality_values(j) = m_parameters.min_stratigraphic_thickness;
 	for (k = 0; k < _n_sequenced_inequality_pairs; k++ ) inequality_values(k + j) = 0.0;
+
+	return true;
+}
+
+bool Stratigraphic_Surfaces::get_inequality_values( VectorXd &b, VectorXd &r )
+{
+
+	double fill_distance;
+	find_fill_distance(b_input,fill_distance); // this could be dangerous when combined with greedy (expensive compute with dense grids)
+	int j = 0;
+	int k = 0;
+	// Sequenced Interface Points 1st
+	for (j = 0; j < _n_sequenced_interface_pairs; j++ ){
+		b(j) = m_parameters.min_stratigraphic_thickness;
+		r(j) = fill_distance - m_parameters.min_stratigraphic_thickness;
+	}
+	// Sequenced Inequality Points 2nd
+	for (k = 0; k < _n_sequenced_inequality_pairs; k++ ){
+		b(k + j) = 0.0;
+		r(k + j) = m_parameters.min_stratigraphic_thickness;
+	}
+	// Interface increment pairs
+	for (int l = 0; l < _n_interface_pairs; l++ ){
+		b(k + j + l) = -m_parameters.interface_uncertainty;
+		r(k + j + l) = 2*m_parameters.interface_uncertainty;
+	}
+
+	int n_ip = _n_increment_pairs;
+	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
+
+	// planar data
+	for (int j = 0; j < n_p; j++ ){
+		// x-component
+		b(n_ip + 3*j + 0) = b_input.planar->at(j).nx_lower_bound();
+		r(n_ip + 3*j + 0) = b_input.planar->at(j).nx_upper_bound() - b_input.planar->at(j).nx_lower_bound();
+		// y-component
+		b(n_ip + 3*j + 1) = b_input.planar->at(j).ny_lower_bound();
+		r(n_ip + 3*j + 1) = b_input.planar->at(j).ny_upper_bound() - b_input.planar->at(j).ny_lower_bound();
+		// z-component
+		b(n_ip + 3*j + 2) = b_input.planar->at(j).nz_lower_bound();
+		r(n_ip + 3*j + 2) = b_input.planar->at(j).nz_upper_bound() - b_input.planar->at(j).nz_lower_bound();
+	}
+
+	// tangent data
+	for (int j = 0; j < n_t; j++ ){
+		b(n_ip + 3*n_p + j) = b_input.tangent->at(j).angle_lower_bound();
+		r(n_ip + 3*n_p + j) = b_input.tangent->at(j).angle_upper_bound() - b_input.tangent->at(j).angle_lower_bound();
+	}
 
 	return true;
 }
@@ -445,24 +515,44 @@ bool Stratigraphic_Surfaces::setup_system_solver()
 	int n_e  = b_parameters.n_equality;
 	int n_c  = b_parameters.n_constraints;
 
-	VectorXd inequality_values(n_ie);
-	get_inequality_values(inequality_values);
 
-	VectorXd equality_values(n_e);
-	get_equality_values(equality_values);
+	if (b_parameters.restricted_range)
+	{
+		VectorXd b(n_c);
+		VectorXd r(n_c);
+		get_inequality_values(b,r);
 
-	MatrixXd interpolation_matrix(n_c,n_c);
-	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+		MatrixXd interpolation_matrix(n_c,n_c);
+		if (!get_interpolation_matrix(interpolation_matrix)) return false;
 
-	MatrixXd inequality_matrix(n_ie,n_c);
-	if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
+		MatrixXd inequality_matrix(n_c,n_c);
+		inequality_matrix = interpolation_matrix;
 
-	MatrixXd equality_matrix(n_e,n_c);
-	if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
+		Quadratic_Predictor_Corrector_LOQO *qpc = new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix,inequality_matrix,b,r);
+		if(!qpc->solve()) return false;
+		solver = qpc;
+	}
+	else
+	{
+		VectorXd inequality_values(n_ie);
+		get_inequality_values(inequality_values);
 
-	Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
-	if(!qpc->solve()) return false;
-	solver = qpc;
+		VectorXd equality_values(n_e);
+		get_equality_values(equality_values);
+
+		MatrixXd interpolation_matrix(n_c,n_c);
+		if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+		MatrixXd inequality_matrix(n_ie,n_c);
+		if (!get_inequality_matrix(interpolation_matrix,inequality_matrix)) return false;
+
+		MatrixXd equality_matrix(n_e,n_c);
+		if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
+
+		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
+		if(!qpc->solve()) return false;
+		solver = qpc;
+	}
 
 	if (!_update_interface_iso_values()) return false;
 

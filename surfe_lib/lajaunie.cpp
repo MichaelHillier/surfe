@@ -91,7 +91,7 @@ bool Lajaunie_Approach::_get_increment_pairs()
 	for (int j = 0; j < (int)b_input.interface_point_lists->size(); j++) _n_interface_pairs += ((int)b_input.interface_point_lists->at(j).size() - 1);
 	for (int j = 0; j < (int)b_input.interface_point_lists->size(); j++ ){
 		for (int k = 0; k < ((int)b_input.interface_point_lists->at(j).size() - 1); k++ ){
-			std::vector<Point> interface_incr_p;
+			std::vector<Interface> interface_incr_p;
 			interface_incr_p.push_back(b_input.interface_point_lists->at(j)[0]);
 			interface_incr_p.push_back(b_input.interface_point_lists->at(j)[k + 1]);
 			_increment_pairs->push_back(interface_incr_p);
@@ -108,7 +108,7 @@ Lajaunie_Approach::Lajaunie_Approach(const model_parameters& m_p, const Basic_in
 	m_parameters = m_p;
 	b_input = basic_i;
 
-	_increment_pairs = new std::vector < std::vector < Point > >();
+	_increment_pairs = new std::vector < std::vector < Interface > >();
 
 	_iteration = 0;
 }
@@ -123,13 +123,22 @@ bool Lajaunie_Approach::get_method_parameters()
 	// Total number of constraints ...
 	b_parameters.n_constraints = _n_increment_pair + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = _n_increment_pair + 3*b_parameters.n_planar + b_parameters.n_tangent;
+	if (m_parameters.use_restricted_range) b_parameters.restricted_range = true;
+	else b_parameters.n_equality = _n_increment_pair + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
-	b_parameters.poly_term = true; // NOTE: May want to have this as an option when using SPD functions
-	b_parameters.modified_basis = false;
-	b_parameters.problem_type = Parameter_Types::Linear;
-
+	if (!b_parameters.restricted_range)
+	{
+		b_parameters.poly_term = true; // NOTE: May want to have this as an option when using SPD functions
+		b_parameters.modified_basis = false;
+		b_parameters.problem_type = Parameter_Types::Linear;
+	}
+	else
+	{
+		b_parameters.poly_term = false;
+		b_parameters.modified_basis = true;
+		b_parameters.problem_type = Parameter_Types::Quadratic;
+	}
 	int m = m_parameters.polynomial_order + 1;
 	b_parameters.n_poly_terms = (int)(m*(m + 1)*(m + 2) / 6) - 1; // minus 1 due to the nature of the indepentent pair constraints and the vanishing of the constant term in the polynomial
 
@@ -150,19 +159,57 @@ bool Lajaunie_Approach::process_input_data()
 
 		if (!_get_increment_pairs()) return false;
 	}
+
+	if (m_parameters.use_restricted_range)
+	{
+		for (int j = 0; j < (int)b_input.planar->size(); j++ ){
+			b_input.planar->at(j).setNormalBounds(m_parameters.angular_uncertainty,m_parameters.angular_uncertainty/2); // Need more ROBUST METHOD. Try large statistical sampling from von Mises spherical distribution
+			cout<<" Planar["<<j<<"] Bounds: "<<endl;
+			cout<<"	nx: "<<b_input.planar->at(j).nx_lower_bound()<<" <= "<<b_input.planar->at(j).nx()<<" <= "<<b_input.planar->at(j).nx_upper_bound()<<endl;
+			cout<<"	ny: "<<b_input.planar->at(j).ny_lower_bound()<<" <= "<<b_input.planar->at(j).ny()<<" <= "<<b_input.planar->at(j).ny_upper_bound()<<endl;
+			cout<<"	nz: "<<b_input.planar->at(j).nz_lower_bound()<<" <= "<<b_input.planar->at(j).nz()<<" <= "<<b_input.planar->at(j).nz_upper_bound()<<endl;
+		}
+		for (int j = 0; j <(int)b_input.tangent->size(); j++ ){
+			b_input.tangent->at(j).setAngleBounds(m_parameters.angular_uncertainty);
+			cout<<" Tangent["<<j<<"] Bounds: "<<endl;
+			cout<<"	"<<b_input.tangent->at(j).angle_lower_bound()<<" <= "<<b_input.tangent->at(j).inner_product_constraint()<<" <= "<<b_input.tangent->at(j).angle_upper_bound()<<endl;
+		}
+	}
+
 	return true;
 }
 
 bool Lajaunie_Approach::setup_system_solver()
 {
-	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
-	VectorXd equality_values(n);
-	get_equality_values(equality_values);
-	MatrixXd interpolation_matrix(n, n);
-	if (!get_interpolation_matrix(interpolation_matrix)) return false;
-	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
-	if (!llu->solve()) return false;
-	solver = llu;
+	if (b_parameters.restricted_range)
+	{
+		int n_c = b_parameters.n_constraints;
+
+		VectorXd b(n_c);
+		VectorXd r(n_c);
+		get_inequality_values(b,r);
+
+		MatrixXd interpolation_matrix(n_c,n_c);
+		if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+		MatrixXd inequality_matrix(n_c,n_c);
+		inequality_matrix = interpolation_matrix;
+
+		Quadratic_Predictor_Corrector_LOQO *qpc = new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix,inequality_matrix,b,r);
+		if(!qpc->solve()) return false;
+		solver = qpc;
+	}
+	else
+	{
+		int n = b_parameters.n_equality + b_parameters.n_poly_terms;
+		VectorXd equality_values(n);
+		get_equality_values(equality_values);
+		MatrixXd interpolation_matrix(n, n);
+		if (!get_interpolation_matrix(interpolation_matrix)) return false;
+		Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
+		if (!llu->solve()) return false;
+		solver = llu;
+	}
 
 	if (!_update_interface_iso_values()) return false;
 
@@ -398,13 +445,75 @@ bool Lajaunie_Approach::append_greedy_input(Basic_input &input)
 	//return false;
 }
 
+bool Lajaunie_Approach::convert_modified_kernel_to_rbf_kernel()
+{
+	// prep for linear prob...
+	// set the constraints...
+	// for Lajaunie and Stratigraphic Surface methods we don't update the itrface[].level()'s
+	// we update the _increment_pairs[][] level()'s
+	for (int j = 0; j < (int)_increment_pairs->size(); j++ ){
+		eval_scalar_interpolant_at_point(_increment_pairs->at(j)[0]);
+		eval_scalar_interpolant_at_point(_increment_pairs->at(j)[1]);
+		_increment_pairs->at(j)[0].setLevel(_increment_pairs->at(j)[0].scalar_field());
+		_increment_pairs->at(j)[1].setLevel(_increment_pairs->at(j)[1].scalar_field());
+	}
+
+	for (int j = 0; j < b_input.planar->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.planar->at(j));
+		// debug
+		// 		cout<<" Planar["<<j<<"]: "<<endl;
+		// 		cout<<"	Nx = "<<b_input.planar->at(j).nx()<<" Nx interpolated = "<<b_input.planar->at(j).nx_interp()<<endl;
+		// 		cout<<"	Ny = "<<b_input.planar->at(j).ny()<<" Ny interpolated = "<<b_input.planar->at(j).ny_interp()<<endl;
+		// 		cout<<"	Nz = "<<b_input.planar->at(j).nz()<<" Nz interpolated = "<<b_input.planar->at(j).nz_interp()<<endl;
+		double normal[3] = {b_input.planar->at(j).nx_interp(),b_input.planar->at(j).ny_interp(),b_input.planar->at(j).nz_interp()};
+		b_input.planar->at(j).setNormal(normal[0],normal[1],normal[2]);
+	}
+	for (int j = 0; j < b_input.tangent->size(); j++ ){
+		eval_vector_interpolant_at_point(b_input.tangent->at(j));
+		// 		cout<<" Tangent["<<j<<"]: "<<endl;
+		// 		cout<<"	Tx = "<<b_input.tangent->at(j).tx()<<" Nx interpolated = "<<b_input.tangent->at(j).nx_interp()<<endl;
+		// 		cout<<"	Ty = "<<b_input.tangent->at(j).ty()<<" Ny interpolated = "<<b_input.tangent->at(j).ny_interp()<<endl;
+		// 		cout<<"	Tz = "<<b_input.tangent->at(j).tz()<<" Nz interpolated = "<<b_input.tangent->at(j).nz_interp()<<endl;
+		// 		cout<<" Tx*nx + Ty*ny + Tz*nz = "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp() + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
+		// 			b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
+		double vf[3] = {b_input.tangent->at(j).nx_interp(),b_input.tangent->at(j).ny_interp(),b_input.tangent->at(j).nz_interp()};
+		double inner_product = vf[0]*b_input.tangent->at(j).tx() + vf[1]*b_input.tangent->at(j).ty() + vf[2]*b_input.tangent->at(j).tz();
+		b_input.tangent->at(j).setInnerProductConstraint(inner_product);
+	}
+
+	// switch from modified kernel to normal rbf kernel
+	kernel = rbf_kernel;
+
+	if (m_parameters.use_restricted_range) b_parameters.restricted_range = false;
+	b_parameters.n_equality = _n_increment_pair + 3*b_parameters.n_planar + b_parameters.n_tangent;
+	b_parameters.poly_term = true;
+	b_parameters.n_poly_terms = 3;
+	b_parameters.modified_basis = false;
+	b_parameters.problem_type = Parameter_Types::Linear;
+	int n_e = b_parameters.n_equality;
+	int n_p = b_parameters.n_poly_terms;
+	VectorXd equality_values(n_e + n_p);
+	get_equality_values(equality_values);
+
+	MatrixXd interpolation_matrix(n_e + n_p, n_e + n_p);
+	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
+	if (!llu->solve()) return false;
+	solver = llu;
+
+	if (!_update_interface_iso_values()) return false;
+
+	return true;
+}
+
 bool Lajaunie_Approach::get_equality_values( VectorXd &equality_values )
 {
 	int j = 0;
 	int k = 0;
 	int l = 0;
 	int m = 0;
-	for (j = 0; j < _n_increment_pair; j++ ) equality_values(j) = 0.0;
+	for (j = 0; j < _n_increment_pair; j++ ) equality_values(j) = _increment_pairs->at(j)[0].level() - _increment_pairs->at(j)[1].level();;
 	for (k = 0; k < (int)b_input.planar->size(); k++){
 		equality_values(3 * k + j)     = b_input.planar->at(k).nx();
 		equality_values(3 * k + j + 1) = b_input.planar->at(k).ny();
@@ -412,6 +521,40 @@ bool Lajaunie_Approach::get_equality_values( VectorXd &equality_values )
 	}
 	for (l = 0; l < (int)b_input.tangent->size(); l++) equality_values(l + 3 * k + j) = 0.0;
 	if (b_parameters.poly_term) for (m = 0; m < (int)b_parameters.n_poly_terms; m++ ) equality_values(m + l + 3 * k + j) = 0.0;
+
+	return true;
+}
+
+bool Lajaunie_Approach::get_inequality_values( VectorXd &b, VectorXd &r )
+{
+	int n_ip = _n_increment_pair;
+	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
+
+	// interface data
+	for (int j = 0; j < n_ip; j++ ){
+		b(j) = -m_parameters.interface_uncertainty;
+		r(j) = 2*m_parameters.interface_uncertainty;
+	}
+
+	// planar data
+	for (int j = 0; j < n_p; j++ ){
+		// x-component
+		b(n_ip + 3*j + 0) = b_input.planar->at(j).nx_lower_bound();
+		r(n_ip + 3*j + 0) = b_input.planar->at(j).nx_upper_bound() - b_input.planar->at(j).nx_lower_bound();
+		// y-component
+		b(n_ip + 3*j + 1) = b_input.planar->at(j).ny_lower_bound();
+		r(n_ip + 3*j + 1) = b_input.planar->at(j).ny_upper_bound() - b_input.planar->at(j).ny_lower_bound();
+		// z-component
+		b(n_ip + 3*j + 2) = b_input.planar->at(j).nz_lower_bound();
+		r(n_ip + 3*j + 2) = b_input.planar->at(j).nz_upper_bound() - b_input.planar->at(j).nz_lower_bound();
+	}
+
+	// tangent data
+	for (int j = 0; j < n_t; j++ ){
+		b(n_ip + 3*n_p + j) = b_input.tangent->at(j).angle_lower_bound();
+		r(n_ip + 3*n_p + j) = b_input.tangent->at(j).angle_upper_bound() - b_input.tangent->at(j).angle_lower_bound();
+	}
 
 	return true;
 }

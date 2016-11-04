@@ -266,6 +266,11 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 
 		soln = KKT.partialPivLu().solve(rhs);
 
+		if ( !soln.allFinite()){
+			std::cout<<" Numerical issue with solving linear system..."<<std::endl;
+			return false;
+		}
+
 		// get "delta" variables for predictor system ...
 		dx = soln.head(n);
 		dy = soln.tail(n); 
@@ -331,6 +336,11 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 // 		std::cout<<" Corrector rhs:\n"<< rhs << std::endl;
 
 		soln = KKT.partialPivLu().solve(rhs);
+
+		if ( !soln.allFinite()){
+			std::cout<<" Numerical issue with solving linear system..."<<std::endl;
+			return false;
+		}
 
 		// get "delta" variables for corrector system ...
 		dx = soln.head(n);

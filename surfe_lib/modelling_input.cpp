@@ -26,6 +26,43 @@ bool Basic_input::get_interface_data()
 	return true;
 }
 
+bool Basic_input::check_input_data()
+{
+	// check interface data...
+
+	// check planar data ...
+
+	// check tangent data ...
+
+	// check inequality data ...
+
+	// if using inequality data, check the level property data to ensure it is consistent with interface data level property ...
+	if ( inequality->size() != 0 )
+	{
+		std::vector<double> inequality_iso_values = _get_distinct_inequality_iso_values();
+		if (inequality_iso_values.size() == 0) return false;
+		for (int j = 0; j < (int)inequality_iso_values.size(); j++ ){ // if one of the inequality iso values is the same as the itrface iso values data is not properly conditioned
+			for (int k = 0; k < (int)interface_iso_values->size(); k++ ){
+				if ( inequality_iso_values[j] == interface_iso_values->at(k) ) return false;
+			}
+		}
+		int nlevelsabove = 0;
+		for (int k = 0; k < (int)interface_iso_values->size(); k++ ){
+			if ( inequality_iso_values[0] > interface_iso_values->at(k) ) nlevelsabove++;
+		}
+		for (int j = 1; j < (int)inequality_iso_values.size(); j++ ){
+			int above = 0;
+			for (int k = 0; k < (int)interface_iso_values->size(); k++ ){
+				if ( inequality_iso_values[j] > interface_iso_values->at(k) ) above++;
+				if ( above > (nlevelsabove - j) ) return false;
+			}
+		}
+	}
+
+	return true;
+
+}
+
 double Basic_input::compute_inequality_avg_nn_distance()
 {
 	std::vector< Point > pts(inequality->begin(),inequality->end());
@@ -123,6 +160,29 @@ void Basic_input::_get_interface_points()
 			j--;
 		}
 	}
+}
+
+std::vector<double> Basic_input::_get_distinct_inequality_iso_values()
+{
+	std::vector <double> iso_values;
+	iso_values.push_back(inequality->at(0).level());
+	for (int j = 1; j <(int)inequality->size(); j++){
+		// search existing list of iso values
+		int add = 0;
+		for (int k = 0; k < (int)iso_values.size(); k++ ){
+			if (inequality->at(j).level() != iso_values[k]) add++;
+		}
+		if (add == (int)iso_values.size()) // this is a iso value not in the list yet
+		{
+			// add new iso value to list
+			iso_values.push_back(inequality->at(j).level());
+		}
+	}
+
+	// sort the vector (largest to smallest) - done for convience and for functional reasons 
+	std::sort(iso_values.begin(), iso_values.end(), std::greater<double>());
+
+	return iso_values;
 }
 
 bool Planar::_compute_strike_dip_polarity_from_normal()
