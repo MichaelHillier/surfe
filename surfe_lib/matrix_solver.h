@@ -30,7 +30,22 @@ private:
 	VectorXd _constraint_values;
 public:
 	Linear_LU_decomposition(const MatrixXd &matrix, const VectorXd &vector)
-	{ _interpolation_matrix = matrix; _constraint_values = vector; }
+	{ 
+		_interpolation_matrix = matrix; 
+		_constraint_values = vector; 
+// 		std::ofstream file1("interpM.txt");
+// 		std::ofstream file2("consV.txt");
+// 		if (file1)
+// 		{
+// 			file1 << matrix <<"\n";
+// 			file1.close();
+// 		}
+// 		if (file2)
+// 		{
+// 			file2 << vector <<"\n";
+// 			file2.close();
+// 		}
+	}
 	Linear_LU_decomposition(){}
 	virtual ~Linear_LU_decomposition() {}
  	bool solve();
