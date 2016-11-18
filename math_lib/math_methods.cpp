@@ -49,7 +49,7 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 	c.setZero();
 	VectorXd rhs(2*n);
 	rhs << c, b;
-	std::cout<<" rhs:\n"<< rhs << std::endl;
+	//std::cout<<" rhs:\n"<< rhs << std::endl;
 	
 	KKT << -(H + MatrixXd::Identity(n,n)), A.transpose(), A, MatrixXd::Identity(n,n);
 	//std::cout<<" Initial KKT matrix:\n"<< KKT << std::endl;
@@ -90,7 +90,7 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 	DebugMatrixV.col(7) = w;
 	DebugMatrixV.col(8) = p;
 	DebugMatrixV.col(9) = q;
-	std::cout<<" Current Variable matrix:\n"<< DebugMatrixV << std::endl;
+	//std::cout<<" Current Variable matrix:\n"<< DebugMatrixV << std::endl;
 
 	double mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q))/4*n; 
 
@@ -182,26 +182,12 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 		std::cout<<"	Primal Infeasibility = "<< primal_infeasibility <<std::endl;
 		std::cout<<"	Dual Infeasibility = "<< dual_infeasibilitiy<<std::endl;
 
-		if ( sigfig > 6 || sigfig < last_iterations_sig_fig )
+		if ( sigfig > 6 )
 		{
 			converged = true;
-
-			if ( sigfig < last_iterations_sig_fig ) fvalues = iter_minus_one_x; // this occurs when there is a stall due to a weak duality gap
-			else fvalues = x; // strong duality gap
 			break;
 		}
-		if ( dual_obj > primal_obj )
-		{
-				converged = true;
-				fvalues = iter_minus_one_x;
-				break;
-		}
-
-// 		if (iter > 10 && primal_infeasibility > last_primal_infeasibility)
-// 		{
-// 			converged = true;
-// 			fvalues = iter_minus_one_x;
-// 		}
+		if (dual_obj > primal_obj || sigfig < last_iterations_sig_fig) return false;
 
 		last_iterations_sig_fig = sigfig;
 		last_primal_infeasibility = primal_infeasibility;

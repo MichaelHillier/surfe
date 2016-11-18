@@ -80,7 +80,7 @@ Matrix <mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_get_hessian
 
 bool Quadratic_Predictor_Corrector::solve()
 {
-	int n = (int)_hessian_matrix.rows();
+	int n = (int)_hessian_matrixD.rows();
 
 	//Matrix <mpf_class, Dynamic, 1> fvalues(n);
 	Matrix <double, Dynamic, 1> fvalues(n);

@@ -66,11 +66,16 @@ public:
 								  const VectorXd inequality_vector)
 	{
 		_interpolation_matrixD = interpolation_matrix;
-		_interpolation_matrix = _convert_double_matrix_2_mpf(interpolation_matrix);
-		_equality_matrix = _convert_double_matrix_2_mpf(equality_matrix);
-		_inequality_matrix = _convert_double_matrix_2_mpf(inequality_matrix);
-		_equality_vector = _convert_double_vector_2_mpf(equality_vector);
-		_inequality_vector = _convert_double_vector_2_mpf(inequality_vector);
+		_hessian_matrixD = 2.0*interpolation_matrix;
+		_equality_matrixD = equality_matrix;
+		_inequality_matrixD = inequality_matrix;
+		_equality_vectorD = equality_vector;
+		_inequality_vectorD = inequality_vector;
+// 		_interpolation_matrix = _convert_double_matrix_2_mpf(interpolation_matrix);
+// 		_equality_matrix = _convert_double_matrix_2_mpf(equality_matrix);
+// 		_inequality_matrix = _convert_double_matrix_2_mpf(inequality_matrix);
+// 		_equality_vector = _convert_double_vector_2_mpf(equality_vector);
+// 		_inequality_vector = _convert_double_vector_2_mpf(inequality_vector);
 
 // 		std::ofstream file1("interpM.txt");
 // 		std::ofstream file2("ieM.txt");
@@ -103,7 +108,7 @@ public:
 // 			file5.close();
 // 		}
 
-		_hessian_matrix = _get_hessian_matrix(_interpolation_matrix);
+		//_hessian_matrix = _get_hessian_matrix(_interpolation_matrix);
 	}
 	bool solve();
 	bool validate_matrix_systems();
