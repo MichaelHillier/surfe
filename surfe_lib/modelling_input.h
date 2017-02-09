@@ -13,6 +13,7 @@ private:
 	double _z;
 	double _c;
 	double _scalar_field;
+	std::vector<double> _field;
 	double _field_normal[3];
 public:
 	Point(const double& x_coord,const double& y_coord, const double &z_coord, const double &c_coord = 0)
@@ -31,6 +32,9 @@ public:
 	void set_c(const double &c_coord) { _c = c_coord; }
 	double scalar_field() const { return _scalar_field; }
 	void set_scalar_field(const double &scalar_field_value) { _scalar_field = scalar_field_value; }
+	double scalar_field(const int &i) const { return _field[i]; }
+	void set_scalar_field_list(const double &scalar_field_value) { _field.push_back(scalar_field_value); }
+	int get_field_list_size() { return (int)_field.size(); }
 	void set_vector_field(const double &nx, const double &ny, const double &nz) { _field_normal[0] = nx; _field_normal[1] = ny; _field_normal[2] = nz; }
 	double nx_interp() const { return _field_normal[0]; }
 	double ny_interp() const { return _field_normal[1]; }
