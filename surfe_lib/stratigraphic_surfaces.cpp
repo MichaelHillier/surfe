@@ -529,7 +529,11 @@ bool Stratigraphic_Surfaces::setup_system_solver()
 		inequality_matrix = interpolation_matrix;
 
 		Quadratic_Predictor_Corrector_LOQO *qpc = new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix,inequality_matrix,b,r);
-		if(!qpc->solve()) return false;
+		if (!qpc->solve())
+		{
+			error_msg.append(" LOQO Quadratic Solver failure.");
+			return false;
+		}
 		solver = qpc;
 	}
 	else
@@ -550,7 +554,11 @@ bool Stratigraphic_Surfaces::setup_system_solver()
 		if (!get_equality_matrix(interpolation_matrix,equality_matrix)) return false;
 
 		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(interpolation_matrix,equality_matrix,inequality_matrix,equality_values,inequality_values);
-		if(!qpc->solve()) return false;
+		if (!qpc->solve())
+		{
+			error_msg.append(" Predictor-Corrector Quadratic Solver failure.");
+			return false;
+		}
 		solver = qpc;
 	}
 

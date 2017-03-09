@@ -58,6 +58,7 @@ public:
 	System_Solver *solver;
 	Kernel *kernel;
 	RBFKernel *rbf_kernel;
+	std::string error_msg;
 };
 
 #endif

@@ -123,7 +123,11 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 		{
 			if (b_parameters.modified_basis)
 			{
-				if (!convert_modified_kernel_to_rbf_kernel()) return false;
+				if (!convert_modified_kernel_to_rbf_kernel())
+				{
+					error_msg.append(" QPP solution conversion to Linear Failure.");
+					return false;
+				}
 			}
 
 			int N = (int)b_input.evaluation_pts->size();
@@ -163,19 +167,39 @@ bool GRBF_Modelling_Methods::run_algorithm()
 
 	cout<<" Starting SURFE algorithm "<<endl;
 	cout<<" Processing input data...";
-	if ( !process_input_data()    ) return false;
+	if (!process_input_data())
+	{
+		error_msg = "Error processing input data";
+		return false;
+	}
 	cout<<"done!"<<endl;
 	cout<<" Get method parameters...";
-	if ( !get_method_parameters() ) return false;
+	if (!get_method_parameters())
+	{
+		error_msg.append(" Error getting method parameters.");
+		return false;
+	}
 	cout<<"done!"<<endl;
 	cout<<" Setup basis functions...";
-	if ( !setup_basis_functions() ) return false;
+	if (!setup_basis_functions())
+	{
+		error_msg.append(" Error setting up basis functions.");
+		return false;
+	}
 	cout<<"done!"<<endl;
 	cout<<" Solve mathematical problem...";
-	if ( !setup_system_solver()   ) return false;
+	if (!setup_system_solver())
+	{
+		error_msg.append(" Error solving mathematical equations.");
+		return false;
+	}
 	cout<<"done!"<<endl;
 	cout<<" Evaluate scalar interpolant at grid nodes...";
-	if ( !evaluate_scalar_interpolant()  ) return false;
+	if (!evaluate_scalar_interpolant())
+	{
+		error_msg.append(" Error evaluating interpolant in grid of points.");
+		return false;
+	}
 	cout<<"done!"<<endl;
 	cout<<" Total computation time = "<<((double)clock()-tstart)/CLOCKS_PER_SEC<<endl;
 
