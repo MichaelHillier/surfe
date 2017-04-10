@@ -61,4 +61,10 @@ public:
 	std::string error_msg;
 };
 
+class SURFE_LIB_EXPORT LocalOrientationAnisotropy_Methods{
+protected:
+	Basic_input b_input; // algorithm input
+public:
+	bool run_algorithm();
+};
 #endif
