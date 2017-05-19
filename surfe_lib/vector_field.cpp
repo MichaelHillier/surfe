@@ -16,7 +16,7 @@ bool Vector_Field::get_method_parameters()
 	b_parameters.n_interface = 0;
 	b_parameters.n_inequality = 0;
 	b_parameters.n_planar = (int)b_input.planar->size();
-	b_parameters.n_tangent = 0;
+	b_parameters.n_tangent = (int)b_input.tangent->size();
 	// Total number of constraints ...
 	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
@@ -40,10 +40,15 @@ bool Vector_Field::process_input_data()
 
 bool Vector_Field::get_equality_values( VectorXd &equality_values )
 {
-	for (int j = 0; j < (int)b_input.planar->size(); j++){
+	int j = 0;
+	int k = 0;
+	for (j = 0; j < (int)b_input.planar->size(); j++){
 		equality_values(3*j) = b_input.planar->at(j).nx();
 		equality_values(3*j + 1) = b_input.planar->at(j).ny();
 		equality_values(3*j + 2) = b_input.planar->at(j).nz();
+	}
+	for (k = 0; k < (int)b_input.tangent->size(); k++){
+		equality_values(3 * j + k) = b_input.tangent->at(k).inner_product_constraint();
 	}
 
 	return true;
@@ -52,6 +57,7 @@ bool Vector_Field::get_equality_values( VectorXd &equality_values )
 bool Vector_Field::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 {
 	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
 
 	// Base Matrix Structure
 	// | p_x/p_x p_x/p_y p_x/p_z |
@@ -73,6 +79,29 @@ bool Vector_Field::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 			interpolation_matrix(3*j + 2,3*k + 1) = kernel->basis_planar_planar(Parameter_Types::DZDY);
 			interpolation_matrix(3*j + 2,3*k + 2) = kernel->basis_planar_planar(Parameter_Types::DZDZ);
 		}
+		// Row:planar/Column:tangent block
+		for (int k = 0; k < n_t; k++){
+			kernel->set_points(b_input.planar->at(j), b_input.tangent->at(k));
+			interpolation_matrix(3 * j, 3 * n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DX);
+			interpolation_matrix(3 * j + 1, 3 * n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DY);
+			interpolation_matrix(3 * j + 2, 3 * n_p + k) = kernel->basis_planar_tangent(Parameter_Types::DZ);
+		}
+	}
+
+	// Tangent Constraints 
+	for (int j = 0; j < n_t; j++){
+		// Row:tangent/Column:planar block
+		for (int k = 0; k < n_p; k++){
+			kernel->set_points(b_input.tangent->at(j), b_input.planar->at(k));
+			interpolation_matrix(j + 3 * n_p, 3 * k) = kernel->basis_tangent_planar(Parameter_Types::DX);
+			interpolation_matrix(j + 3 * n_p, 3 * k + 1) = kernel->basis_tangent_planar(Parameter_Types::DY);
+			interpolation_matrix(j + 3 * n_p, 3 * k + 2) = kernel->basis_tangent_planar(Parameter_Types::DZ);
+		}
+		// Row:tangent/Column:tangent block
+		for (int k = 0; k < n_t; k++){
+			kernel->set_points(b_input.tangent->at(j), b_input.tangent->at(k));
+			interpolation_matrix(j + 3 * n_p, 3 * n_p + k) = kernel->basis_tangent_tangent();
+		}
 	}
 
 	return true;
@@ -83,15 +112,20 @@ bool Vector_Field::setup_system_solver()
 
 	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
 
-	VectorXd equality_values;
+	VectorXd equality_values(n);
 	get_equality_values(equality_values);
 
 	MatrixXd interpolation_matrix(n, n);
 	if (!get_interpolation_matrix(interpolation_matrix)) return false;
 
-	Linear_LU_decomposition llu(interpolation_matrix,equality_values);
-	if (!llu.solve()) return false;
-	solver = &llu;
+	std::cout<<" Interpolation matrix:\n"<< interpolation_matrix << std::endl;
+	std::cout<<" RHS:\n"<< equality_values << std::endl;
+
+	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
+	if (!llu->solve()) return false;
+	solver = llu;
+
+	std::cout << " solution :\n" << solver->weights << std::endl;
 
 	return true;
 }
@@ -99,26 +133,25 @@ bool Vector_Field::setup_system_solver()
 void Vector_Field::eval_scalar_interpolant_at_point( Point &p )
 {
 	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
-	double elemsum_x = 0.0;
-	double elemsum_y = 0.0;
-	double elemsum_z = 0.0;
+	double elemsum_1 = 0.0;
+	double elemsum_2 = 0.0;
+	double elemsum_3 = 0.0;
+	double elemsum_4 = 0.0;
+	double poly = 0.0;
 	for (int k = 0; k < n_p; k++ ){
 		kernel_j->set_points(p, b_input.planar->at(k));
-		elemsum_x += solver->weights[3*k] * kernel_j->basis_planar_planar(Parameter_Types::DXDX);
-		elemsum_x += solver->weights[3*k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DXDY);
-		elemsum_x += solver->weights[3*k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DXDZ);
-
-		elemsum_y += solver->weights[3*k] * kernel_j->basis_planar_planar(Parameter_Types::DYDX);
-		elemsum_y += solver->weights[3*k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DYDY);
-		elemsum_y += solver->weights[3*k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DYDZ);
-
-		elemsum_z += solver->weights[3*k] * kernel_j->basis_planar_planar(Parameter_Types::DZDX);
-		elemsum_z += solver->weights[3*k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DZDY);
-		elemsum_z += solver->weights[3*k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DZDZ);
+		elemsum_3 += solver->weights[3 * k] * kernel_j->basis_pt_planar_x();
+		elemsum_3 += solver->weights[3 * k + 1] * kernel_j->basis_pt_planar_y();
+		elemsum_3 += solver->weights[3 * k + 2] * kernel_j->basis_pt_planar_z();
 	}
-	p.set_vector_field(elemsum_x,elemsum_y,elemsum_z);
+	for (int k = 0; k < n_t; k++){
+		kernel_j->set_points(p, b_input.tangent->at(k));
+		elemsum_4 += solver->weights[3 * n_p + k] * kernel_j->basis_pt_tangent();
+	}
+	p.set_scalar_field(elemsum_1 + elemsum_2 + elemsum_3 + elemsum_4 + poly);
 	delete kernel_j;
 }
 
