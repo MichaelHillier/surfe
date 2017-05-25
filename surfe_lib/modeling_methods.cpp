@@ -138,7 +138,6 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 			#pragma omp parallel for schedule(dynamic)
 			for (int j = 0; j < N; j++ ){
 				eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
-				//eval_vector_interpolant_at_point(b_input.evaluation_pts->at(j));
 				if ( j % vv == 0 )
 				{
 #pragma omp atomic
@@ -149,6 +148,38 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant()
 				}
 			}
 			cout<<endl;
+		}
+	}
+	return true;
+}
+
+bool GRBF_Modelling_Methods::evaluate_vector_interpolant()
+{
+	if (solver == NULL) return false;
+	else
+	{
+		if ((int)solver->weights.size() == 0) return false;
+		else
+		{
+
+			int N = (int)b_input.evaluation_pts->size();
+			int add = 0;
+			int vv = round((double)N / 72.0); // 72.0 is the width of the progress bar 
+			double factor = (100.0*(double)vv) / (double)N;
+
+//#pragma omp parallel for schedule(dynamic)
+			for (int j = 0; j < N; j++){
+				eval_vector_interpolant_at_point(b_input.evaluation_pts->at(j));
+				if (j % vv == 0)
+				{
+//#pragma omp atomic
+					add++;
+					int step = factor * add;
+//#pragma omp critical
+					_Progress(" Computing Scalar field: ", step, 100);
+				}
+			}
+			cout << endl;
 		}
 	}
 	return true;
@@ -195,10 +226,21 @@ bool GRBF_Modelling_Methods::run_algorithm()
 	}
 	cout<<"done!"<<endl;
 	cout<<" Evaluate scalar interpolant at grid nodes...";
-	if (!evaluate_scalar_interpolant())
+	if (m_parameters.model_type != Parameter_Types::Vector_field)
 	{
-		error_msg.append(" Error evaluating interpolant in grid of points.");
-		return false;
+		if (!evaluate_scalar_interpolant())
+		{
+			error_msg.append(" Error evaluating scalar interpolant in grid of points.");
+			return false;
+		}
+	}
+	else
+	{
+		if (!evaluate_vector_interpolant())
+		{
+			error_msg.append(" Error evaluating vector interpolant in grid of points.");
+			return false;
+		}
 	}
 	cout<<"done!"<<endl;
 	cout<<" Total computation time = "<<((double)clock()-tstart)/CLOCKS_PER_SEC<<endl;

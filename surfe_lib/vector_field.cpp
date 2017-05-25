@@ -20,21 +20,60 @@ bool Vector_Field::get_method_parameters()
 	// Total number of constraints ...
 	b_parameters.n_constraints = b_parameters.n_interface +	b_parameters.n_inequality + 3*b_parameters.n_planar + b_parameters.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
+	if (m_parameters.use_restricted_range) b_parameters.restricted_range = true;
+	else b_parameters.n_equality = b_parameters.n_interface + 3*b_parameters.n_planar + b_parameters.n_tangent;
 
 	// polynomial parameters ...
+	if (m_parameters.use_restricted_range != 0)
+	{
+		b_parameters.poly_term = false;
+		b_parameters.modified_basis = true;
+		b_parameters.problem_type = Parameter_Types::Quadratic;
+	}
+	else
+	{
+		b_parameters.poly_term = false;
+		b_parameters.modified_basis = false;
+		b_parameters.problem_type = Parameter_Types::Linear;
 
-	b_parameters.poly_term = false;
-	b_parameters.modified_basis = false;
-	b_parameters.problem_type = Parameter_Types::Linear;
-
-	b_parameters.n_poly_terms = 0;
+		b_parameters.n_poly_terms = 0;
+	}
 
 	return true;
 }
 
 bool Vector_Field::process_input_data()
 {
+	// Have to build b_input.interface_point_lists to generate LPB 
+	// this is going to be hard coded here for R^3 .ie 4 points have to be inserted into that data structure.
+	// grab the points from planar + tangent
+// 	if ((int)b_input.interface_iso_values->size() != 0) b_input.interface_iso_values->clear(); // this is need for greedy, since this is called many times
+// 	if ((int)b_input.interface_point_lists->size() != 0) b_input.interface_point_lists->clear();
+// 	if ((int)b_input.interface_test_points->size() != 0) b_input.interface_test_points->clear();
+// 
+// 	int count = 0;
+// 	b_input.interface_point_lists->resize(1);
+// 	for (int j = 0; j < b_input.planar->size(); j++){
+// 		Interface a_pt(b_input.planar->at(j).x, b_input.planar->at(j).y, b_input.planar->at(j).z);
+// 		b_input.interface_point_lists->at(0).push_back(b_input.planar->at(j));
+// 	}
+
+	if (m_parameters.use_restricted_range)
+	{
+		for (int j = 0; j < (int)b_input.planar->size(); j++){
+			b_input.planar->at(j).setNormalBounds(m_parameters.angular_uncertainty, m_parameters.angular_uncertainty / 2); // Need more ROBUST METHOD. Try large statistical sampling from von Mises spherical distribution
+			cout << " Planar[" << j << "] Bounds: " << endl;
+			cout << "	nx: " << b_input.planar->at(j).nx_lower_bound() << " <= " << b_input.planar->at(j).nx() << " <= " << b_input.planar->at(j).nx_upper_bound() << endl;
+			cout << "	ny: " << b_input.planar->at(j).ny_lower_bound() << " <= " << b_input.planar->at(j).ny() << " <= " << b_input.planar->at(j).ny_upper_bound() << endl;
+			cout << "	nz: " << b_input.planar->at(j).nz_lower_bound() << " <= " << b_input.planar->at(j).nz() << " <= " << b_input.planar->at(j).nz_upper_bound() << endl;
+		}
+		for (int j = 0; j < (int)b_input.tangent->size(); j++){
+			b_input.tangent->at(j).setAngleBounds(m_parameters.angular_uncertainty);
+			cout << " Tangent[" << j << "] Bounds: " << endl;
+			cout << "	" << b_input.tangent->at(j).angle_lower_bound() << " <= " << b_input.tangent->at(j).inner_product_constraint() << " <= " << b_input.tangent->at(j).angle_upper_bound() << endl;
+		}
+	}
+
 	return true;
 }
 
@@ -157,28 +196,44 @@ void Vector_Field::eval_scalar_interpolant_at_point( Point &p )
 
 void Vector_Field::eval_vector_interpolant_at_point( Point &p )
 {
-	// this method is a copy of the eval_scalar_interpolant_at_points() method 
-	// TO DO: Fix eval_scalar_interpolant_at_points() method to actually computer the scalar field and not the vector field.
 	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
-	double elemsum_x = 0.0;
-	double elemsum_y = 0.0;
-	double elemsum_z = 0.0;
+// 	double elemsum_1_x = 0.0;
+// 	double elemsum_1_y = 0.0;
+// 	double elemsum_1_z = 0.0;
+	double elemsum_2_x = 0.0;
+	double elemsum_2_y = 0.0;
+	double elemsum_2_z = 0.0;
+	double elemsum_3_x = 0.0;
+	double elemsum_3_y = 0.0;
+	double elemsum_3_z = 0.0;
+	// normal constraints
 	for (int k = 0; k < n_p; k++ ){
 		kernel_j->set_points(p, b_input.planar->at(k));
-		elemsum_x += solver->weights[3*k] * kernel_j->basis_planar_planar(Parameter_Types::DXDX);
-		elemsum_x += solver->weights[3*k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DXDY);
-		elemsum_x += solver->weights[3*k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DXDZ);
+		elemsum_2_x += solver->weights[3*k] * kernel_j->basis_planar_planar(Parameter_Types::DXDX);
+		elemsum_2_x += solver->weights[3*k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DXDY);
+		elemsum_2_x += solver->weights[3 * k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DXDZ);
 
-		elemsum_y += solver->weights[3*k] * kernel_j->basis_planar_planar(Parameter_Types::DYDX);
-		elemsum_y += solver->weights[3*k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DYDY);
-		elemsum_y += solver->weights[3*k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DYDZ);
+		elemsum_2_y += solver->weights[3 * k] * kernel_j->basis_planar_planar(Parameter_Types::DYDX);
+		elemsum_2_y += solver->weights[3 * k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DYDY);
+		elemsum_2_y += solver->weights[3 * k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DYDZ);
 
-		elemsum_z += solver->weights[3*k] * kernel_j->basis_planar_planar(Parameter_Types::DZDX);
-		elemsum_z += solver->weights[3*k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DZDY);
-		elemsum_z += solver->weights[3*k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DZDZ);
+		elemsum_2_z += solver->weights[3 * k] * kernel_j->basis_planar_planar(Parameter_Types::DZDX);
+		elemsum_2_z += solver->weights[3 * k + 1] * kernel_j->basis_planar_planar(Parameter_Types::DZDY);
+		elemsum_2_z += solver->weights[3 * k + 2] * kernel_j->basis_planar_planar(Parameter_Types::DZDZ);
 	}
-	p.set_vector_field(elemsum_x,elemsum_y,elemsum_z);
+	// tangent constraints
+	for (int k = 0; k < n_t; k++){
+		kernel->set_points(p, b_input.tangent->at(k));
+		elemsum_3_x += solver->weights[3 * n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DX);
+		elemsum_3_y += solver->weights[3 * n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DY);
+		elemsum_3_z += solver->weights[3 * n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DZ);
+	}
+	double nx = elemsum_2_x + elemsum_3_x;
+	double ny = elemsum_2_y + elemsum_3_y;
+	double nz = elemsum_2_z + elemsum_3_z;
+	p.set_vector_field(nx, ny, nz);
 	delete kernel_j;
 }
