@@ -278,12 +278,18 @@ RBFKernel * GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF
 	}
 	else
 	{
-		//if (b_input._weights.size() != 0) return new Scaled_Cubic(b_input._weights,b_input._points);
 		if (rbf_type == Parameter_Types::Cubic) return new Cubic;
 		else if (rbf_type == Parameter_Types::Gaussian) return new Gaussian(m_parameters.shape_parameter);
 		else if (rbf_type == Parameter_Types::IMQ) return new IMQ(m_parameters.shape_parameter);
 		else if (rbf_type == Parameter_Types::MQ) return new MQ(m_parameters.shape_parameter);
 		else if (rbf_type == Parameter_Types::R) return new R;
+		else if (rbf_type == Parameter_Types::WendlandC2)
+		{
+			//double fill_distance = 1000; // some default
+			//find_fill_distance(b_input, fill_distance);
+			//fill_distance *= 2;
+			return new WendlandC2(m_parameters.shape_parameter);
+		}
 		else return new TPS;
 	}
 }

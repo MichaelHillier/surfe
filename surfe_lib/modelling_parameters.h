@@ -10,7 +10,7 @@ struct SURFE_LIB_EXPORT Parameter_Types{
 	enum DWRT {PT1,PT2};
 	enum SecondDerivatives {DXDX,DXDY,DXDZ,DYDX,DYDY,DYDZ,DZDX,DZDY,DZDZ};
 	enum FirstDerivatives {DX,DY,DZ};
-	enum RBF {Cubic,Gaussian,MQ,IMQ,TPS,R};
+	enum RBF {Cubic,Gaussian,MQ,IMQ,TPS,R,WendlandC2};
 	enum SolverType {Linear,Quadratic};
 	enum ModelType {Single_surface,Lajaunie_approach,Stratigraphic_horizons,Continuous_property,Vector_field};
 	enum AXIS {Xaxis,Yaxis,Zaxis};
