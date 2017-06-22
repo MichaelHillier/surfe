@@ -27,7 +27,7 @@ bool Vector_Field::get_method_parameters()
 	if (m_parameters.use_restricted_range != 0)
 	{
 		b_parameters.poly_term = false;
-		b_parameters.modified_basis = true;
+		b_parameters.modified_basis = false;
 		b_parameters.problem_type = Parameter_Types::Quadratic;
 	}
 	else
@@ -93,6 +93,33 @@ bool Vector_Field::get_equality_values( VectorXd &equality_values )
 	return true;
 }
 
+bool Vector_Field::get_inequality_values(VectorXd &b, VectorXd &r)
+{
+	int n_p = b_parameters.n_planar;
+	int n_t = b_parameters.n_tangent;
+
+	// planar data
+	for (int j = 0; j < n_p; j++){
+		// x-component
+		b(3 * j + 0) = b_input.planar->at(j).nx_lower_bound();
+		r(3 * j + 0) = b_input.planar->at(j).nx_upper_bound() - b_input.planar->at(j).nx_lower_bound();
+		// y-component
+		b(3 * j + 1) = b_input.planar->at(j).ny_lower_bound();
+		r(3 * j + 1) = b_input.planar->at(j).ny_upper_bound() - b_input.planar->at(j).ny_lower_bound();
+		// z-component
+		b(3 * j + 2) = b_input.planar->at(j).nz_lower_bound();
+		r(3 * j + 2) = b_input.planar->at(j).nz_upper_bound() - b_input.planar->at(j).nz_lower_bound();
+	}
+
+	// tangent data
+	for (int j = 0; j < n_t; j++){
+		b(3 * n_p + j) = b_input.tangent->at(j).angle_lower_bound();
+		r(3 * n_p + j) = b_input.tangent->at(j).angle_upper_bound() - b_input.tangent->at(j).angle_lower_bound();
+	}
+
+	return true;
+}
+
 bool Vector_Field::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 {
 	int n_p = b_parameters.n_planar;
@@ -151,20 +178,52 @@ bool Vector_Field::setup_system_solver()
 
 	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
 
-	VectorXd equality_values(n);
-	get_equality_values(equality_values);
+	if (b_parameters.restricted_range)
+	{
+		int n_c = b_parameters.n_constraints;
+		
+		VectorXd b(n_c);
+		VectorXd r(n_c);
+		get_inequality_values(b, r);
 
-	MatrixXd interpolation_matrix(n, n);
-	if (!get_interpolation_matrix(interpolation_matrix)) return false;
+		MatrixXd interpolation_matrix(n_c, n_c);
+		if (!get_interpolation_matrix(interpolation_matrix)) return false;
 
-	std::cout<<" Interpolation matrix:\n"<< interpolation_matrix << std::endl;
-	std::cout<<" RHS:\n"<< equality_values << std::endl;
+		std::ofstream interpMAT("interpM.txt");
+		if (interpMAT)
+		{
+			interpMAT << interpolation_matrix << "\n";
+			interpMAT.close();
+		}
+		MatrixXd inequality_matrix(n_c, n_c);
+		inequality_matrix = interpolation_matrix;
 
-	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix,equality_values);
-	if (!llu->solve()) return false;
-	solver = llu;
+		Quadratic_Predictor_Corrector_LOQO *qpc = new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
+		if (!qpc->solve())
+		{
+			error_msg.append(" LOQO Quadratic Solver failure.");
+			return false;
+		}
+		solver = qpc;
 
-	std::cout << " solution :\n" << solver->weights << std::endl;
+	}
+	else
+	{
+		VectorXd equality_values(n);
+		get_equality_values(equality_values);
+
+		MatrixXd interpolation_matrix(n, n);
+		if (!get_interpolation_matrix(interpolation_matrix)) return false;
+
+		std::cout << " Interpolation matrix:\n" << interpolation_matrix << std::endl;
+		std::cout << " RHS:\n" << equality_values << std::endl;
+
+		Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix, equality_values);
+		if (!llu->solve()) return false;
+		solver = llu;
+
+		std::cout << " solution :\n" << solver->weights << std::endl;
+	}
 
 	return true;
 }

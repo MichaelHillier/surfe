@@ -190,7 +190,7 @@ public:
 		// t . del s = Cos(ϴ)*||t||*||del s||
 		// ||t|| = 1
 		// 0 <= ||del s|| <= + inf (but in reality ~ 2)
-		double a = cos((90.0 - angle)*D2R)*2.0;
+		double a = cos((90.0 - angle)*D2R)*0.3;
 		if (a < 0)
 		{
 			_angle_bound[0] = a;

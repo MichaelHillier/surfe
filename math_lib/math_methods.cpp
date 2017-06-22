@@ -188,7 +188,7 @@ bool Math_methods::quadratic_solver_loqo( const MatrixXd &H, const MatrixXd &A, 
 			fvalues = x; // strong duality gap
 			break;
 		}
-		if (dual_obj > primal_obj || sigfig < last_iterations_sig_fig) return false;
+		if (dual_obj > primal_obj /*|| sigfig < last_iterations_sig_fig*/) return false;
 
 		last_iterations_sig_fig = sigfig;
 		last_primal_infeasibility = primal_infeasibility;
