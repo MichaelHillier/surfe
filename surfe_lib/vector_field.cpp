@@ -143,6 +143,8 @@ bool Vector_Field::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 		}
 	}
 
+	for (int j = 0; j < interpolation_matrix.rows(); j++) interpolation_matrix(j, j) = m_parameters.smoothing_amount;
+
 	return true;
 }
 

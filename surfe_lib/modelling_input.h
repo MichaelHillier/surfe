@@ -39,6 +39,8 @@ public:
 	double nx_interp() const { return _field_normal[0]; }
 	double ny_interp() const { return _field_normal[1]; }
 	double nz_interp() const { return _field_normal[2]; }
+	bool GetDownDipVector(double(&vector)[3]);
+	bool GetStrikeVector(double(&vector)[3]);
 };
 
 class SURFE_LIB_EXPORT Evaluation_Point : public Point{
