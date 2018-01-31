@@ -917,5 +917,7 @@ bool Single_Surface::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(poly_matrix,interpolation_matrix)) return false;
 	}
 
+	if (m_parameters.smoothing_amount != 0) for (int j = 0; j < interpolation_matrix.rows(); j++) interpolation_matrix(j, j) = m_parameters.smoothing_amount;
+
 	return true;
 }
