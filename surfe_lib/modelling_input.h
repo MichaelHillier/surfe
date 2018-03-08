@@ -238,6 +238,28 @@ public:
 	void setInnerProductConstraint(const double &ip_constraint) { _inner_product_constraint = ip_constraint; }
 }; 
 
+struct InequalityPoints{
+	Inequality *inequality;
+	int n_pts;
+};
+struct InterfacePoints{
+	Interface *interface;
+	int n_pts;
+};
+struct PlanarPoints{
+	Planar *planar; 
+	int n_pts;
+};
+struct TangentPoints{
+	Tangent *tangent;
+	int n_pts;
+};
+struct EvaluationPoints{
+	Evaluation_Point *evaluation;
+	int n_pts;
+};
+
+
 
 class SURFE_LIB_EXPORT Basic_input{
 private:
@@ -270,6 +292,35 @@ public:
 		_avg_nn_dist_itr = -99999.0; // no data value
 		_avg_nn_dist_p   = -99999.0; // no data value
 		_avg_nn_dist_t   = -99999.0; // no data value
+	}
+	Basic_input(const InequalityPoints &ie_pts,
+				const InterfacePoints &i_pts,
+				const PlanarPoints &p_pts,
+				const TangentPoints &t_pts,
+				const EvaluationPoints &e_pts)
+	{
+		inequality = new std::vector<Inequality>;
+		itrface = new std::vector<Interface>;
+		planar = new std::vector<Planar>;
+		tangent = new std::vector<Tangent>;
+
+		evaluation_pts = new std::vector<Evaluation_Point>;
+
+		for (int j = 0; j < ie_pts.n_pts; j++) inequality->push_back(ie_pts.inequality[j]);
+		for (int j = 0; j < i_pts.n_pts;  j++) itrface->push_back(i_pts.interface[j]);
+		for (int j = 0; j < p_pts.n_pts;  j++) planar->push_back(p_pts.planar[j]);
+		for (int j = 0; j < t_pts.n_pts;  j++) tangent->push_back(t_pts.tangent[j]);
+		 
+		for (int j = 0; j < e_pts.n_pts; j++) evaluation_pts->push_back(e_pts.evaluation[j]);
+
+		interface_iso_values = new std::vector<double>;
+		interface_point_lists = new std::vector< std::vector < Interface > >;
+		interface_test_points = new std::vector< Interface >;
+
+		_avg_nn_dist_ie = -99999.0; // no data value
+		_avg_nn_dist_itr = -99999.0; // no data value
+		_avg_nn_dist_p = -99999.0; // no data value
+		_avg_nn_dist_t = -99999.0; // no data value
 	}
 	~Basic_input()
 	{
