@@ -279,6 +279,18 @@ RBFKernel * GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF
 	}
 }
 
+EvaluationPoints GRBF_Modelling_Methods::get_evaluation_points_c_output()
+{
+	int n = b_input.evaluation_pts->size();
+	EvaluationPoints ep;
+	ep.evaluation = new Evaluation_Point[n];
+	ep.n_pts = n;
+	for (int j = 0; j < b_input.evaluation_pts->size(); j++){
+		ep.evaluation[j] = b_input.evaluation_pts->at(j);
+	}
+	return ep;
+}
+
 bool GRBF_Modelling_Methods::_output_greedy_debug_objects()
 {
 	if (solver == NULL) return false;

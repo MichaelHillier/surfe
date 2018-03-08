@@ -55,6 +55,7 @@ public:
 		_scalar_field = NULL;
 		for (int j = 0; j < 3; j++ ) _field_normal[j] = NULL;
 	}
+	Point(){}
 	double x() const { return _x; }
 	double y() const { return _y; }
 	double z() const { return _z; }
@@ -83,6 +84,7 @@ public:
 		: Point(x_coord,y_coord,z_coord,c_coord)
 	{ 
 	} 
+	Evaluation_Point(){}
 };
 
 class SURFE_LIB_EXPORT Interface : public Point {
@@ -102,6 +104,7 @@ public:
 		_level_bound[0] = 0.0;
 		_level_bound[1] = 0.0;
 	} 
+	Interface(){}
 	double level() const { return _level; }
 	double residual() const { return _residual; }
 	double level_lower_bound() const { return _level_bound[0]; }
@@ -122,6 +125,7 @@ public:
 		const double &lvl,
 		const double &c_coord = NULL)
 		: Point(x_coord,y_coord,z_coord,c_coord), _inequality_level(lvl) { _residual = true; } 
+	Inequality(){}
 	double level() const { return _inequality_level; }
 	bool residual() const { return _residual; }
 	void setResidual(const bool &res) { _residual = res; }
@@ -168,6 +172,7 @@ public:
 		// residual default
 		_residual = 0.0;
 	}
+	Planar(){}
 	bool getDipVector(double (&vector)[3]);
 	bool getStrikeVector(double (&vector)[3]);
 	double dip() const { return _dip; }
@@ -210,6 +215,7 @@ public:
 		_residual = 0.0;
 		_inner_product_constraint = 0.0; // default value 0.0 means that the angle b/t the gradient of the scalar field and tangent vector is 90 degrees.
 	}
+	Tangent(){}
 	double tx() const { return _tangent[0]; }
 	double ty() const { return _tangent[1]; }
 	double tz() const { return _tangent[2]; }

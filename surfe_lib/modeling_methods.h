@@ -65,6 +65,7 @@ public:
 	GRBF_Modelling_Methods *get_method(const model_parameters& m_parameters,const Basic_input& input ); // factory method to get create the appropriate pointer for given problem
 	RBFKernel *create_rbf_kernel(const Parameter_Types::RBF &rbf_type, const bool &anisotropy);
 	std::vector<Evaluation_Point> *get_evaluation_points_output() const { return b_input.evaluation_pts; }
+	EvaluationPoints get_evaluation_points_c_output();
 	std::vector<Interface> *get_interface_points_ouput() const { return b_input.itrface; }
 	Basic_input get_b_input() const { return b_input; }
 	std::vector<double> *get_interface_iso_values() const { return b_input.interface_iso_values; }
