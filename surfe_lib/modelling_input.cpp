@@ -1014,3 +1014,74 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals( const std:
 
 	return tangent_indices_to_include;
 }
+bool Point::GetDownDipVector(double(&vector)[3])
+{
+	int n_null = 0;
+
+	for (int j = 0; j < 3; j++){
+		if (_field_normal[0] == NULL) n_null++;
+	}
+
+	if (n_null == 3) return false;
+
+	if (_field_normal[2] < 0){
+		_field_normal[0] *= -1.0;
+		_field_normal[1] *= -1.0;
+		_field_normal[2] *= -1.0;
+	}
+
+	double L = sqrt(_field_normal[0] * _field_normal[0] + _field_normal[1] * _field_normal[1] + _field_normal[2] * _field_normal[2]);
+	double n_normal[3] = { _field_normal[0], _field_normal[1], _field_normal[2] };
+	n_normal[0] /= L;
+	n_normal[1] /= L;
+	n_normal[2] /= L;
+
+	double angle = asin(n_normal[2])*R2D; // angle between the horizontal plane and the normal vector
+	double theta = 90.0 - angle; // angle between down dip vector and horizontal plane
+	double phi = atan2(n_normal[1], n_normal[0])*R2D;
+
+	vector[0] = cos(theta*D2R)*cos(phi*D2R);
+	vector[1] = cos(theta*D2R)*sin(phi*D2R);
+	vector[2] = -sin(theta*D2R);
+
+	L = sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+
+	vector[0] /= L;
+	vector[1] /= L;
+	vector[2] /= L;
+
+	return true;
+}
+
+bool Point::GetStrikeVector(double(&vector)[3])
+{
+	int n_null = 0;
+
+	for (int j = 0; j < 3; j++){
+		if (_field_normal[0] == NULL) n_null++;
+	}
+
+	if (n_null == 3) return false;
+
+	double L = sqrt(_field_normal[0] * _field_normal[0] + _field_normal[1] * _field_normal[1] + _field_normal[2] * _field_normal[2]);
+	double n_normal[3] = { _field_normal[0], _field_normal[1], _field_normal[2] };
+	n_normal[0] /= L;
+	n_normal[1] /= L;
+	n_normal[2] /= L;
+
+	double phi = atan2(n_normal[1], n_normal[0])*R2D + 90.0;
+
+	vector[0] = cos(phi*D2R);
+	vector[1] = sin(phi*D2R);
+	vector[2] = 0;
+
+	L = sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
+
+	vector[0] /= L;
+	vector[1] /= L;
+	vector[2] /= L;
+
+
+
+	return true;
+}

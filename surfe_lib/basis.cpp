@@ -1952,6 +1952,239 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector < std
 	else return false;
 }
 
+bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector < Point > &pts)
+{
+	// NOTE : Currently only supporting 1st order polynomials ( have p(x) = A*x + B*y + C*z + D )
+	// Tried implementing 2nd order however it is not practical
+	// e.g. finding the algrebraic solution in mathematical (via Thomas algo) resulted in ~ 100 page equation.  
+	// the requirement here is that the selected points are unisolvent - e.g. not co-planar
+	// current the below method is not sophisticated and looks for special cases where all points lie on the x/y/z planes
+	// these are just a subset all all the possible co-planarity cases.
+
+	// use interface_point_lists data
+	int n = (int)pts.size();
+	if (n == 0) return false;
+
+	std::vector<double> Xcoord_array;
+	std::vector<int> Index_Xcoord_array;
+	std::vector<double> Ycoord_array;
+	std::vector<int> Index_Ycoord_array;
+	std::vector<double> Zcoord_array;
+	std::vector<int> Index_Zcoord_array;
+
+	for (int j = 0; j < n; j++) {
+		Index_Xcoord_array.push_back(j);
+		Index_Ycoord_array.push_back(j);
+		Index_Zcoord_array.push_back(j);
+		Xcoord_array.push_back(pts.at(j).x());
+		Ycoord_array.push_back(pts.at(j).y());
+		Zcoord_array.push_back(pts.at(j).z());
+	}
+	// Sort those arrays
+	Math_methods::sort_vector_w_index<double>(Xcoord_array, Index_Xcoord_array);
+	Math_methods::sort_vector_w_index<double>(Ycoord_array, Index_Ycoord_array);
+	Math_methods::sort_vector_w_index<double>(Zcoord_array, Index_Zcoord_array);
+
+	// 	cout<<" sorted x array"<<endl;
+	// 	for (int j = 0; j < n; j++ ) cout<<" ["<<j<<"]= "<<Xcoord_array[j]<<" index= "<<Index_Xcoord_array[j]<<endl;
+	// 	cout<<" sorted y array"<<endl;
+	// 	for (int j = 0; j < n; j++ ) cout<<" ["<<j<<"]= "<<Ycoord_array[j]<<" index= "<<Index_Ycoord_array[j]<<endl;
+	// 	cout<<" sorted z array"<<endl;
+	// 	for (int j = 0; j < n; j++ ) cout<<" ["<<j<<"]= "<<Zcoord_array[j]<<" index= "<<Index_Zcoord_array[j]<<endl;
+
+	double dx = Xcoord_array[n - 1] - Xcoord_array[0];
+	double dy = Ycoord_array[n - 1] - Ycoord_array[0];
+	double dz = Zcoord_array[n - 1] - Zcoord_array[0];
+
+	/*	cout<<" dx = "<<dx<<" dy= "<<dy<<" dz= "<<dz<<endl;*/
+
+	// Find the axis that has the largest sampling
+	if (dx >= dy && dx >= dz)
+	{
+		unisolvent_subset_points.push_back(pts[Index_Xcoord_array[0]]);
+		unisolvent_subset_points.push_back(pts[Index_Xcoord_array[n - 1]]);
+		if (dy >= dz)
+		{
+			for (int j = 0; j < n; j++) {
+				if (Index_Ycoord_array[j] != Index_Xcoord_array[0] && Index_Ycoord_array[j] != Index_Xcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Ycoord_array[j]]);
+					break;
+				}
+			}
+			for (int j = 0; j < n; j++) {
+				if (Index_Ycoord_array[n - 1 - j] != Index_Xcoord_array[0] && Index_Ycoord_array[n - 1 - j] != Index_Xcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Ycoord_array[n - 1 - j]]);
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (int j = 0; j < n; j++) {
+				if (Index_Zcoord_array[j] != Index_Xcoord_array[0] && Index_Zcoord_array[j] != Index_Xcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Zcoord_array[j]]);
+					break;
+				}
+			}
+			for (int j = 0; j < n; j++) {
+				if (Index_Zcoord_array[n - 1 - j] != Index_Xcoord_array[0] && Index_Zcoord_array[n - 1 - j] != Index_Xcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Zcoord_array[n - 1 - j]]);
+					break;
+				}
+			}
+		}
+	}
+
+	if (dy >= dx && dy >= dz)
+	{
+		unisolvent_subset_points.push_back(pts[Index_Ycoord_array[0]]);
+		unisolvent_subset_points.push_back(pts[Index_Ycoord_array[n - 1]]);
+		if (dx >= dz)
+		{
+			for (int j = 0; j < n; j++) {
+				if (Index_Xcoord_array[j] != Index_Ycoord_array[0] && Index_Xcoord_array[j] != Index_Ycoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Xcoord_array[j]]);
+					break;
+				}
+			}
+			for (int j = 0; j < n; j++) {
+				if (Index_Xcoord_array[n - 1 - j] != Index_Ycoord_array[0] && Index_Xcoord_array[n - 1 - j] != Index_Ycoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Xcoord_array[n - 1 - j]]);
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (int j = 0; j < n; j++) {
+				if (Index_Zcoord_array[j] != Index_Ycoord_array[0] && Index_Zcoord_array[j] != Index_Ycoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Zcoord_array[j]]);
+					break;
+				}
+			}
+			for (int j = 0; j < n; j++) {
+				if (Index_Zcoord_array[n - 1 - j] != Index_Ycoord_array[0] && Index_Zcoord_array[n - 1 - j] != Index_Ycoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Zcoord_array[n - 1 - j]]);
+					break;
+				}
+			}
+		}
+	}
+
+	if (dz >= dx && dz >= dy)
+	{
+		unisolvent_subset_points.push_back(pts[Index_Zcoord_array[0]]);
+		unisolvent_subset_points.push_back(pts[Index_Zcoord_array[n - 1]]);
+		if (dx >= dy)
+		{
+			for (int j = 0; j < n; j++) {
+				if (Index_Xcoord_array[j] != Index_Zcoord_array[0] && Index_Xcoord_array[j] != Index_Zcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Xcoord_array[j]]);
+					break;
+				}
+			}
+			for (int j = 0; j < n; j++) {
+				if (Index_Xcoord_array[n - 1 - j] != Index_Zcoord_array[0] && Index_Xcoord_array[n - 1 - j] != Index_Zcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Xcoord_array[n - 1 - j]]);
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (int j = 0; j < n; j++) {
+				if (Index_Ycoord_array[j] != Index_Zcoord_array[0] && Index_Ycoord_array[j] != Index_Zcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Ycoord_array[j]]);
+					break;
+				}
+			}
+			for (int j = 0; j < n; j++) {
+				if (Index_Ycoord_array[n - 1 - j] != Index_Zcoord_array[0] && Index_Ycoord_array[n - 1 - j] != Index_Zcoord_array[n - 1])
+				{
+					unisolvent_subset_points.push_back(pts[Index_Ycoord_array[n - 1 - j]]);
+					break;
+				}
+			}
+		}
+	}
+
+	// check if Subset list exists on a plane
+	bool exists_on_plane = false;
+	int add_x = 0;
+	int add_y = 0;
+	int add_z = 0;
+	int Q = (int)unisolvent_subset_points.size();
+	for (int j = 1; j < Q; j++) {
+		// compare each coord of [0] with the same coord of the other pts []
+		// if coord is same as all other pts, pts lie on a plane
+		if (unisolvent_subset_points[j].x() == unisolvent_subset_points[0].x()) add_x++;
+		if (unisolvent_subset_points[j].y() == unisolvent_subset_points[0].y()) add_y++;
+		if (unisolvent_subset_points[j].z() == unisolvent_subset_points[0].z()) add_z++;
+	}
+
+	if (add_x == (Q - 1) || add_y == (Q - 1) || add_z == (Q - 1)) exists_on_plane = true;
+	if (exists_on_plane)
+	{
+		bool found_unique_point = false;
+		if (add_x == (Q - 1)) // search for a pt in pointset with a different x
+		{
+			for (int j = 0; j < (int)pts.size(); j++) {
+				if (pts[j].x() != unisolvent_subset_points[0].x())
+				{
+					unisolvent_subset_points.pop_back();
+					unisolvent_subset_points.push_back(pts[j]);
+					found_unique_point = true;
+					break;
+				}
+			}
+		}
+		if (add_y == (Q - 1)) // search for a pt in pointset with a different y
+		{
+			for (int j = 0; j < (int)pts.size(); j++) {
+				if (pts[j].y() != unisolvent_subset_points[0].y())
+				{
+					unisolvent_subset_points.pop_back();
+					unisolvent_subset_points.push_back(pts[j]);
+					found_unique_point = true;
+					break;
+				}
+			}
+		}
+		if (add_z == (Q - 1)) // search for a pt in pointset with a different z
+		{
+			for (int j = 0; j < (int)pts.size(); j++) {
+				if (pts[j].z() != unisolvent_subset_points[0].z())
+				{
+					unisolvent_subset_points.pop_back();
+					unisolvent_subset_points.push_back(pts[j]);
+					found_unique_point = true;
+					break;
+				}
+			}
+		}
+		if (!found_unique_point)
+		{
+			if (add_x == (Q - 1)) unisolvent_subset_points[0].set_x(unisolvent_subset_points[0].x() + 0.0001);
+			if (add_y == (Q - 1)) unisolvent_subset_points[0].set_y(unisolvent_subset_points[0].y() + 0.0001);
+			if (add_z == (Q - 1)) unisolvent_subset_points[0].set_z(unisolvent_subset_points[0].z() + 0.0001);
+		}
+	}
+
+	if ((int)unisolvent_subset_points.size() == 4) return true;
+	else return false;
+}
+
 void Lagrangian_Polynomial_Basis::_initialize_basis()
 {
 	mpf_class x1 = unisolvent_subset_points[0].x();

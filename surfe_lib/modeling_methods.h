@@ -5,6 +5,7 @@
 
 #include <modelling_parameters.h>
 #include <modelling_input.h>
+#include <anisotropy_input.h>
 #include <matrix_solver.h>
 #include <basis.h>
 #include <Eigen/Core>
@@ -63,8 +64,15 @@ public:
 
 class SURFE_LIB_EXPORT LocalOrientationAnisotropy_Methods{
 protected:
-	Basic_input b_input; // algorithm input
+	unsigned int _get_nearest_orientation_pt_index(const TensorEvaluationPoints &pt);
+	void _sort_eigensystem(Matrix3d &evectors, Vector3d &evalues);
+	double _GetLargestInterPointDistance(const std::vector<Orientation> &pts);
+	double distance;
 public:
+	LocalAnisotropyInput input; // algorithm input
+	model_parameters parameters;
 	bool run_algorithm();
+	// Riemannian methods 
+	bool interpolate_tensor_field_at_pt(TensorEvaluationPoints& eval_pt);
 };
 #endif

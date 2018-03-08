@@ -39,6 +39,8 @@ public:
 	double nx_interp() const { return _field_normal[0]; }
 	double ny_interp() const { return _field_normal[1]; }
 	double nz_interp() const { return _field_normal[2]; }
+	bool GetDownDipVector(double(&vector)[3]);
+	bool GetStrikeVector(double(&vector)[3]);
 };
 
 class SURFE_LIB_EXPORT Evaluation_Point : public Point{
@@ -190,7 +192,7 @@ public:
 		// t . del s = Cos(ϴ)*||t||*||del s||
 		// ||t|| = 1
 		// 0 <= ||del s|| <= + inf (but in reality ~ 2)
-		double a = cos((90.0 - angle)*D2R)*2.0;
+		double a = 0.1;//cos((90.0 - angle)*D2R)*2.0;
 		if (a < 0)
 		{
 			_angle_bound[0] = a;

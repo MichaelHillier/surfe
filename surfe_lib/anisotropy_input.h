@@ -2,6 +2,7 @@
 #define _anisotropy_input_h
 
 #include <surfe_lib_module.h>
+#include <modelling_parameters.h>
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
@@ -21,7 +22,6 @@ private:
 	double _z;
 	double _dip;
 	double _strike;
-	double _normal[3];
 	Vector3d _normal;
 	Vector3d _dipvector;
 	Vector3d _strikevector;
@@ -67,27 +67,57 @@ public:
 	double nx() const { return _normal[0]; }
 	double ny() const { return _normal[1]; }
 	double nz() const { return _normal[2]; }
+	double x() const { return _x; }
+	double y() const { return _y; }
+	double z() const { return _z; }
 	void setNormal(const double &nx, const double &ny, const double &nz) { _normal[0] = nx; _normal[1] = ny; _normal[2] = nz; }
+	Matrix3d eigenvectors; // principal directions of anisotropy
+	Vector3d eigenvalues;
+	Matrix3d U;
+	Matrix3d D;
+	Matrix3d S;
+	Matrix3d Tensor;
+	Matrix3d Transform;
+};
+
+class SURFE_LIB_EXPORT TensorEvaluationPoints{
+private:
+	double _x;
+	double _y;
+	double _z;
+public:
+	TensorEvaluationPoints(const double &x_coord,
+		const double &y_coord,
+		const double &z_coord)
+	{
+		_x = x_coord;
+		_y = y_coord;
+		_z = z_coord;
+	}
+ 	double x() const { return _x; }
+ 	double y() const { return _y; }
+ 	double z() const { return _z; }
 	Matrix3d eigenvectors; // principal directions of anisotropy
 	Vector3d eigenvalues;
 };
 
-class SURFE_LIB_EXPORT local_anisotropy_input{
+class SURFE_LIB_EXPORT LocalAnisotropyInput{
 private:
 	// Attributes
-	Matrix3d _eigenvectors; // principal directions of anisotropy
-	Vector3d _eigenvalues;
+	std::vector < std::vector < Orientation > > neighbourhoods;
+	void _sort_eigensystem(Matrix3d &evectors, Vector3d &evalues);
+	bool _get_neighbourhoods(const int &n_neighbors);
+	void _get_local_anisotropy_from_neighbourhoods(std::vector < std::vector < Orientation > > &nh);
 public:
-	local_anisotropy_input()
+	LocalAnisotropyInput()
 	{
 		orientation = new std::vector<Orientation>;
+		evalpts = new std::vector<TensorEvaluationPoints>;
 	}
-	~local_anisotropy_input()
-	{
-		delete orientation;
-	}
+	~LocalAnisotropyInput(){}
+	bool GetLocalAnisotropy(const model_parameters &parameters);
 	// input data 
 	std::vector< Orientation > *orientation;
-	void getMeanTensor(Matrix3d &y,Matrix3d &d);
-
+	std::vector< TensorEvaluationPoints > *evalpts;
+};
 #endif

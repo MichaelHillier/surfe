@@ -448,6 +448,7 @@ private:
 	Matrix <mpf_class, Dynamic, 1> _polynomial_constants;
 	Matrix <mpf_class, Dynamic, Dynamic> _derivative_polynomial_constants;
 	bool _get_unisolvent_subset(const std::vector < std::vector < Interface > > &interface_point_lists);
+	bool _get_unisolvent_subset(const std::vector < Point >  &pts);
 	void _initialize_basis();
 public:
 	Lagrangian_Polynomial_Basis(const std::vector < std::vector < Interface > > &interface_point_lists)
@@ -459,11 +460,20 @@ public:
 			// throw exception
 		}
 	}
+	Lagrangian_Polynomial_Basis(const std::vector < Point >  &pts)
+	{
+		mpf_set_default_prec(128.0);
+		if (_get_unisolvent_subset(pts)) _initialize_basis();
+		else
+		{
+			// throw exception
+		}
+	}
 	Matrix <mpf_class, Dynamic, 1> poly(const Point *p);
 	Matrix <mpf_class, Dynamic, 1> poly_dx(const Point *p);
 	Matrix <mpf_class, Dynamic, 1> poly_dy(const Point *p);
 	Matrix <mpf_class, Dynamic, 1> poly_dz(const Point *p);
-	std::vector < Interface > unisolvent_subset_points;
+	std::vector < Point > unisolvent_subset_points;
 };
 
 class Modified_Kernel : public Kernel {
@@ -473,6 +483,12 @@ public:
 		mpf_set_default_prec(128.0);
 		_aRBFKernel = arbfkernel;
 		_aLPB = new Lagrangian_Polynomial_Basis(interface_point_lists);
+	}
+	Modified_Kernel(RBFKernel* arbfkernel, const std::vector < Point >  &pts)
+	{
+		mpf_set_default_prec(128.0);
+		_aRBFKernel = arbfkernel;
+		_aLPB = new Lagrangian_Polynomial_Basis(pts);
 	}
 	// copy constructor
 	Modified_Kernel( const Modified_Kernel& source) : _aRBFKernel(source._aRBFKernel->clone()), _aLPB(source._aLPB){}
