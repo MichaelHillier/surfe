@@ -244,23 +244,23 @@ public:
 	void setInnerProductConstraint(const double &ip_constraint) { _inner_product_constraint = ip_constraint; }
 }; 
 
-struct InequalityPoints{
+struct SURFE_LIB_EXPORT InequalityPoints{
 	Inequality *inequality;
 	int n_pts;
 };
-struct InterfacePoints{
+struct SURFE_LIB_EXPORT InterfacePoints{
 	Interface *interface;
 	int n_pts;
 };
-struct PlanarPoints{
+struct SURFE_LIB_EXPORT PlanarPoints{
 	Planar *planar; 
 	int n_pts;
 };
-struct TangentPoints{
+struct SURFE_LIB_EXPORT TangentPoints{
 	Tangent *tangent;
 	int n_pts;
 };
-struct EvaluationPoints{
+struct SURFE_LIB_EXPORT EvaluationPoints{
 	Evaluation_Point *evaluation;
 	int n_pts;
 };
