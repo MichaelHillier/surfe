@@ -245,7 +245,7 @@ struct SURFE_LIB_EXPORT InequalityPoints{
 	int n_pts;
 };
 struct SURFE_LIB_EXPORT InterfacePoints{
-	Interface *interface;
+	Interface *intface;
 	int n_pts;
 };
 struct SURFE_LIB_EXPORT PlanarPoints{
@@ -309,7 +309,7 @@ public:
 		evaluation_pts = new std::vector<Evaluation_Point>;
 
 		for (int j = 0; j < ie_pts.n_pts; j++) inequality->push_back(ie_pts.inequality[j]);
-		for (int j = 0; j < i_pts.n_pts;  j++) itrface->push_back(i_pts.interface[j]);
+		for (int j = 0; j < i_pts.n_pts;  j++) itrface->push_back(i_pts.intface[j]);
 		for (int j = 0; j < p_pts.n_pts;  j++) planar->push_back(p_pts.planar[j]);
 		for (int j = 0; j < t_pts.n_pts;  j++) tangent->push_back(t_pts.tangent[j]);
 		 
