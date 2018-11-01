@@ -815,7 +815,7 @@ bool Single_Surface::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 	int n_i = b_parameters.n_interface;
 	int n_p = b_parameters.n_planar;
 	int n_t = b_parameters.n_tangent;
-
+	
 	// Row and Column constraint order : inequality (ine) -> interface (itr) -> planar (p_x,p_y,p_z) -> tangent (t)
 
 	// Base Matrix Structure
@@ -949,6 +949,26 @@ bool Single_Surface::get_interpolation_matrix( MatrixXd &interpolation_matrix )
 		// fill remaining matrix blocks (P, PT, 0)
 		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(poly_matrix,interpolation_matrix)) return false;
 	}
+
+	if (m_parameters.use_regression_smoothing)
+	{
+		int j = 0;
+		double sa = m_parameters.smoothing_amount;
+		for (int k = 0; k < n_ie; k++, j++){
+			// create fake point
+			Point apt(b_input.inequality->at(k).x() + sa, b_input.inequality->at(k).y() + sa, b_input.inequality->at(k).z() + sa);
+			kernel->set_points(b_input.inequality->at(k), apt);
+			interpolation_matrix(j, j) = kernel->basis_pt_pt();
+		}
+		for (int k = 0; k < n_i; k++, j++){
+			// create fake point
+			Point apt(b_input.itrface->at(k).x() + sa, b_input.itrface->at(k).y() + sa, b_input.itrface->at(k).z() + sa);
+			kernel->set_points(b_input.itrface->at(k), apt);
+			interpolation_matrix(j, j) = kernel->basis_pt_pt();
+		}
+	}
+
+	//std::cout << "Interpolation matrix:\n" << interpolation_matrix<< std::endl;
 
 	return true;
 }

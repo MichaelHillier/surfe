@@ -47,6 +47,8 @@ bool Linear_LU_decomposition::solve()
 
 	if ( !weights.allFinite()) return false; 
 
+	//std::cout << " weight vector:\n" << weights << std::endl;
+
 	return true;
 }
 

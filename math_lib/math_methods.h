@@ -474,7 +474,7 @@ bool Math_methods::quadratic_solver(const Matrix <T, Dynamic, Dynamic> &H,
 			return false;
 		}
 		prev_mu = mu;
-		if (mu < 0.00000001)
+		if (mu < 0.00000001 && mu > 0)
 		{
 			found_soln = true;
 			for (int j = 0; j < n; j++) fvalues(j) = x(j); // get solution

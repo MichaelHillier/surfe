@@ -724,6 +724,11 @@ bool Lajaunie_Approach::get_interpolation_matrix( MatrixXd &interpolation_matrix
 		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(poly_matrix, interpolation_matrix)) return false;
 	}
 
+	if (m_parameters.use_regression_smoothing)
+	{
+		for (int j = 0; j < (n_ip); j++)	interpolation_matrix(j, j) += m_parameters.smoothing_amount;
+	}
+
 	return true;
 }
 

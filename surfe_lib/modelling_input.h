@@ -318,7 +318,7 @@ public:
 	void SetTangentAvgNNDist(const double &dist) { _avg_nn_dist_t = dist; }
 };
 
-inline double distance_btw_pts(const Point &p1, const Point &p2);
+double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector < Point > &pts);
 std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p, const std::vector < Point > &pts);
 int furtherest_neighbour_index(const Point &p, const std::vector < Point > &pts);
