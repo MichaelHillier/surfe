@@ -438,7 +438,7 @@ void Planar::setNormalBounds(const double &delta_strike,
   _normal_bound[2][1] = nz_upper;
 }
 
-double distance_btw_pts(const Point &p1, const Point &p2) {
+double Surfe::distance_btw_pts(const Point &p1, const Point &p2) {
   double dx = p1.x() - p2.x();
   double dy = p1.y() - p2.y();
   double dz = p1.z() - p2.z();
@@ -447,7 +447,7 @@ double distance_btw_pts(const Point &p1, const Point &p2) {
   return sqrt(dx * dx + dy * dy + dz * dz + dc * dc);
 }
 
-int nearest_neighbour_index(const Point &p, const std::vector<Point> &pts) {
+int Surfe::nearest_neighbour_index(const Point &p, const std::vector<Point> &pts) {
   double min_distance = DBL_MAX;
   int index = -1; // if this is actually returned by this function a seg fault
                   // will result
@@ -467,7 +467,7 @@ int nearest_neighbour_index(const Point &p, const std::vector<Point> &pts) {
   return index;
 }
 std::vector<int>
-get_n_nearest_neighbours_to_point(const int &n, const Point &p,
+Surfe::get_n_nearest_neighbours_to_point(const int &n, const Point &p,
                                   const std::vector<Point> &pts) {
   std::vector<int> nn_indices;
 
@@ -497,7 +497,7 @@ get_n_nearest_neighbours_to_point(const int &n, const Point &p,
   return nn_indices;
 }
 
-int furtherest_neighbour_index(const Point &p, const std::vector<Point> &pts) {
+int Surfe::furtherest_neighbour_index(const Point &p, const std::vector<Point> &pts) {
   int index = 0;
   double largest_distance = distance_btw_pts(p, pts[0]);
   for (int j = 1; j < (int)pts.size(); j++) {
@@ -510,7 +510,7 @@ int furtherest_neighbour_index(const Point &p, const std::vector<Point> &pts) {
   return index;
 }
 
-int furtherest_neighbour_index(const std::vector<Point> &pts1,
+int Surfe::furtherest_neighbour_index(const std::vector<Point> &pts1,
                                const std::vector<Point> &pts2) {
   // find a point in PTS1 dataset that is furthest away from PTS2 dataset
 
@@ -528,7 +528,7 @@ int furtherest_neighbour_index(const std::vector<Point> &pts1,
   return index;
 }
 
-double avg_nn_distance(const std::vector<Point> &pts) {
+double Surfe::avg_nn_distance(const std::vector<Point> &pts) {
   double average_nn_distance = 0.0;
   int n = (int)pts.size();
   for (int j = 0; j < n; j++) {
@@ -549,7 +549,7 @@ double avg_nn_distance(const std::vector<Point> &pts) {
   return average_nn_distance;
 }
 
-bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts,
+bool Surfe::Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts,
                                                  int (&TwoIndexes)[2]) {
   if (pts.size() < 2)
     return false;
@@ -569,7 +569,7 @@ bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts,
   return true;
 }
 
-int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(
+int Surfe::Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(
     const Point &p, const std::vector<Point> &pts, const double &dist) {
   double smallest_residual = 100000000000;
   int index = -1;
@@ -585,7 +585,7 @@ int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(
   return index;
 }
 
-void calculate_bounds(const std::vector<Point> &pts, double (&bounds)[6]) {
+void Surfe::calculate_bounds(const std::vector<Point> &pts, double (&bounds)[6]) {
   // bounds[6] = { xmin, xmax, ymin, ymax, zmin, zmax }
   bounds[0] = pts[0].x();
   bounds[1] = pts[0].x();
@@ -611,7 +611,7 @@ void calculate_bounds(const std::vector<Point> &pts, double (&bounds)[6]) {
 }
 
 std::vector<int>
-get_extremal_point_data_indices_from_points(const std::vector<Point> &pts) {
+Surfe::get_extremal_point_data_indices_from_points(const std::vector<Point> &pts) {
   // return a vector of indices from pts[] that maximally samples the data space
   int n = (int)pts.size();
 
@@ -725,7 +725,7 @@ get_extremal_point_data_indices_from_points(const std::vector<Point> &pts) {
   return data_indices;
 }
 
-bool get_maximal_axial_variability_order(
+bool Surfe::get_maximal_axial_variability_order(
     const double (&bounds)[6], Parameter_Types::AXIS (&axis_order)[3]) {
   std::vector<double> ranges;
   std::vector<int> axis;
@@ -749,7 +749,7 @@ bool get_maximal_axial_variability_order(
   return true;
 }
 
-bool is_index_in_list(const int &index, const std::vector<int> &list) {
+bool Surfe::is_index_in_list(const int &index, const std::vector<int> &list) {
   for (int j = 0; j < (int)list.size(); j++) {
     if (list[j] == index)
       return true;
@@ -757,7 +757,7 @@ bool is_index_in_list(const int &index, const std::vector<int> &list) {
   return false;
 }
 
-bool find_fill_distance(const Basic_input &input, double &fill_distance) {
+bool Surfe::find_fill_distance(const Basic_input &input, double &fill_distance) {
   std::vector<double> ndist_j;
 
   // put all inputted constraints into a vector of Points
@@ -794,7 +794,7 @@ bool find_fill_distance(const Basic_input &input, double &fill_distance) {
   return true;
 }
 
-std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(
+std::vector<int> Surfe::Get_Inequality_STL_Vector_Indices_With_Large_Residuals(
     const std::vector<Inequality> *inequality, const double &avg_nn_distance) {
   // Function will intelligently* get the indices within the STL vector of
   // Inequality points that have large residuals Intelligently* : Doesn't
@@ -845,7 +845,7 @@ std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(
   return inequality_indices_to_include;
 }
 
-std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(
+std::vector<int> Surfe::Get_Interface_STL_Vector_Indices_With_Large_Residuals(
     const std::vector<Interface> *itrface, const double &itrface_uncertainty,
     const double &avg_nn_distance) {
   // Function will intelligently* get the indices within the STL vector of
@@ -940,7 +940,7 @@ std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(
   return itrface_indices_to_include;
 }
 
-std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(
+std::vector<int> Surfe::Get_Planar_STL_Vector_Indices_With_Large_Residuals(
     const std::vector<Planar> *planar, const double &angular_uncertainty,
     const double &avg_nn_distance) {
   // Function will intelligently* get the indices within the STL vector of
@@ -1037,7 +1037,7 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(
   return planar_indices_to_include;
 }
 
-std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
+std::vector<int> Surfe::Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
     const std::vector<Tangent> *tangent, const double &angular_uncertainty,
     const double &avg_nn_distance) {
   // Function will intelligently* get the indices within the STL vector of

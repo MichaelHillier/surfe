@@ -365,5 +365,7 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(
 std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
     const std::vector<Tangent> *tangent, const double &angular_uncertainty,
     const double &avg_nn_distance);
+bool get_maximal_axial_variability_order(
+    const double (&bounds)[6], Parameter_Types::AXIS (&axis_order)[3]);
 } //end namespace
 #endif
