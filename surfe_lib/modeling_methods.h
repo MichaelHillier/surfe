@@ -47,6 +47,9 @@
 #include <matrix_solver.h>
 #include <modelling_input.h>
 #include <modelling_parameters.h>
+
+#include <omp.h>
+
 namespace Surfe{
 using namespace std;
 using namespace Eigen;
