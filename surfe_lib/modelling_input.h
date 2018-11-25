@@ -42,10 +42,11 @@
 
 #include <modelling_parameters.h>
 #include <surfe_lib_module.h>
-
+#include <cmath>
 #include <vector>
-
-class SURFE_LIB_EXPORT Point {
+namespace Surfe{
+using namespace std;
+class Point {
 private:
   double _x;
   double _y;
@@ -90,14 +91,14 @@ public:
   double nz_interp() const { return _field_normal[2]; }
 };
 
-class SURFE_LIB_EXPORT Evaluation_Point : public Point {
+class Evaluation_Point : public Point {
 public:
   Evaluation_Point(const double &x_coord, const double &y_coord,
                    const double &z_coord, const double &c_coord = NULL)
       : Point(x_coord, y_coord, z_coord, c_coord) {}
 };
 
-class SURFE_LIB_EXPORT Interface : public Point {
+class Interface : public Point {
 private:
   double _level;
   double _residual;
@@ -123,7 +124,7 @@ public:
   }
 };
 
-class SURFE_LIB_EXPORT Inequality : public Point {
+class Inequality : public Point {
 private:
   double _inequality_level;
   bool _residual;
@@ -140,7 +141,7 @@ public:
   void setResidual(const bool &res) { _residual = res; }
 };
 
-class SURFE_LIB_EXPORT Planar : public Point {
+class Planar : public Point {
 private:
   double _dip;
   double _strike;
@@ -197,7 +198,7 @@ public:
   }
 };
 
-class SURFE_LIB_EXPORT Tangent : public Point {
+class Tangent : public Point {
 private:
   double _tangent[3];
   double _residual;
@@ -243,7 +244,7 @@ public:
   }
 };
 
-class SURFE_LIB_EXPORT Basic_input {
+class Basic_input {
 private:
   // Attributes
   double _avg_nn_dist_ie;
@@ -329,7 +330,7 @@ public:
   void SetTangentAvgNNDist(const double &dist) { _avg_nn_dist_t = dist; }
 };
 
-inline double distance_btw_pts(const Point &p1, const Point &p2);
+double distance_btw_pts(const Point &p1, const Point &p2); 
 int nearest_neighbour_index(const Point &p, const std::vector<Point> &pts);
 std::vector<int>
 get_n_nearest_neighbours_to_point(const int &n, const Point &p,
@@ -364,5 +365,5 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(
 std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
     const std::vector<Tangent> *tangent, const double &angular_uncertainty,
     const double &avg_nn_distance);
-
+} //end namespace
 #endif

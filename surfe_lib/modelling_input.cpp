@@ -46,6 +46,7 @@
 #include <algorithm>
 #include <functional>
 
+using namespace Surfe;
 using namespace std;
 
 bool Basic_input::get_interface_data() {

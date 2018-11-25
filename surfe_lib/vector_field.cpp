@@ -48,6 +48,7 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace Surfe;
 bool Vector_Field::get_method_parameters() {
   // # of constraints for each constraint type ...
   b_parameters.n_interface = 0;

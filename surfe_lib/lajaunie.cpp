@@ -48,6 +48,7 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace Surfe;
 bool Lajaunie_Approach::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
   int n_ip = _n_increment_pair;
   int n_p = b_parameters.n_planar;

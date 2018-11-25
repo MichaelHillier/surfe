@@ -48,6 +48,7 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace Surfe;
 bool Single_Surface::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
   int n_ie = b_parameters.n_inequality;
   int n_i = b_parameters.n_interface;

@@ -43,8 +43,8 @@
 #include <surfe_lib_module.h> // macro for importing / exporting dll
 
 #include <modeling_methods.h>
-
-class SURFE_LIB_EXPORT Stratigraphic_Surfaces : public GRBF_Modelling_Methods {
+namespace Surfe {
+class Stratigraphic_Surfaces : public GRBF_Modelling_Methods {
 private:
   // Methods
   bool _get_increment_pairs();
@@ -94,5 +94,5 @@ public:
   // Attributes
   Polynomial_Basis *p_basis;
 };
-
+}
 #endif

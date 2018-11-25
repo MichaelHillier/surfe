@@ -53,6 +53,7 @@
 #include <time.h>
 #include <vector>
 
+using namespace Surfe;
 double round(double d) { return floor(d + 0.5); }
 
 bool GRBF_Modelling_Methods::_update_interface_iso_values() {

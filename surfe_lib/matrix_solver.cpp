@@ -44,6 +44,7 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace Surfe;
 bool Linear_LU_decomposition::solve() {
 
   if (_constraint_values.rows() != _interpolation_matrix.rows())

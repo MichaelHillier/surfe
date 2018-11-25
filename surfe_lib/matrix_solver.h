@@ -48,7 +48,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
+namespace Surfe{
 using namespace Eigen;
 using namespace std;
 
@@ -200,5 +200,6 @@ public:
   bool solve();
   bool validate_matrix_systems();
 };
+}
 
 #endif

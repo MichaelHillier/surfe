@@ -43,8 +43,9 @@
 #include <surfe_lib_module.h> // macro for importing / exporting dll
 
 #include "modeling_methods.h"
-
-class SURFE_LIB_EXPORT Lajaunie_Approach : public GRBF_Modelling_Methods {
+namespace Surfe{
+//class SURFE_LIB_EXPORT Lajaunie_Approach : public GRBF_Modelling_Methods {
+class Lajaunie_Approach : public GRBF_Modelling_Methods {
 private:
   int _n_increment_pair;
   bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
@@ -76,5 +77,5 @@ public:
   // Attributes
   Polynomial_Basis *p_basis;
 };
-
+}
 #endif

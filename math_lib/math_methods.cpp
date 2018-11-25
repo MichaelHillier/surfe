@@ -39,7 +39,7 @@
 
 #include <cstdlib>
 #include <math_methods.h>
-
+using namespace Surfe;
 double Math_methods::_find_step(const VectorXd &da, const VectorXd &a) {
   int n = da.rows();
   double max = DBL_MIN;

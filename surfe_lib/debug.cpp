@@ -39,7 +39,11 @@
 
 #include <debug.h>
 
+using namespace Surfe;
+
 void open_console_window() {
+#ifdef _WIN32
+
   // Grab a console to show debug info ...
   AllocConsole();
   freopen("CONOUT$", "w", stdout);
@@ -55,4 +59,5 @@ void open_console_window() {
   coord.Y = 8000;
   SetConsoleScreenBufferSize(hConsole, coord);
   SetConsoleTitle("Generalized Interpolation with Radial Basis Functions");
+#endif
 }

@@ -48,6 +48,7 @@
 #include <iomanip>
 #include <iostream>
 
+using namespace Surfe;
 bool Stratigraphic_Surfaces::_get_increment_pairs() {
   // 1) sequenced contacts
   _n_sequenced_interface_pairs = (int)b_input.interface_test_points->size() - 1;

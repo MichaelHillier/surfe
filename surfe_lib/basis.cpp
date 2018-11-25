@@ -43,7 +43,7 @@
 #include <algorithm>
 
 using namespace std;
-
+using namespace Surfe;
 inline void RBFKernel::radius() {
   // compute euclidean distance
   // compute component differences

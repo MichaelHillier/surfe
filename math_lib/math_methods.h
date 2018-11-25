@@ -52,10 +52,13 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
+namespace Surfe {
 using namespace Eigen;
+using namespace std;
+//some bug with namespaces and preprocessor 
+class Math_methods {
 
-class MATH_LIB_EXPORT Math_methods {
+//class MATH_LIB_EXPORT Math_methods {
 private:
   template <class T>
   static T _find_step_length(const Matrix<T, Dynamic, 1> &a,
@@ -93,7 +96,7 @@ public:
                                const Matrix<T, Dynamic, 1> &b,
                                const Matrix<T, Dynamic, 1> &d,
                                Matrix<T, Dynamic, 1> &fvalues);
-  static bool Math_methods::quadratic_solver_loqo(const MatrixXd &H,
+  static bool quadratic_solver_loqo(const MatrixXd &H,
                                                   const MatrixXd &A,
                                                   const VectorXd &b,
                                                   const VectorXd &r,
@@ -710,5 +713,5 @@ bool Math_methods::sort_vector_w_index(std::vector<T> &arr,
 
   return true;
 }
-
+}
 #endif

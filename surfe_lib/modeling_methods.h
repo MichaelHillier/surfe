@@ -47,12 +47,13 @@
 #include <matrix_solver.h>
 #include <modelling_input.h>
 #include <modelling_parameters.h>
-
+namespace Surfe{
 using namespace std;
 using namespace Eigen;
 
 // Abstract base class
-class SURFE_LIB_EXPORT GRBF_Modelling_Methods {
+//class SURFE_LIB_EXPORT GRBF_Modelling_Methods {
+class GRBF_Modelling_Methods {
 protected:
   // ATTRIBUTES
   model_parameters m_parameters; // QT GUI parameters
@@ -115,5 +116,5 @@ public:
   RBFKernel *rbf_kernel;
   std::string error_msg;
 };
-
+}
 #endif

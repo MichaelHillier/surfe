@@ -43,8 +43,8 @@
 #include <surfe_lib_module.h> // macro for importing / exporting dll
 
 #include <modeling_methods.h>
-
-class SURFE_LIB_EXPORT Vector_Field : public GRBF_Modelling_Methods {
+namespace Surfe {
+class Vector_Field : public GRBF_Modelling_Methods {
 public:
   // Constructor/Destructor
   Vector_Field(const model_parameters &m_p, const Basic_input &basic_i) {
@@ -71,5 +71,5 @@ public:
   bool convert_modified_kernel_to_rbf_kernel() { return true; } // TO IMPLEMENT
   GRBF_Modelling_Methods *clone() { return new Vector_Field(*this); }
 };
-
+}
 #endif
