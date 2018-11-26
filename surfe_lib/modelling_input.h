@@ -267,35 +267,24 @@ private:
     std::vector<double> _get_distinct_inequality_iso_values();
 
 public:
-    Basic_input() {
-        inequality = new std::vector<Inequality>;
-        itrface = new std::vector<Interface>;
-        planar = new std::vector<Planar>;
-        tangent = new std::vector<Tangent>;
-
-        evaluation_pts = new std::vector<Evaluation_Point>;
-
-        interface_iso_values = new std::vector<double>;
-        interface_point_lists = new std::vector<std::vector<Interface> >;
-        interface_test_points = new std::vector<Interface>;
-
-        _avg_nn_dist_ie = -99999.0;   // no data value
-        _avg_nn_dist_itr = -99999.0;  // no data value
-        _avg_nn_dist_p = -99999.0;    // no data value
-        _avg_nn_dist_t = -99999.0;    // no data value
-    }
+    Basic_input();
     ~Basic_input() {
-        //LG commented this out because it was causing corruption on linux
-        //i think because the data objects don't have the appropriate destructors? 
-        //delete inequality;
-        //delete itrface;
-        //delete planar;
-        //delete tangent;
-        //delete evaluation_pts;
-        //delete interface_iso_values;
-        //delete interface_point_lists;
-        //delete interface_test_points;
+        // LG commented this out because it was causing corruption on linux
+        // i think because the data objects don't have the appropriate
+        // destructors?
+        // delete inequality;
+        // delete itrface;
+        // delete planar;
+        // delete tangent;
+        // delete evaluation_pts;
+        // delete interface_iso_values;
+        // delete interface_point_lists;
+        // delete interface_test_points;
     }
+    void add_interface_data(std::vector<double> x, std::vector<double> y,
+                            std::vector<double> z, std::vector<double> v);
+    void add_evaluation_points(std::vector<double> x, std::vector<double> y,
+                            std::vector<double> z);
     // input data
     std::vector<Inequality> *inequality;
     std::vector<Interface> *itrface;

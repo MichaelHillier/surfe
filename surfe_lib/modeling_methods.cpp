@@ -241,6 +241,7 @@ bool GRBF_Modelling_Methods::run_algorithm() {
   cout << "done!" << endl;
   cout << " Solve mathematical problem...";
   if (!setup_system_solver()) {
+      cout<<"failed"<<endl;
     error_msg.append(" Error solving mathematical equations.");
     return false;
   }

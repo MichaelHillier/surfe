@@ -2,6 +2,7 @@
 #include <modelling_input.h>
 #include <continuous_property.h>
 #include <modeling_methods.h>
+#include <modelling_methods_builder.h>
 #include <vector>
 using namespace Surfe;
 
@@ -31,7 +32,9 @@ int main(int argc, char* argv[]) {
     input.itrface = &interfaces;
     input.evaluation_pts = &eval;
     model_parameters parameters = model_parameters();
-    Continuous_Property* metho = new Continuous_Property(parameters, input);
+    GRBF_Builder* builder = new GRBF_Builder();
+    GRBF_Modelling_Methods* metho = builder->get_method(parameters, input);
+    //Continuous_Property* metho = new Continuous_Property(parameters, input);
     metho->run_algorithm();
     std::cout << "Finished" << std::endl;
     delete metho;

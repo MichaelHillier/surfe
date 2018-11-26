@@ -1,9 +1,11 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>  //auto conversion b/w stl and python types
+#include <pybind11/iostream.h>  //auto conversion b/w stl and python types
 
 #include <continuous_property.h>
 #include <modeling_methods.h>
 #include <modelling_input.h>
+#include <modelling_methods_builder.h>
 #include <Eigen/LU>
 
 // ----------------
@@ -58,19 +60,27 @@ PYBIND11_MODULE(surfe, m) {
         .def_readwrite("evaluation_pts", &Basic_input::evaluation_pts)
         .def_readwrite("inequality", &Basic_input::inequality)
         .def_readwrite("planar", &Basic_input::planar)
-        .def_readwrite("tangent", &Basic_input::tangent);
+        .def_readwrite("tangent", &Basic_input::tangent)
+        .def("add_interface_data",&Basic_input::add_interface_data)
+        .def("add_evaluation_points",&Basic_input::add_evaluation_points);
     // we only need to bind the base class because you can choose the
     // interpolation
     // method using the model parameters
     py::class_<Continuous_Property>(m, "Continuous_Property")
         .def(py::init<const model_parameters&, const Basic_input &>())
         .def("run_algorithm", &Continuous_Property::run_algorithm);
+
+
     py::class_<GRBF_Modelling_Methods>(m, "GRBF")
-        .def("get_method", &GRBF_Modelling_Methods::get_method)
         .def("run_greedy_algorithm",
              &GRBF_Modelling_Methods::run_greedy_algorithm)
-        .def("run_algorithm", &GRBF_Modelling_Methods::run_algorithm);
+        .def("run_algorithm", &GRBF_Modelling_Methods::run_algorithm,py::call_guard<py::scoped_ostream_redirect,
+                     py::scoped_estream_redirect>());
+        
 
+    py::class_<GRBF_Builder>(m,"GRBF_Builder")
+    .def(py::init<>())
+    .def("get_method",&GRBF_Builder::get_method);
     py::class_<model_parameters>(m, "model_parameters")
         .def(py::init<>())
         .def_readwrite("model_type", &model_parameters::model_type)
