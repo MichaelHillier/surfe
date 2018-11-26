@@ -38,7 +38,6 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef MATH_LIB_EXPORT_H
 #define MATH_LIB_EXPORT_H
-namespace Surfe{
 #ifdef _WIN32
 #ifdef MATH_LIB_STATIC_DEFINE
 #define MATH_LIB_EXPORT
@@ -73,5 +72,4 @@ namespace Surfe{
 #define MATH_LIB_EXPORT
 #endif
 #endif
-}
 #endif

@@ -194,7 +194,7 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant() {
       for (int j = 0; j < N; j++) {
         eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
         // eval_vector_interpolant_at_point(b_input.evaluation_pts->at(j));
-        if (j % vv == 0) {
+        if (vv>0 && j % vv == 0) {
 #pragma omp atomic
           add++;
           int step = factor * add;

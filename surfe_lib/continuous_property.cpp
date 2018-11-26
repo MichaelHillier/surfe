@@ -141,7 +141,9 @@ Continuous_Property::Continuous_Property(const model_parameters &m_p,
 
   _iteration = 0;
 }
-
+Continuous_Property::~Continuous_Property(){
+    std::cout<<"dest"<<std::endl;
+    }
 Polynomial_Basis *
 Continuous_Property::create_polynomial_basis(const int &poly_order) {
   if (poly_order == 0)
@@ -185,13 +187,15 @@ bool Continuous_Property::get_method_parameters() {
 }
 
 bool Continuous_Property::setup_system_solver() {
-
   int n = b_parameters.n_equality + b_parameters.n_poly_terms;
-
+  if (n < 2){
+      //just avoid eigen errors
+      return false;
+      }
   VectorXd equality_values(n);
   get_equality_values(equality_values);
-
   MatrixXd interpolation_matrix(n, n);
+
   if (!get_interpolation_matrix(interpolation_matrix))
     return false;
 
@@ -200,7 +204,6 @@ bool Continuous_Property::setup_system_solver() {
   if (!llu->solve())
     return false;
   solver = llu;
-
   return true;
 }
 
@@ -357,6 +360,7 @@ void Continuous_Property::eval_scalar_interpolant_at_point(Point &p) {
     kernel_j->set_points(p, b_input.itrface->at(k));
     elemsum_2 += solver->weights[k] * kernel_j->basis_pt_pt();
   }
+
   for (int k = 0; k < n_p; k++) {
     kernel_j->set_points(p, b_input.planar->at(k));
     elemsum_3 += solver->weights[n_i + 3 * k] * kernel_j->basis_pt_planar_x();
@@ -365,11 +369,13 @@ void Continuous_Property::eval_scalar_interpolant_at_point(Point &p) {
     elemsum_3 +=
         solver->weights[n_i + 3 * k + 2] * kernel_j->basis_pt_planar_z();
   }
+
   for (int k = 0; k < n_t; k++) {
     kernel_j->set_points(p, b_input.tangent->at(k));
     elemsum_4 +=
         solver->weights[n_i + 3 * n_p + k] * kernel_j->basis_pt_tangent();
   }
+
   if (b_parameters.poly_term) {
     Polynomial_Basis *p_basis_j = p_basis->clone();
     p_basis_j->set_point(p);

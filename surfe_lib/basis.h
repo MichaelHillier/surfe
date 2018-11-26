@@ -104,7 +104,7 @@ protected:
 public:
   RBFKernel() : _radius(0), _x_delta(0), _y_delta(0), _z_delta(0), _c_delta(0) {
     for (int j = 0; j < 3; j++)
-      _Global_Plunge[j] = NULL;
+      _Global_Plunge[j] = 0;
     _Transform.setZero();
   }
   virtual ~RBFKernel() {}

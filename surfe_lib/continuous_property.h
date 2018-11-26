@@ -53,7 +53,7 @@ private:
 public:
   // Constructor/Destructor
   Continuous_Property(const model_parameters &m_p, const Basic_input &basic_i);
-  Continuous_Property(){};
+  ~Continuous_Property();
   // Methods
   Polynomial_Basis *create_polynomial_basis(const int &poly_order);
   bool get_interpolation_matrix(MatrixXd &interpolation_matrix);
