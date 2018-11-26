@@ -53,7 +53,40 @@ PYBIND11_MODULE(surfe, m) {
         .def("setResidual", &Inequality::setResidual);
     py::class_<Evaluation_Point, Point>(m, "Evaluation_Point")
         .def(py::init<const double&, const double&, const double&>());
-    //.def("scalar_field",&Evaluation_Point::scalar_field);
+    
+    py::class_<Planar,Point>(m,"Planar")
+    .def(py::init<const double,const double,const double,const double,const double,const double>())
+    //.def("getDipVector",&Planar::getDipVector)
+    //.def("getStrikeVector",&Planar::getStrikeVector)
+    .def("dip",&Planar::dip)
+    .def("strike",&Planar::strike)
+    .def("polarity",&Planar::polarity)
+    .def("nx",&Planar::nx)
+    .def("ny",&Planar::ny)
+    .def("nz",&Planar::nz)
+    .def("nx_lower_bound",&Planar::nx_lower_bound)
+    .def("nx_upper_bound",&Planar::nx_upper_bound)
+    .def("ny_lower_bound",&Planar::ny_lower_bound)
+    .def("ny_upper_bound",&Planar::ny_upper_bound)
+    .def("nz_lower_bound",&Planar::nz_lower_bound)
+    .def("nz_upper_bound",&Planar::nz_upper_bound)
+    .def("setNormalBounds",&Planar::setNormalBounds)
+    .def("residual",&Planar::residual)
+    .def("setResidual",&Planar::setResidual)
+    .def("setNormal",&Planar::setNormal);
+py::class_<Tangent,Point>(m,"Tangent")
+    .def(py::init<const double,const double,const double,const double,const double,const double>())
+    .def("tx",&Tangent::tx)
+    .def("ty",&Tangent::ty)
+    .def("tz",&Tangent::tz)
+    .def("residual",&Tangent::residual)
+    .def("angle_lower_bound",&Tangent::angle_lower_bound)
+    .def("angle_upper_bound",&Tangent::angle_upper_bound)
+    .def("inner_product_constraint",&Tangent::inner_product_constraint)
+    .def("setResidual",&Tangent::setResidual)
+    .def("setAngleBounds",&Tangent::setAngleBounds)
+    .def("setInnerProductConstraint",&Tangent::setInnerProductConstraint);
+    
     py::class_<Basic_input>(m, "Basic_input")
         .def(py::init<>())
         .def_readwrite("interfaces", &Basic_input::itrface)
