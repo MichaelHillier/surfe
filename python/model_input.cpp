@@ -100,7 +100,9 @@ PYBIND11_MODULE(surfe, m) {
         .def_readwrite("planar", &Basic_input::planar)
         .def_readwrite("tangent", &Basic_input::tangent)
         .def("add_interface_data", &Basic_input::add_interface_data)
-        .def("add_evaluation_points", &Basic_input::add_evaluation_points);
+        .def("add_evaluation_points", &Basic_input::add_evaluation_points)
+        .def("add_tangent_data", &Basic_input::add_tangent_data)
+        .def("add_planar_data", &Basic_input::add_planar_data);
     // we only need to bind the base class because you can choose the
     // interpolation
     // method using the model parameters
