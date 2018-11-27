@@ -284,7 +284,15 @@ public:
     void add_interface_data(std::vector<double> x, std::vector<double> y,
                             std::vector<double> z, std::vector<double> v);
     void add_evaluation_points(std::vector<double> x, std::vector<double> y,
-                            std::vector<double> z);
+                               std::vector<double> z);
+    void add_tangent_data(std::vector<double> x,
+                                     std::vector<double> y,
+                                     std::vector<double> z,
+                                     std::vector<std::vector<double>> t);
+    void add_planar_data(std::vector<double> x,
+                                     std::vector<double> y,
+                                     std::vector<double> z,
+                                     std::vector<std::vector<double>> n);
     // input data
     std::vector<Inequality> *inequality;
     std::vector<Interface> *itrface;
@@ -316,23 +324,31 @@ public:
     double compute_planar_avg_nn_distance();
     double compute_tangent_avg_nn_distance();
     void compute_avg_nn_distances();
-    inline double GetInequalityAvgNNDist() const; 
-    inline double GetInterfaceAvgNNDist() const; 
-    inline double GetPlanarAvgNNDist() const; 
-    inline double GetTangentAvgNNDist() const; 
-    inline void SetInequalityAvgNNDist(const double &dist); 
-    inline void SetInterfaceAvgNNDist(const double &dist); 
-    inline void SetPlanarAvgNNDist(const double &dist); 
-    inline void SetTangentAvgNNDist(const double &dist); 
+    inline double GetInequalityAvgNNDist() const;
+    inline double GetInterfaceAvgNNDist() const;
+    inline double GetPlanarAvgNNDist() const;
+    inline double GetTangentAvgNNDist() const;
+    inline void SetInequalityAvgNNDist(const double &dist);
+    inline void SetInterfaceAvgNNDist(const double &dist);
+    inline void SetPlanarAvgNNDist(const double &dist);
+    inline void SetTangentAvgNNDist(const double &dist);
 };
-     double Basic_input::GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
-     double Basic_input::GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }
-     double Basic_input::GetPlanarAvgNNDist() const { return _avg_nn_dist_p; }
-     double Basic_input::GetTangentAvgNNDist() const { return _avg_nn_dist_t; }
-     void Basic_input::SetInequalityAvgNNDist(const double &dist) { _avg_nn_dist_ie = dist; }
-     void Basic_input::SetInterfaceAvgNNDist(const double &dist){ _avg_nn_dist_itr = dist; }
-     void Basic_input::SetPlanarAvgNNDist(const double &dist) { _avg_nn_dist_p = dist; }
-     void Basic_input::SetTangentAvgNNDist(const double &dist) { _avg_nn_dist_t = dist; }
+double Basic_input::GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
+double Basic_input::GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }
+double Basic_input::GetPlanarAvgNNDist() const { return _avg_nn_dist_p; }
+double Basic_input::GetTangentAvgNNDist() const { return _avg_nn_dist_t; }
+void Basic_input::SetInequalityAvgNNDist(const double &dist) {
+    _avg_nn_dist_ie = dist;
+}
+void Basic_input::SetInterfaceAvgNNDist(const double &dist) {
+    _avg_nn_dist_itr = dist;
+}
+void Basic_input::SetPlanarAvgNNDist(const double &dist) {
+    _avg_nn_dist_p = dist;
+}
+void Basic_input::SetTangentAvgNNDist(const double &dist) {
+    _avg_nn_dist_t = dist;
+}
 
 double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector<Point> &pts);
