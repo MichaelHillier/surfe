@@ -285,14 +285,12 @@ public:
                             std::vector<double> z, std::vector<double> v);
     void add_evaluation_points(std::vector<double> x, std::vector<double> y,
                                std::vector<double> z);
-    void add_tangent_data(std::vector<double> x,
-                                     std::vector<double> y,
-                                     std::vector<double> z,
-                                     std::vector<std::vector<double>> t);
-    void add_planar_data(std::vector<double> x,
-                                     std::vector<double> y,
-                                     std::vector<double> z,
-                                     std::vector<std::vector<double>> n);
+    void add_tangent_data(std::vector<double> x, std::vector<double> y,
+                          std::vector<double> z,
+                          std::vector<std::vector<double> > t);
+    void add_planar_data(std::vector<double> x, std::vector<double> y,
+                         std::vector<double> z,
+                         std::vector<std::vector<double> > n);
     // input data
     std::vector<Inequality> *inequality;
     std::vector<Interface> *itrface;

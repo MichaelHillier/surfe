@@ -62,8 +62,8 @@
 #ifndef SURFE_LIB_DEPRECATED
 #define SURFE_LIB_DEPRECATED __declspec(deprecated)
 #define SURFE_LIB_DEPRECATED_EXPORT SURFE_LIB_EXPORT __declspec(deprecated)
-#define SURFE_LIB_DEPRECATED_NO_EXPORT                                         \
-  SURFE_LIB_NO_EXPORT __declspec(deprecated)
+#define SURFE_LIB_DEPRECATED_NO_EXPORT \
+    SURFE_LIB_NO_EXPORT __declspec(deprecated)
 #endif
 
 #define DEFINE_NO_DEPRECATED 0

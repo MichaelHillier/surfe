@@ -80,43 +80,39 @@ void Basic_input::add_interface_data(std::vector<double> x,
     }
 }
 void Basic_input::add_evaluation_points(std::vector<double> x,
-                                     std::vector<double> y,
-                                     std::vector<double> z
-                                    ) {
+                                        std::vector<double> y,
+                                        std::vector<double> z) {
     // check all input has the same shape
-    if (x.size() != y.size() || z.size() != x.size() ) {
+    if (x.size() != y.size() || z.size() != x.size()) {
         return;
     }
     for (int i = 0; i < (int)x.size(); i++) {
         evaluation_pts->push_back(Evaluation_Point(x[i], y[i], z[i]));
     }
 }
-void Basic_input::add_planar_data(std::vector<double> x,
-                                     std::vector<double> y,
-                                     std::vector<double> z,
-                                     std::vector<std::vector<double>> n) {
+void Basic_input::add_planar_data(std::vector<double> x, std::vector<double> y,
+                                  std::vector<double> z,
+                                  std::vector<std::vector<double> > n) {
     // check all input has the same shape
-    if (x.size() != y.size() || z.size() != x.size() || x.size() != n.size() ) {
+    if (x.size() != y.size() || z.size() != x.size() || x.size() != n.size()) {
         return;
     }
     for (int i = 0; i < (int)x.size(); i++) {
-        planar->push_back(Planar(x[i], y[i], z[i],n[i][0],n[i][1],n[i][2]));
+        planar->push_back(Planar(x[i], y[i], z[i], n[i][0], n[i][1], n[i][2]));
     }
-
-    }
-void Basic_input::add_tangent_data(std::vector<double> x,
-                                     std::vector<double> y,
-                                     std::vector<double> z,
-                                     std::vector<std::vector<double>> t) {
+}
+void Basic_input::add_tangent_data(std::vector<double> x, std::vector<double> y,
+                                   std::vector<double> z,
+                                   std::vector<std::vector<double> > t) {
     // check all input has the same shape
-    if (x.size() != y.size() || z.size() != x.size() || x.size() != t.size() ) {
+    if (x.size() != y.size() || z.size() != x.size() || x.size() != t.size()) {
         return;
     }
     for (int i = 0; i < (int)x.size(); i++) {
-        tangent->push_back(Tangent(x[i], y[i], z[i],t[i][0],t[i][1],t[i][2]));
+        tangent->push_back(
+            Tangent(x[i], y[i], z[i], t[i][0], t[i][1], t[i][2]));
     }
-
-    }    
+}
 bool Basic_input::get_interface_data() {
     if ((int)itrface->size() < 2) return false;
 
@@ -977,7 +973,8 @@ std::vector<int> Surfe::Get_Interface_STL_Vector_Indices_With_Large_Residuals(
             // 				// has been called already
             // 				double variability =
             // abs(itrface->at(index).scalar_field() -
-            // itrface->at(nn_index).scalar_field() ); 				if (
+            // itrface->at(nn_index).scalar_field() ); 				if
+            // (
             // variability
             // >
             // itrface_uncertainty )

@@ -1784,7 +1784,7 @@ double AR::dzz() {
 }
 
 bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(
-    const std::vector<std::vector<Interface>> &interface_point_lists) {
+    const std::vector<std::vector<Interface> > &interface_point_lists) {
   // NOTE : Currently only supporting 1st order polynomials ( have p(x) = A*x +
   // B*y + C*z + D ) Tried implementing 2nd order however it is not practical
   // e.g. finding the algrebraic solution in mathematical (via Thomas algo)

@@ -66,7 +66,7 @@ private:
                              const Matrix<T, Dynamic, 1> &b,
                              const Matrix<T, Dynamic, 1> &db);
   template <class T>
-  static void _rot(std::vector<std::vector<T>> &a, const T &s, const T &tau,
+  static void _rot(std::vector<std::vector<T> > &a, const T &s, const T &tau,
                    const int &i, const int &j, const int &k, const int &l);
   static double _get_double(const double &d) { return d; }
   static double _get_double(const mpf_class &d) { return d.get_d(); }
