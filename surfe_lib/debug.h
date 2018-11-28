@@ -43,8 +43,11 @@
 #include <gmpxx.h>
 #include <modeling_methods.h>
 #include <modelling_input.h>
-
-//#include <Windows.h>
+#include <typeinfo>
+// if on windows
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 #include <fstream>
 #include <iostream>
 #include <sstream>
