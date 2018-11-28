@@ -7,7 +7,7 @@ addons:
       - cmake-data
       - cmake
 script:
-  - sudo apt-get install libeigen3-dev python3.6
+  - sudo apt-get install libeigen3-dev python3.6-dev
   - git submodule update --init --recursive
   - mkdir build
   - cd build
