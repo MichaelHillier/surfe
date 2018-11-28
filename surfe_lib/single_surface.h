@@ -44,7 +44,7 @@
 
 #include <modeling_methods.h>
 namespace Surfe {
-class Single_Surface : public GRBF_Modelling_Methods {
+class SURFE_LIB_EXPORT Single_Surface : public GRBF_Modelling_Methods {
 private:
   bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
   bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(

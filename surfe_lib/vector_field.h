@@ -44,7 +44,7 @@
 
 #include <modeling_methods.h>
 namespace Surfe {
-class Vector_Field : public GRBF_Modelling_Methods {
+class SURFE_LIB_EXPORT Vector_Field : public GRBF_Modelling_Methods {
 public:
   // Constructor/Destructor
   Vector_Field(const model_parameters &m_p, const Basic_input &basic_i) {

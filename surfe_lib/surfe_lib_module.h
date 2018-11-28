@@ -39,7 +39,7 @@
 
 #ifndef SURFE_LIB_EXPORT_H
 #define SURFE_LIB_EXPORT_H
-
+#ifdef _WIN32
 #ifdef SURFE_LIB_STATIC_DEFINE
 #define SURFE_LIB_EXPORT
 #define SURFE_LIB_NO_EXPORT
@@ -69,6 +69,10 @@
 #define DEFINE_NO_DEPRECATED 0
 #if DEFINE_NO_DEPRECATED
 #define SURFE_LIB_NO_DEPRECATED
+#endif
+#endif
+#ifndef _WIN32
+#define SURFE_LIB_EXPORT
 #endif
 
 #endif

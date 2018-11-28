@@ -47,7 +47,7 @@
 #define R2D                                                                    \
   57.295779513082320876798154814105 // radians to degrees conversion factor
 namespace Surfe{
-struct Parameter_Types {
+struct SURFE_LIB_EXPORT Parameter_Types {
   enum DWRT { PT1, PT2 };
   enum SecondDerivatives {
     DXDX,
@@ -73,7 +73,7 @@ struct Parameter_Types {
   enum AXIS { Xaxis, Yaxis, Zaxis };
 };
 
-struct model_parameters {
+struct SURFE_LIB_EXPORT model_parameters {
   ////////////////////////////////
   //        UI parameters       //
   ////////////////////////////////
@@ -110,7 +110,7 @@ struct model_parameters {
         angular_uncertainty(0) {}
 };
 
-struct basic_parameters {
+struct SURFE_LIB_EXPORT basic_parameters {
   // number of constraints, for each basic constraint type
   unsigned int n_interface;
   unsigned int n_planar;

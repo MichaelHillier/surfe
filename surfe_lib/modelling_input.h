@@ -46,7 +46,7 @@
 #include <vector>
 namespace Surfe {
 using namespace std;
-class Point {
+class SURFE_LIB_EXPORT Point {
 private:
     double _x;
     double _y;
@@ -91,14 +91,14 @@ public:
     double nz_interp() const { return _field_normal[2]; }
 };
 
-class Evaluation_Point : public Point {
+class SURFE_LIB_EXPORT Evaluation_Point : public Point {
 public:
     Evaluation_Point(const double &x_coord, const double &y_coord,
                      const double &z_coord, const double &c_coord = 0)
         : Point(x_coord, y_coord, z_coord, c_coord) {}
 };
 
-class Interface : public Point {
+class SURFE_LIB_EXPORT Interface : public Point {
 private:
     double _level;
     double _residual;
@@ -125,7 +125,7 @@ public:
     }
 };
 
-class Inequality : public Point {
+class SURFE_LIB_EXPORT Inequality : public Point {
 private:
     double _inequality_level;
     bool _residual;
@@ -142,7 +142,7 @@ public:
     void setResidual(const bool &res) { _residual = res; }
 };
 
-class Planar : public Point {
+class SURFE_LIB_EXPORT Planar : public Point {
 private:
     double _dip;
     double _strike;
@@ -201,7 +201,7 @@ public:
     }
 };
 
-class Tangent : public Point {
+class SURFE_LIB_EXPORT Tangent : public Point {
 private:
     double _tangent[3];
     double _residual;
@@ -249,7 +249,7 @@ public:
     }
 };
 
-class Basic_input {
+class SURFE_LIB_EXPORT Basic_input {
 private:
     // Attributes
     double _avg_nn_dist_ie;

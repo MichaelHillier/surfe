@@ -68,8 +68,8 @@
 #if DEFINE_NO_DEPRECATED
 #define MATH_LIB_NO_DEPRECATED
 #endif
+#endif
 #ifndef _WIN32
 #define MATH_LIB_EXPORT
-#endif
 #endif
 #endif

@@ -49,7 +49,7 @@ namespace Surfe {
 
 using namespace Eigen;
 
-class Kernel {
+class SURFE_LIB_EXPORT Kernel {
 protected:
   Point *_p1;
   Point *_p2;

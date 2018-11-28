@@ -56,9 +56,9 @@ namespace Surfe {
 using namespace Eigen;
 using namespace std;
 //some bug with namespaces and preprocessor 
-class Math_methods {
+//class Math_methods {
 
-//class MATH_LIB_EXPORT Math_methods {
+class MATH_LIB_EXPORT Math_methods {
 private:
   template <class T>
   static T _find_step_length(const Matrix<T, Dynamic, 1> &a,
