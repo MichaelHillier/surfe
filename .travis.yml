@@ -7,8 +7,8 @@ addons:
       - cmake-data
       - cmake
 script:
-  -git submodule update --init --recursive
-  -mkdir build
-  -cd build
-  -cmake ..
-  -make
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
