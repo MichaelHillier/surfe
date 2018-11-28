@@ -1,7 +1,0 @@
-organization=lachlangrose-github
-projectKey=surfe
-serverUrl=https://sonarcloud.io
-serverVersion=7.5.0.19640
-dashboardUrl=https://sonarcloud.io/dashboard?id=surfe
-ceTaskId=AWdYMGAlkEzkvLMFXhf2
-ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AWdYMGAlkEzkvLMFXhf2
