@@ -1,3 +1,5 @@
 _build
 _buildv12
 *.orig
+.scannerwork/*
+bw-output/*
