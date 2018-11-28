@@ -1,0 +1,68 @@
+Wed Nov 28 13:31:08 2018: build-wrapper, version 5.1 (linux-x86)
+Wed Nov 28 13:31:08 2018: System name: Linux Nodename: MU00059856 Release: 4.13.0-46-generic Version: #51-Ubuntu SMP Tue Jun 12 12:36:29 UTC 2018 Machine: x86_64
+Wed Nov 28 13:31:08 2018: socket path: /tmp/build-wrapper-socket.aOHsy9
+Wed Nov 28 13:31:08 2018: dynamic library found: /home/lgrose/bin/build-wrapper-linux-x86/libinterceptor-i686.so
+Wed Nov 28 13:31:08 2018: dynamic library found: /home/lgrose/bin/build-wrapper-linux-x86/libinterceptor-x86_64.so
+Wed Nov 28 13:31:08 2018: command executed as: <build-wrapper-linux-x86-64>
+Wed Nov 28 13:31:08 2018: command line received: <make clean all>
+Wed Nov 28 13:31:08 2018: env 0: <LD_LIBRARY_PATH=/usr/local/cuda-9.2/lib64::/home/lgrose/VisualSFM/bin>
+Wed Nov 28 13:31:08 2018: env 1: <GOCADLMD_LICENSE_FILE=/home/lgrose/.gocad/gocadlmd.lic>
+Wed Nov 28 13:31:08 2018: env 2: <LESSCLOSE=/usr/bin/lesspipe %s %s>
+Wed Nov 28 13:31:08 2018: env 3: <XDG_MENU_PREFIX=gnome->
+Wed Nov 28 13:31:08 2018: env 4: <LANG=en_AU.UTF-8>
+Wed Nov 28 13:31:08 2018: env 5: <DISPLAY=:0>
+Wed Nov 28 13:31:08 2018: env 6: <GNOME_SHELL_SESSION_MODE=ubuntu>
+Wed Nov 28 13:31:08 2018: env 7: <NODE_PATH=/usr/lib/nodejs:/usr/lib/node_modules:/usr/share/javascript>
+Wed Nov 28 13:31:08 2018: env 8: <GTK2_MODULES=overlay-scrollbar>
+Wed Nov 28 13:31:08 2018: env 9: <COLORTERM=truecolor>
+Wed Nov 28 13:31:08 2018: env 10: <DESKTOP_AUTOSTART_ID=103c8e26235afad5dc154335413146641700000024300008>
+Wed Nov 28 13:31:08 2018: env 11: <USERNAME=lgrose>
+Wed Nov 28 13:31:08 2018: env 12: <JAVA_HOME=/usr/local/java/jre1.8.0_73>
+Wed Nov 28 13:31:08 2018: env 13: <J2SDKDIR=/usr/lib/jvm/java-9-oracle>
+Wed Nov 28 13:31:08 2018: env 14: <XDG_VTNR=2>
+Wed Nov 28 13:31:08 2018: env 15: <SSH_AUTH_SOCK=/run/user/1001/keyring/ssh>
+Wed Nov 28 13:31:08 2018: env 16: <MANDATORY_PATH=/usr/share/gconf/ubuntu-xorg.mandatory.path>
+Wed Nov 28 13:31:08 2018: env 17: <XDG_SESSION_ID=2>
+Wed Nov 28 13:31:08 2018: env 18: <DERBY_HOME=/usr/lib/jvm/java-9-oracle/db>
+Wed Nov 28 13:31:08 2018: env 19: <USER=lgrose>
+Wed Nov 28 13:31:08 2018: env 20: <GOCAD_LICENSE=dsl>
+Wed Nov 28 13:31:08 2018: env 21: <DESKTOP_SESSION=ubuntu-xorg>
+Wed Nov 28 13:31:08 2018: env 22: <DEFAULTS_PATH=/usr/share/gconf/ubuntu-xorg.default.path>
+Wed Nov 28 13:31:08 2018: env 23: <QT_QPA_PLATFORMTHEME=appmenu-qt5>
+Wed Nov 28 13:31:08 2018: env 24: <PWD=/home/lgrose/dev/cpp/surfe>
+Wed Nov 28 13:31:08 2018: env 25: <HOME=/home/lgrose>
+Wed Nov 28 13:31:08 2018: env 26: <JOURNAL_STREAM=9:35391>
+Wed Nov 28 13:31:08 2018: env 27: <J2REDIR=/usr/lib/jvm/java-9-oracle>
+Wed Nov 28 13:31:08 2018: env 28: <SSH_AGENT_PID=2771>
+Wed Nov 28 13:31:08 2018: env 29: <QT_ACCESSIBILITY=1>
+Wed Nov 28 13:31:08 2018: env 30: <XDG_SESSION_TYPE=x11>
+Wed Nov 28 13:31:08 2018: env 31: <MATHEMATICA_HOME=/usr/local/Wolfram/Mathematica/11.0>
+Wed Nov 28 13:31:08 2018: env 32: <XDG_DATA_DIRS=/usr/share/ubuntu-xorg:/usr/share/ubuntu-xorg:/usr/local/share/:/usr/share/>
+Wed Nov 28 13:31:08 2018: env 33: <XDG_SESSION_DESKTOP=ubuntu-xorg>
+Wed Nov 28 13:31:08 2018: env 34: <GTK_MODULES=gail:atk-bridge>
+Wed Nov 28 13:31:08 2018: env 35: <WINDOWPATH=2>
+Wed Nov 28 13:31:08 2018: env 36: <TERM=xterm-256color>
+Wed Nov 28 13:31:08 2018: env 37: <SHELL=/bin/bash>
+Wed Nov 28 13:31:08 2018: env 38: <VTE_VERSION=4804>
+Wed Nov 28 13:31:08 2018: env 39: <XDG_CURRENT_DESKTOP=ubuntu:GNOME>
+Wed Nov 28 13:31:08 2018: env 40: <XDG_SEAT=seat0>
+Wed Nov 28 13:31:08 2018: env 41: <SHLVL=1>
+Wed Nov 28 13:31:08 2018: env 42: <LANGUAGE=en_AU:en>
+Wed Nov 28 13:31:08 2018: env 43: <WINDOWID=71310073>
+Wed Nov 28 13:31:08 2018: env 44: <GDMSESSION=ubuntu-xorg>
+Wed Nov 28 13:31:08 2018: env 45: <GNOME_DESKTOP_SESSION_ID=this-is-deprecated>
+Wed Nov 28 13:31:08 2018: env 46: <LOGNAME=lgrose>
+Wed Nov 28 13:31:08 2018: env 47: <DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus>
+Wed Nov 28 13:31:08 2018: env 48: <XDG_RUNTIME_DIR=/run/user/1001>
+Wed Nov 28 13:31:08 2018: env 49: <XAUTHORITY=/run/user/1001/gdm/Xauthority>
+Wed Nov 28 13:31:08 2018: env 50: <XDG_CONFIG_DIRS=/etc/xdg/xdg-ubuntu-xorg:/etc/xdg/xdg-ubuntu-xorg:/etc/xdg>
+Wed Nov 28 13:31:08 2018: env 51: <PATH=/usr/local/cuda-9.2/bin:/home/lgrose/bin:/usr/local/cuda-9.2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/jvm/java-9-oracle/bin:/usr/lib/jvm/java-9-oracle/db/bin:/home/lgrose/bin:/usr/local/java/jre1.8.0_73/bin:/home/lgrose/VisualSFM/bin/home/lgrose/bin/home/lgrose/script:/home/lgrose/TextureMesh/bin/Debug:/home/lgrose/git/pynoddy/noddy:/home/lgrose/git/pdfannots:/home/lgrose/local/texlive/2018/bin/x86_64-linux:/home/lgrose/bin/build-wrapper-linux-x86:/home/lgrose/bin/sonar-scanner-3.2.0.1227-linux>
+Wed Nov 28 13:31:08 2018: env 52: <SESSION_MANAGER=local/MU00059856:@/tmp/.ICE-unix/2430,unix/MU00059856:/tmp/.ICE-unix/2430>
+Wed Nov 28 13:31:08 2018: env 53: <GCC_COLORS=error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01>
+Wed Nov 28 13:31:08 2018: env 54: <LESSOPEN=| /usr/bin/lesspipe %s>
+Wed Nov 28 13:31:08 2018: env 55: <OLDPWD=/home/lgrose>
+Wed Nov 28 13:31:08 2018: env 56: <_=/home/lgrose/bin/build-wrapper-linux-x86/build-wrapper-linux-x86-64>
+Wed Nov 28 13:31:08 2018: executing: <make clean all>
+Wed Nov 28 13:31:08 2018: initializing json file
+Wed Nov 28 13:31:08 2018: finalizing json file
+Wed Nov 28 13:31:08 2018: returned with code: 2
