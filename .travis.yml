@@ -6,3 +6,8 @@ addons:
     packages:
       - cmake-data
       - cmake
+script:
+  -mkdir build
+  -cd build
+  -cmake ..
+  -make
