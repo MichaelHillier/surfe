@@ -41,7 +41,7 @@
 #include <math_methods.h>
 #include <modeling_methods.h>
 #include <modelling_input.h>
-#include <modelling_parameters.h>
+//#include <modelling_parameters.h>
 
 #include <algorithm>
 #include <functional>
@@ -973,7 +973,7 @@ std::vector<int> Surfe::Get_Interface_STL_Vector_Indices_With_Large_Residuals(
             // 				// has been called already
             // 				double variability =
             // abs(itrface->at(index).scalar_field() -
-            // itrface->at(nn_index).scalar_field() ); 				if
+            // itrface->at(nn_index).scalar_field() ); if
             // (
             // variability
             // >
