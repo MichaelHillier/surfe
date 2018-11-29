@@ -42,7 +42,7 @@
 #include <modeling_methods.h>
 #include <modelling_input.h>
 //#include <modelling_parameters.h>
-
+#include <export_to_vtk.h>
 #include <algorithm>
 #include <functional>
 
@@ -67,6 +67,34 @@ Basic_input::Basic_input() {
         _avg_nn_dist_t = -99999.0;    // no data value
     }
 }
+void Point::set_vector_field(const double &nx, const double &ny,
+                          const double &nz) {
+        _field_normal[0] = nx;
+        _field_normal[1] = ny;
+        _field_normal[2] = nz;
+                          }
+
+void Basic_input::write_to_vtk(std::string file_name){
+    Surfe::write_to_vtk(*this,file_name);
+    }
+std::vector<double> Basic_input::get_evaluation_values() {
+    std::vector<double> values;
+    for (int i = 0; i< (int)evaluation_pts->size(); i++){
+        values.push_back((*evaluation_pts)[i].scalar_field());
+        }
+        return values;
+    }
+std::vector<std::vector<double> > Basic_input::get_evaluation_vectors() {
+    std::vector<std::vector<double> > values;
+    for (int i = 0; i< (int)evaluation_pts->size(); i++){
+        std::vector<double> normal;
+        normal.push_back((*evaluation_pts)[i].nx_interp());
+        normal.push_back((*evaluation_pts)[i].ny_interp());
+        normal.push_back((*evaluation_pts)[i].nz_interp());
+        values.push_back(normal);
+        }
+        return values;
+    }    
 void Basic_input::add_interface_data(std::vector<double> x,
                                      std::vector<double> y,
                                      std::vector<double> z,

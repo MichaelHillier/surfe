@@ -44,6 +44,7 @@
 #include <surfe_lib_module.h>
 #include <cmath>
 #include <vector>
+#include <string>
 namespace Surfe {
 using namespace std;
 class SURFE_LIB_EXPORT Point {
@@ -81,15 +82,14 @@ public:
     }
     int get_field_list_size() { return (int)_field.size(); }
     void set_vector_field(const double &nx, const double &ny,
-                          const double &nz) {
-        _field_normal[0] = nx;
-        _field_normal[1] = ny;
-        _field_normal[2] = nz;
-    }
-    double nx_interp() const { return _field_normal[0]; }
-    double ny_interp() const { return _field_normal[1]; }
-    double nz_interp() const { return _field_normal[2]; }
+                          const double &nz); 
+    inline double nx_interp() const;
+    inline double ny_interp() const;
+    inline double nz_interp() const;
 };
+    double Point::nx_interp() const { return _field_normal[0]; }
+    double Point::ny_interp() const { return _field_normal[1]; }
+    double Point::nz_interp() const { return _field_normal[2]; }
 
 class SURFE_LIB_EXPORT Evaluation_Point : public Point {
 public:
@@ -330,6 +330,9 @@ public:
     inline void SetInterfaceAvgNNDist(const double &dist);
     inline void SetPlanarAvgNNDist(const double &dist);
     inline void SetTangentAvgNNDist(const double &dist);
+    void write_to_vtk(std::string file_name);
+    std::vector<double> get_evaluation_values(); /// <\brief returns the scalar field value for the evaluation points as a standard vector ordered as the points are stored
+    std::vector<std::vector<double> > get_evaluation_vectors();
 };
 double Basic_input::GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
 double Basic_input::GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }

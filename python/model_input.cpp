@@ -6,6 +6,8 @@
 #include <modeling_methods.h>
 #include <modelling_input.h>
 #include <modelling_methods_builder.h>
+#include <export_to_vtk.h>
+
 #include <Eigen/LU>
 
 // ----------------
@@ -102,7 +104,10 @@ PYBIND11_MODULE(surfe, m) {
         .def("add_interface_data", &Basic_input::add_interface_data)
         .def("add_evaluation_points", &Basic_input::add_evaluation_points)
         .def("add_tangent_data", &Basic_input::add_tangent_data)
-        .def("add_planar_data", &Basic_input::add_planar_data);
+        .def("write_to_vtk",&Basic_input::write_to_vtk)
+        .def("add_planar_data", &Basic_input::add_planar_data)
+        .def("get_evaluation_values",&Basic_input::get_evaluation_values)
+        .def("get_evaluation_vectors",&Basic_input::get_evaluation_vectors);
     // we only need to bind the base class because you can choose the
     // interpolation
     // method using the model parameters
@@ -163,7 +168,8 @@ PYBIND11_MODULE(surfe, m) {
         .value("PT1", Parameter_Types::DWRT::PT1)
         .value("PT2", Parameter_Types::DWRT::PT2)
         .export_values();
-    py::enum_<Parameter_Types::SecondDerivatives>(Parameter_Types, "SecondDerivatives")
+    py::enum_<Parameter_Types::SecondDerivatives>(Parameter_Types,
+                                                  "SecondDerivatives")
         .value("DXDX", Parameter_Types::SecondDerivatives::DXDX)
         .value("DXDY", Parameter_Types::SecondDerivatives::DXDY)
         .value("DXDZ", Parameter_Types::SecondDerivatives::DXDZ)
@@ -174,18 +180,20 @@ PYBIND11_MODULE(surfe, m) {
         .value("DZDY", Parameter_Types::SecondDerivatives::DZDY)
         .value("DZDZ", Parameter_Types::SecondDerivatives::DZDZ)
         .export_values();
-        py::enum_<Parameter_Types::FirstDerivatives>(Parameter_Types, "FirstDerivatives")
+    py::enum_<Parameter_Types::FirstDerivatives>(Parameter_Types,
+                                                 "FirstDerivatives")
         .value("DX", Parameter_Types::FirstDerivatives::DX)
         .value("DY", Parameter_Types::FirstDerivatives::DY)
         .value("DZ", Parameter_Types::FirstDerivatives::DZ)
-        .export_values();    
-        py::enum_<Parameter_Types::RBF>(Parameter_Types, "RBF")
+        .export_values();
+    py::enum_<Parameter_Types::RBF>(Parameter_Types, "RBF")
         .value("Cubic", Parameter_Types::RBF::Cubic)
         .value("Gaussian", Parameter_Types::RBF::Gaussian)
         .value("MQ", Parameter_Types::RBF::MQ)
         .value("IMQ", Parameter_Types::RBF::IMQ)
         .value("TPS", Parameter_Types::RBF::TPS)
         .value("R", Parameter_Types::RBF::R)
-        .export_values();    
-
+        .export_values();
+    m.def("write_to_vtk", &write_to_vtk,py::call_guard<py::scoped_ostream_redirect,
+                            py::scoped_estream_redirect>());  // py::class_
 }
