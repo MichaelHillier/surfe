@@ -107,7 +107,8 @@ PYBIND11_MODULE(surfe, m) {
         .def("write_to_vtk",&Basic_input::write_to_vtk)
         .def("add_planar_data", &Basic_input::add_planar_data)
         .def("get_evaluation_values",&Basic_input::get_evaluation_values)
-        .def("get_evaluation_vectors",&Basic_input::get_evaluation_vectors);
+        .def("get_evaluation_vectors",&Basic_input::get_evaluation_vectors)
+        .def("reset_evaluation_points",&Basic_input::reset_evaluation_points);
     // we only need to bind the base class because you can choose the
     // interpolation
     // method using the model parameters
@@ -120,7 +121,11 @@ PYBIND11_MODULE(surfe, m) {
              &GRBF_Modelling_Methods::run_greedy_algorithm)
         .def("run_algorithm", &GRBF_Modelling_Methods::run_algorithm,
              py::call_guard<py::scoped_ostream_redirect,
-                            py::scoped_estream_redirect>());
+                            py::scoped_estream_redirect>())
+        .def("evaluate_scalar_interpolant",&GRBF_Modelling_Methods::evaluate_scalar_interpolant)
+        .def("evaluate_scalar_interpolant_at_point",&GRBF_Modelling_Methods::eval_scalar_interpolant_at_point)
+        .def("evaluate_vector_interpolant_at_point",&GRBF_Modelling_Methods::eval_vector_interpolant_at_point);
+       
 
     py::class_<GRBF_Builder>(m, "GRBF_Builder").def(py::init<>()).def(
         "get_method", &GRBF_Builder::get_method);

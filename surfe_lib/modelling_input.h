@@ -291,6 +291,7 @@ public:
     void add_planar_data(std::vector<double> x, std::vector<double> y,
                          std::vector<double> z,
                          std::vector<std::vector<double> > n);
+    void reset_evaluation_points();
     // input data
     std::vector<Inequality> *inequality;
     std::vector<Interface> *itrface;

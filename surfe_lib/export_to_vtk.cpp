@@ -101,6 +101,7 @@ void Surfe::write_to_vtk(Basic_input input, std::string filename) {
     fprintf(pFile, "%s\n", "      </Piece>  ");
     fprintf(pFile, "%s\n", "   </UnstructuredGrid>");
     fprintf(pFile, "%s\n", "</VTKFile>");
+    fflush(pFile);
     std::cout<<"Finished"<<std::endl;
 }
 }

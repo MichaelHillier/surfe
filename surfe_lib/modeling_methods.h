@@ -97,6 +97,7 @@ public:
     bool check_interpolant();
     bool evaluate_scalar_interpolant();
     bool evaluate_vector_interpolant();
+    std::vector<double> eval_vector_on_points(std::vector<std::vector<double> > points);
     bool run_algorithm();
     bool run_greedy_algorithm();
     bool get_equality_matrix(const MatrixXd &interpolation_matrix,

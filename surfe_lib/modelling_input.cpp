@@ -118,6 +118,9 @@ void Basic_input::add_evaluation_points(std::vector<double> x,
         evaluation_pts->push_back(Evaluation_Point(x[i], y[i], z[i]));
     }
 }
+void Basic_input::reset_evaluation_points(){
+    evaluation_pts->clear();
+    }
 void Basic_input::add_planar_data(std::vector<double> x, std::vector<double> y,
                                   std::vector<double> z,
                                   std::vector<std::vector<double> > n) {
