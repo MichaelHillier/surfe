@@ -7,7 +7,7 @@
 #include <iostream>
 using namespace Surfe;
 void Surfe::write_to_vtk(Basic_input input, std::string filename) {
-    auto points = *input.evaluation_pts;
+    std::vector<Evaluation_Point > points = *input.evaluation_pts;
     FILE* pFile = fopen(filename.c_str(), "w");
     if (pFile!=NULL){
     fprintf(pFile, "%s", "<VTKFile type=\"UnstructuredGrid\"");

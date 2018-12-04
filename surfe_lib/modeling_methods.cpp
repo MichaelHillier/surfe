@@ -217,44 +217,44 @@ bool GRBF_Modelling_Methods::evaluate_scalar_interpolant() {
     }
     return true;
 }
-std::vector<double> GRBF_Modelling_Methods::eval_vector_on_points(std::vector<std::vector<double> > points ){
-        if (solver == NULL)
-        return false;
-    else {
-        if ((int)solver->weights.size() == 0)
-            return false;
-        else {
-            if (b_parameters.modified_basis) {
-                if (!convert_modified_kernel_to_rbf_kernel()) {
-                    error_msg.append(
-                        " QPP solution conversion to Linear Failure.");
-                    return false;
-                }
-            }
-
-            int N = (int)b_input.evaluation_pts->size();
-            int add = 0;
-            int vv = round((double)N /
-                           72.0);  // 72.0 is the width of the progress bar
-            double factor = (100.0 * (double)vv) / (double)N;
-
-#pragma omp parallel for schedule(dynamic)
-            for (int j = 0; j < N; j++) {
-                eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
-                eval_vector_interpolant_at_point(b_input.evaluation_pts->at(j));
-                if (vv > 0 && j % vv == 0) {
-#pragma omp atomic
-                    add++;
-                    int step = factor * add;
-#pragma omp critical
-                    _Progress(" Computing Scalar field: ", step, 100);
-                }
-            }
-            cout << endl;
-        }
-    }
-
-    }
+//std::vector<double> GRBF_Modelling_Methods::eval_vector_on_points(std::vector<std::vector<double> > points ){
+//        if (solver == NULL)
+//        return false;
+//    else {
+//        if ((int)solver->weights.size() == 0)
+//            return false;
+//        else {
+//            if (b_parameters.modified_basis) {
+//                if (!convert_modified_kernel_to_rbf_kernel()) {
+//                    error_msg.append(
+//                        " QPP solution conversion to Linear Failure.");
+//                    return false;
+//                }
+//            }
+//
+//            int N = (int)b_input.evaluation_pts->size();
+//            int add = 0;
+//            int vv = round((double)N /
+//                           72.0);  // 72.0 is the width of the progress bar
+//            double factor = (100.0 * (double)vv) / (double)N;
+//
+//#pragma omp parallel for schedule(dynamic)
+//            for (int j = 0; j < N; j++) {
+//                eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
+//                eval_vector_interpolant_at_point(b_input.evaluation_pts->at(j));
+//                if (vv > 0 && j % vv == 0) {
+//#pragma omp atomic
+//                    add++;
+//                    int step = factor * add;
+//#pragma omp critical
+//                    _Progress(" Computing Scalar field: ", step, 100);
+//                }
+//            }
+//            cout << endl;
+//        }
+//    }
+//
+//    }
 bool GRBF_Modelling_Methods::run_algorithm() {
     clock_t tstart = clock();
 
