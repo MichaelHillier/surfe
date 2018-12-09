@@ -1,0 +1,11 @@
+platform: x64
+configuration: Debug
+branches:
+  only:
+  - master
+
+build_script:
+ - mkdir build
+ - cd build
+ - cmake .. 
+ - cmake --build . --config Debug 
