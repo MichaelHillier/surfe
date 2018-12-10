@@ -1,5 +1,7 @@
 platform: x64
 configuration: Debug
+GENERATOR: "Visual Studio 12 2013 Win64"
+
 branches:
   only:
   - master
@@ -12,5 +14,5 @@ install:
 build_script:
  - mkdir build
  - cd build
- - cmake -DGMP_INCLUDE_DIR:STRING="gmp_lib" -DGMP_LIBRARY_C:STRING="gmp_lib/Debug/lib/libgmp-3" -DGMP_LIBRARY_CPP:STRING="gmp_lib/Debug/lib/libgmpxx-3" -D EIGEN3_INCLUDE_DIR=C:\projects\eigen-eigen-5a0156e40feb .. 
+ - cmake -G "%GENERATOR%" -DGMP_INCLUDE_DIR:STRING="gmp_lib" -DGMP_LIBRARY_C:STRING="gmp_lib/Debug/lib/libgmp-3" -DGMP_LIBRARY_CPP:STRING="gmp_lib/Debug/lib/libgmpxx-3" -D EIGEN3_INCLUDE_DIR=C:\projects\eigen-eigen-5a0156e40feb .. 
  - cmake --build . --config Debug 
