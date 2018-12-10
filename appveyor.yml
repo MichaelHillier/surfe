@@ -3,7 +3,8 @@ configuration: Debug
 branches:
   only:
   - master
-
+clone_script:
+- cmd: git clone -q --recursive --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
 install:
   - ps: wget http://bitbucket.org/eigen/eigen/get/3.3.4.zip -outfile eigen3.zip
   - cmd: 7z x eigen3.zip -o"C:\projects" -y > nul
