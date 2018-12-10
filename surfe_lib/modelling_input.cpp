@@ -41,7 +41,7 @@
 #include <math_methods.h>
 #include <modeling_methods.h>
 #include <modelling_input.h>
-//#include <modelling_parameters.h>
+#include <modelling_parameters.h>
 #include <export_to_vtk.h>
 #include <algorithm>
 #include <functional>
