@@ -1,3 +1,4 @@
+[!Travis Build](https://travis-ci.org/lachlangrose/surfe.svg?branch=master)
 # README #
 
 This code was development at Natural Resources Canada (Geological Survey of Canada) by Michael Hillier, Eric de Kemp, and Ernst Schetselaar for the purposes of 3D structural geological modelling particularly in sparse data environments.  
