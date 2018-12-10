@@ -7,5 +7,5 @@ branches:
 build_script:
  - mkdir build
  - cd build
- - cmake .. 
+ - cmake -GMP_INCLUDE_DIR:STRING="gmp_lib/Debug/" -GMP_LIBRARY_C:STRING="gmp_lib/Debug/lib/libgmp-3.lib" -GMP_LIBRARY_CPP:STRING="gmp_lib/Debug/lib/libgmpxx-3.lib".. 
  - cmake --build . --config Debug 
