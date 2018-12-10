@@ -37,15 +37,14 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+#include <modelling_parameters.h>
 #include <continuous_property.h>
 #include <math_methods.h>
 #include <modeling_methods.h>
 #include <modelling_input.h>
-#include <modelling_parameters.h>
 #include <export_to_vtk.h>
 #include <algorithm>
 #include <functional>
-
 using namespace Surfe;
 using namespace std;
 Basic_input::Basic_input() {
@@ -795,7 +794,7 @@ std::vector<int> Surfe::get_extremal_point_data_indices_from_points(
 }
 
 bool Surfe::get_maximal_axial_variability_order(
-    const double (&bounds)[6], Surfe::Parameter_Types::AXIS (&axis_order)[3]) {
+    const double (&bounds)[6], Parameter_Types::AXIS (&axis_order)[3]) {
     std::vector<double> ranges;
     std::vector<int> axis;
     for (int j = 0; j < 3; j++) {
@@ -806,9 +805,9 @@ bool Surfe::get_maximal_axial_variability_order(
 
     int idx = 0;
     for (int j = 2; j >= 0; j--) {
-        if (axis[j] == 0) axis_order[idx] = Surfe::Parameter_Types::AXIS::Xaxis;
-        if (axis[j] == 1) axis_order[idx] = Surfe::Parameter_Types::AXIS::Yaxis;
-        if (axis[j] == 2) axis_order[idx] = Surfe::Parameter_Types::AXIS::Zaxis;
+        if (axis[j] == 0) axis_order[idx] = Parameter_Types::AXIS::Xaxis;
+        if (axis[j] == 1) axis_order[idx] = Parameter_Types::AXIS::Yaxis;
+        if (axis[j] == 2) axis_order[idx] = Parameter_Types::AXIS::Zaxis;
         idx++;
     }
 

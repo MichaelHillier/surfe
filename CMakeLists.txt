@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
  
 PROJECT(surfe)
-
+SET(CMAKE_CXX_STANDARD 11 )
 # Get GMP dependency
 find_path(GMP_INCLUDE_DIR gmp.h gmpxx.h)
 find_library(GMP_LIBRARY_C NAMES gmp)
