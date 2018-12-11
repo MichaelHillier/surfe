@@ -1,9 +1,5 @@
 platform: x64
 configuration: Debug
-matrix:
-  - PYTHON: "C:\\Python35-x64"
-    PYTHON_VERSION: "3.5.0"
-    PYTHON_ARCH: "64"
 
 branches:
   only:
@@ -13,7 +9,7 @@ clone_script:
 install:
   - ps: wget http://bitbucket.org/eigen/eigen/get/3.3.4.zip -outfile eigen3.zip
   - cmd: 7z x eigen3.zip -o"C:\projects" -y > nul
-  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
+  - ps: if (-not(Test-Path($env:"C:\\Python35-x64"))) { & appveyor\install.ps1 }
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
