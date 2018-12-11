@@ -13,5 +13,5 @@ install:
 build_script:
  - mkdir build
  - cd build
- - cmake  -DGMP_INCLUDE_DIR:STRING="gmp_lib" -DGMP_LIBRARY_C:STRING="C:\projects\surfe\gmp_lib\Debug\lib\libgmp-3" -DGMP_LIBRARY_CPP:STRING="C:\projects\surfe\gmp_lib\Debug\lib\libgmpxx-3" -D EIGEN3_INCLUDE_DIR=C:\projects\eigen-eigen-5a0156e40feb .. 
+ - cmake  -DGMP_INCLUDE_DIR:STRING="gmp_lib" -DGMP_LIBRARY_C:STRING="C:\projects\surfe\gmp_lib\Debug\lib\libgmp-3.lib" -DGMP_LIBRARY_CPP:STRING="C:\projects\surfe\gmp_lib\Debug\lib\libgmpxx-3.lib" -D EIGEN3_INCLUDE_DIR=C:\projects\eigen-eigen-5a0156e40feb .. 
  - cmake --build . --config Debug 
