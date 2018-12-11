@@ -5,7 +5,7 @@
 #include <modelling_parameters.h>
 #include <modeling_methods.h>
 namespace Surfe {
-class GRBF_Builder {
+class SURFE_LIB_EXPORT GRBF_Builder {
 public:
     GRBF_Builder();
     GRBF_Modelling_Methods* get_method(const model_parameters& m_paramers,
