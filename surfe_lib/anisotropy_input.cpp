@@ -127,6 +127,30 @@ void Orientation::_set_eigensystem()
 	Transform = U * S * U.transpose();
 }
 
+bool Orientation::getDipVector(double(&vector)[3])
+{
+	if (_dipvector[0] >= -1.0 && _dipvector[0] <= 1.0) vector[0] = _dipvector[0];
+	else return false;
+	if (_dipvector[1] >= -1.0 && _dipvector[1] <= 1.0) vector[1] = _dipvector[1];
+	else return false;
+	if (_dipvector[2] >= -1.0 && _dipvector[2] <= 1.0) vector[2] = _dipvector[2];
+	else return false;
+
+	return true;
+}
+
+bool Orientation::getStrikeVector(double(&vector)[3])
+{
+	if (_strikevector[0] >= -1.0 && _strikevector[0] <= 1.0) vector[0] = _strikevector[0];
+	else return false;
+	if (_strikevector[1] >= -1.0 && _strikevector[1] <= 1.0) vector[1] = _strikevector[1];
+	else return false;
+	if (_strikevector[2] >= -1.0 && _strikevector[2] <= 1.0) vector[2] = _strikevector[2];
+	else return false;
+
+	return true;
+}
+
 void LocalAnisotropyInput::_sort_eigensystem(Matrix3d &evectors, Vector3d &evalues)
 {
 	// sort the eigenvectors  & eigenvalues according to ascending eigenvalue order

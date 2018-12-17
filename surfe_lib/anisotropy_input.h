@@ -21,7 +21,8 @@ private:
 	double _y;
 	double _z;
 	double _dip;
-	double _strike;
+	double _strike; 
+	double _dip_direction; // for euro folk
 	Vector3d _normal;
 	Vector3d _dipvector;
 	Vector3d _strikevector;
@@ -56,6 +57,25 @@ public:
 		_z = z_coord;
 		_dip = dip;
 		_strike = strike;
+		// compute normal
+		_compute_normal_from_strike_dip_polarity();
+		_set_eigensystem();
+	}
+	Orientation(
+		const double &x_coord,
+		const double &y_coord,
+		const double &z_coord,
+		const double &dip,
+		const double &dip_direction)
+		:
+		_x(x_coord),
+		_y(y_coord),
+		_z(z_coord),
+		_dip(dip),
+		_dip_direction(dip_direction)
+	{
+		if (_dip_direction >= 90) _strike = _dip_direction - 90.0;
+		else _strike = _dip_direction + 270.0;
 		// compute normal
 		_compute_normal_from_strike_dip_polarity();
 		_set_eigensystem();
