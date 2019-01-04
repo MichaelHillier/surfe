@@ -27,7 +27,7 @@ private:
 	Vector3d _dipvector;
 	Vector3d _strikevector;
 	bool _compute_strike_dip_polarity_from_normal();
-	bool _compute_normal_from_strike_dip_polarity();
+	bool _compute_a_normal_from_strike_dip();
 	void _set_eigensystem();
 public:
 	Orientation(const double &x_coord,
@@ -50,34 +50,21 @@ public:
 		const double &y_coord,
 		const double &z_coord,
 		const double &dip,
-		const double &strike)
+		const double &strike,
+		bool euro_convention = false)
 	{
 		_x = x_coord;
 		_y = y_coord;
 		_z = z_coord;
 		_dip = dip;
-		_strike = strike;
+		if (euro_convention) // in this case the 'strike' is not the strike but the dip direction
+		{
+			if (strike >= 90) _strike = strike - 90.0;
+			else _strike = strike + 270.0;
+		}
+		else _strike = strike;
 		// compute normal
-		_compute_normal_from_strike_dip_polarity();
-		_set_eigensystem();
-	}
-	Orientation(
-		const double &x_coord,
-		const double &y_coord,
-		const double &z_coord,
-		const double &dip,
-		const double &dip_direction)
-		:
-		_x(x_coord),
-		_y(y_coord),
-		_z(z_coord),
-		_dip(dip),
-		_dip_direction(dip_direction)
-	{
-		if (_dip_direction >= 90) _strike = _dip_direction - 90.0;
-		else _strike = _dip_direction + 270.0;
-		// compute normal
-		_compute_normal_from_strike_dip_polarity();
+		_compute_a_normal_from_strike_dip();
 		_set_eigensystem();
 	}
 	bool getDipVector(double(&vector)[3]);
@@ -119,9 +106,12 @@ public:
  	double z() const { return _z; }
 	Matrix3d eigenvectors; // principal directions of anisotropy
 	Vector3d eigenvalues;
+	Vector3d GetDipVector();
+	Vector3d GetStrikeVector();
+	Vector3d GetNormalVector();
 };
 
-class SURFE_LIB_EXPORT LocalAnisotropyInput{
+class SURFE_LIB_EXPORT TensorInput{
 private:
 	// Attributes
 	std::vector < std::vector < Orientation > > neighbourhoods;
@@ -129,12 +119,12 @@ private:
 	bool _get_neighbourhoods(const int &n_neighbors);
 	void _get_local_anisotropy_from_neighbourhoods(std::vector < std::vector < Orientation > > &nh);
 public:
-	LocalAnisotropyInput()
+	TensorInput()
 	{
 		orientation = new std::vector<Orientation>;
 		evalpts = new std::vector<TensorEvaluationPoints>;
 	}
-	~LocalAnisotropyInput(){}
+	~TensorInput(){}
 	bool GetLocalAnisotropy(const model_parameters &parameters);
 	// input data 
 	std::vector< Orientation > *orientation;

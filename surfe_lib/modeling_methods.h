@@ -62,14 +62,14 @@ public:
 	std::string error_msg;
 };
 
-class SURFE_LIB_EXPORT LocalOrientationAnisotropy_Methods{
+class SURFE_LIB_EXPORT Tensor_Methods{
 protected:
 	unsigned int _get_nearest_orientation_pt_index(const TensorEvaluationPoints &pt);
 	void _sort_eigensystem(Matrix3d &evectors, Vector3d &evalues);
 	double _GetLargestInterPointDistance(const std::vector<Orientation> &pts);
 	double distance;
 public:
-	LocalAnisotropyInput input; // algorithm input
+	TensorInput input; // algorithm input
 	model_parameters parameters;
 	bool run_algorithm();
 	// Riemannian methods 

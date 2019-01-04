@@ -329,7 +329,7 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm()
 	return true;
 }
 
-unsigned int LocalOrientationAnisotropy_Methods::_get_nearest_orientation_pt_index(const TensorEvaluationPoints &pt)
+unsigned int Tensor_Methods::_get_nearest_orientation_pt_index(const TensorEvaluationPoints &pt)
 {
 	double nn_dist = 0;
 	unsigned int index = 0;
@@ -356,7 +356,7 @@ unsigned int LocalOrientationAnisotropy_Methods::_get_nearest_orientation_pt_ind
 	return index;
 }
 
-void LocalOrientationAnisotropy_Methods::_sort_eigensystem(Matrix3d &evectors, Vector3d &evalues)
+void Tensor_Methods::_sort_eigensystem(Matrix3d &evectors, Vector3d &evalues)
 {
 	// sort the eigenvectors  & eigenvalues according to ascending eigenvalue order
 	// create temp storage ...
@@ -413,7 +413,7 @@ void LocalOrientationAnisotropy_Methods::_sort_eigensystem(Matrix3d &evectors, V
 	evalues[2] = EigenValues[0];
 }
 
-double LocalOrientationAnisotropy_Methods::_GetLargestInterPointDistance(const std::vector<Orientation> &pts)
+double Tensor_Methods::_GetLargestInterPointDistance(const std::vector<Orientation> &pts)
 {
 	double lipd = 1.0;
 	std::vector<double> LD;
@@ -434,7 +434,7 @@ double LocalOrientationAnisotropy_Methods::_GetLargestInterPointDistance(const s
 	return sqrt(LD[LD.size() - 1]);
 }
 
-bool LocalOrientationAnisotropy_Methods::run_algorithm()
+bool Tensor_Methods::run_algorithm()
 {
 	// get the local anisotropy @ every point (input.orientation[])
 	//if (!input.GetLocalAnisotropy(parameters)) return false;
@@ -452,7 +452,7 @@ bool LocalOrientationAnisotropy_Methods::run_algorithm()
 	return true;
 }
 
-bool LocalOrientationAnisotropy_Methods::interpolate_tensor_field_at_pt(TensorEvaluationPoints& eval_pt)
+bool Tensor_Methods::interpolate_tensor_field_at_pt(TensorEvaluationPoints& eval_pt)
 {
 	// get closest input pt
 	unsigned int index = _get_nearest_orientation_pt_index(eval_pt);
@@ -573,19 +573,15 @@ bool LocalOrientationAnisotropy_Methods::interpolate_tensor_field_at_pt(TensorEv
 			double dy = input.orientation->at(j).y() - eval_pt.y();
 			double dz = input.orientation->at(j).z() - eval_pt.z();
 			double r = sqrt(dx*dx + dy*dy + dz*dz);
-			double sr = r / distance;
-			double s = pow(r,parameters.idw_power);
-			double p = (double)parameters.idw_power;
 			//cout<<" r = "<<r<<endl;
-			double value = p*p*sr*sr;
-			double basis = exp(-1.0*value);//1 - 3.0 * sr*sr + 2.0 * sr*sr*sr;//1.0 / s;//exp(-1.0*s);// 1 - 3 * sr*sr + 2 * sr*sr*sr; //1 / (sr*sr);
+			double j_weight = 1 / (pow(r,parameters.idw_power));//exp(-1.0*value);//1 - 3.0 * sr*sr + 2.0 * sr*sr*sr;//1.0 / s;//exp(-1.0*s);// 1 - 3 * sr*sr + 2 * sr*sr*sr; //1 / (sr*sr);
 			//cout<<" basis weight = "<<basis<<endl;
 			//cout<<" multiplying U_j*D_j_log*U_j_T by basis weight"<<endl;
-			temp_mat = temp_mat2 * basis;
+			temp_mat = temp_mat2 * j_weight;
 			//std::cout << " temp_mat:\n" << temp_mat << std::endl;
 			//cout<<" Adding current matrix to previous iteration "<<endl;
 			cur_matrix += temp_mat;
-			total_weight += basis;
+			total_weight += j_weight;
 		}
 		//std::cout << " cur_matrix:\n" << cur_matrix<< std::endl;
 		//cout<<" total weight = "<<total_weight<<endl;

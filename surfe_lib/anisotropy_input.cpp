@@ -23,8 +23,11 @@ bool Orientation::_compute_strike_dip_polarity_from_normal()
 	return true; // check this computation
 }
 
-bool Orientation::_compute_normal_from_strike_dip_polarity()
+bool Orientation::_compute_a_normal_from_strike_dip()
 {
+	// Please note that the polarity of the normal here DOES NOT matter
+	// Both the +ve/-ve are valid since these type of tensor only respect the axial nature of this 'direction'
+
 	// Get down dip vector - v
 	double vx = cos(-1.0*(_strike * D2R)) * cos(-1.0*(_dip * D2R));
 	double vy = sin(-1.0*(_strike * D2R)) * cos(-1.0*(_dip * D2R));
@@ -61,20 +64,6 @@ bool Orientation::_compute_normal_from_strike_dip_polarity()
 	Nx = Nx / Length;
 	Ny = Ny / Length;
 	Nz = Nz / Length;
-
-	// Check polarity of computed normal is consistent with the property "polarity"
-	// polarity == 1 -> Is overturned: Must point downward
-	// polarity == 0 -> Is upright: Must point upward
-	// polarity != 0/1 -> Is unknown: Can point upward or downward, it doesn't matter.
-	//                    Retains its initialized polarity set above.
-	int polarity = 0; // assume upright .. in the end it doesn't matter for this type of data
-	if ((polarity == 1 && Nz > 0) || (polarity == 0 && Nz < 0))
-	{
-		// Flip vector
-		Nx = -Nx;
-		Ny = -Ny;
-		Nz = -Nz;
-	}
 
 	// assign normal
 	_normal[0] = Nx;
@@ -151,7 +140,7 @@ bool Orientation::getStrikeVector(double(&vector)[3])
 	return true;
 }
 
-void LocalAnisotropyInput::_sort_eigensystem(Matrix3d &evectors, Vector3d &evalues)
+void TensorInput::_sort_eigensystem(Matrix3d &evectors, Vector3d &evalues)
 {
 	// sort the eigenvectors  & eigenvalues according to ascending eigenvalue order
 	// create temp storage ...
@@ -208,7 +197,7 @@ void LocalAnisotropyInput::_sort_eigensystem(Matrix3d &evectors, Vector3d &evalu
 	evalues[2] = EigenValues[0];
 }
 
-bool LocalAnisotropyInput::_get_neighbourhoods(const int &n_neighbors)
+bool TensorInput::_get_neighbourhoods(const int &n_neighbors)
 {
 	if (orientation->size() == 0) return false;
 
@@ -235,7 +224,7 @@ bool LocalAnisotropyInput::_get_neighbourhoods(const int &n_neighbors)
 	return true;
 }
 
-void LocalAnisotropyInput::_get_local_anisotropy_from_neighbourhoods(std::vector < std::vector < Orientation > > &nh)
+void TensorInput::_get_local_anisotropy_from_neighbourhoods(std::vector < std::vector < Orientation > > &nh)
 {
 	for (int j = 0; j < nh.size(); j++){
 		Matrix3d OrientationMatrix;
@@ -332,7 +321,7 @@ void LocalAnisotropyInput::_get_local_anisotropy_from_neighbourhoods(std::vector
 	}
 }
 
-bool LocalAnisotropyInput::GetLocalAnisotropy(const model_parameters &parameters)
+bool TensorInput::GetLocalAnisotropy(const model_parameters &parameters)
 {
 	// 1st get neighbourhoods
 	if (!_get_neighbourhoods(parameters.nearest_neighbours)) return false;
@@ -342,3 +331,29 @@ bool LocalAnisotropyInput::GetLocalAnisotropy(const model_parameters &parameters
 	return true;
 }
 
+Vector3d TensorEvaluationPoints::GetDipVector()
+{
+	Vector3d dipvector;
+	dipvector[0] = eigenvectors(0, 1);
+	dipvector[1] = eigenvectors(1, 1);
+	dipvector[2] = eigenvectors(2, 1);
+	return dipvector;
+}
+
+Vector3d TensorEvaluationPoints::GetStrikeVector()
+{
+	Vector3d strikevector;
+	strikevector[0] = eigenvectors(0, 0);
+	strikevector[1] = eigenvectors(1, 0);
+	strikevector[2] = eigenvectors(2, 0);
+	return strikevector;
+}
+
+Vector3d TensorEvaluationPoints::GetNormalVector()
+{
+	Vector3d normalvector;
+	normalvector[0] = eigenvectors(0, 2);
+	normalvector[1] = eigenvectors(1, 2);
+	normalvector[2] = eigenvectors(2, 2);
+	return normalvector;
+}
