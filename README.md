@@ -12,6 +12,18 @@ This code was development at Natural Resources Canada (Geological Survey of Cana
 To setup a visual studio project to compile you must get cmake (https://cmake.org/). In cmake you will setup the compiler and dependences.
 * Dependencies
 GMP (https://gmplib.org/) and Eigen library (http://eigen.tuxfamily.org)
+CMake Instructions:
+	1. Point to a folder that contains the downloaded source code (e.g. ../surfe_lib)
+	2. Point to an output folder for the build results (e.g. ../surfe_lib/_build)
+	3. Select configure at bottom left.
+	4. Select the version of you want for the vs project (make sure it's 64 bit version) Keep "Use default native compiler" selected.
+	5. Then click on finish, some errors will pop, CMake needs to know paths to some libraries. When paths are entered reselect configure option.
+	6. Error on EIGEN3_INCLUDE_DIR --> unzip downloaded eigen tar and point to folder that contains eigen cmake file (e.g. …/eigen)
+	7. Error on GMP_INCLUDE_DIR --> Point to SURFE downloaded code folder "gmp_lib" (e.g. ../surfe_lib/gmp_lib)
+	8. Error on GMP_LIBRARY_C --> Point to SURFE downloaded code library (e.g. ../surfe_lib/gmp_lib/Release/lib/libgmp-3.lib)
+	9. Error on GMP_LIBRARY_CPP -> Point to SURFE downloaded code library (e.g. ../surfe_lib/gmp_lib/Release/lib/libgmpxx-3.lib).
+ 10. When configure is done, click on generate.
+ 
 * What does the algorithm expect as input?
 1) Fill the Basic_input (modelling_input.h) data structure with the constraints that you have and their corresponding properties/attributes : 
 // input data 
