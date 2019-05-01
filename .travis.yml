@@ -1,0 +1,16 @@
+language: cpp
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake-data
+      - cmake
+script:
+  - source ~/virtualenv/python3.6/bin/activate
+  - sudo apt-get install libeigen3-dev
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make

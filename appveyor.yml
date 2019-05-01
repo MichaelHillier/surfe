@@ -1,0 +1,24 @@
+platform: x64
+configuration: Debug
+environment:
+  matrix:
+  - PYTHON: "C:\\Python35-x64"
+    PYTHON_VERSION: "3.5.0"
+    PYTHON_ARCH: "64"
+branches:
+  only:
+  - master
+clone_script:
+- cmd: git clone -q --recursive --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+install:
+  - ps: wget http://bitbucket.org/eigen/eigen/get/3.3.4.zip -outfile eigen3.zip
+  - cmd: 7z x eigen3.zip -o"C:\projects" -y > nul
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+  
+build_script:
+ - mkdir build
+ - cd build
+ - cmake  -G "Visual Studio 14 Win64" -DGMP_INCLUDE_DIR:STRING="gmp_lib" -DGMP_LIBRARY_C:STRING="C:\projects\surfe\gmp_lib\Debug\lib\libgmp-3.lib" -DGMP_LIBRARY_CPP:STRING="C:\projects\surfe\gmp_lib\Debug\lib\libgmpxx-3.lib" -D EIGEN3_INCLUDE_DIR=C:\projects\eigen-eigen-5a0156e40feb .. 
+ - cmake --build . --config Debug 
