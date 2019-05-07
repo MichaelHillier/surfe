@@ -48,9 +48,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-namespace Surfe {
+
 using namespace Eigen;
-using namespace std;
 
 class System_Solver {
 public:
@@ -108,15 +107,10 @@ private:
     Matrix<mpf_class, Dynamic, Dynamic> _inequality_matrix;
     Matrix<mpf_class, Dynamic, 1> _equality_vector;
     Matrix<mpf_class, Dynamic, 1> _inequality_vector;
-    Matrix<mpf_class, Dynamic, Dynamic> _convert_double_matrix_2_mpf(
-        const MatrixXd &matrix);
-    Matrix<mpf_class, Dynamic, 1> _convert_double_vector_2_mpf(
-        const VectorXd &vector);
-    VectorXd _convert_mpf_vector_2_double(
-        const Matrix<mpf_class, Dynamic, 1> &vector);
-    Matrix<mpf_class, Dynamic, Dynamic> _get_hessian_matrix(
-        const Matrix<mpf_class, Dynamic, Dynamic> &matrix);
-
+    Matrix<mpf_class, Dynamic, Dynamic> _convert_double_matrix_2_mpf(const MatrixXd &matrix);
+    Matrix<mpf_class, Dynamic, 1> _convert_double_vector_2_mpf(const VectorXd &vector);
+    VectorXd _convert_mpf_vector_2_double(const Matrix<mpf_class, Dynamic, 1> &vector);
+    Matrix<mpf_class, Dynamic, Dynamic> _get_hessian_matrix(const Matrix<mpf_class, Dynamic, Dynamic> &matrix);
 public:
     Quadratic_Predictor_Corrector(const MatrixXd &interpolation_matrix,
                                   const MatrixXd &equality_matrix,
@@ -204,6 +198,5 @@ public:
     bool solve();
     bool validate_matrix_systems();
 };
-}
 
 #endif

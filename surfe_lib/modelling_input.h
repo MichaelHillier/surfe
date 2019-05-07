@@ -45,8 +45,8 @@
 #include <cmath>
 #include <vector>
 #include <string>
-namespace Surfe {
-using namespace std;
+#include <set>
+
 class SURFE_LIB_EXPORT Point {
 private:
     double _x;
@@ -54,7 +54,6 @@ private:
     double _z;
     double _c;
     double _scalar_field;
-    std::vector<double> _field;
     double _field_normal[3];
 
 public:
@@ -64,32 +63,27 @@ public:
         _scalar_field = 0;
         for (int j = 0; j < 3; j++) _field_normal[j] = 0;
     }
-    double x() const { return _x; }
-    double y() const { return _y; }
-    double z() const { return _z; }
-    double c() const { return _c; }
+	// Setters
     void set_x(const double &x_coord) { _x = x_coord; }
     void set_y(const double &y_coord) { _y = y_coord; }
     void set_z(const double &z_coord) { _z = z_coord; }
     void set_c(const double &c_coord) { _c = c_coord; }
     double scalar_field() const { return _scalar_field; }
-    void set_scalar_field(const double &scalar_field_value) {
-        _scalar_field = scalar_field_value;
-    }
-    double scalar_field(const int &i) const { return _field[i]; }
-    void set_scalar_field_list(const double &scalar_field_value) {
-        _field.push_back(scalar_field_value);
-    }
-    int get_field_list_size() { return (int)_field.size(); }
-    void set_vector_field(const double &nx, const double &ny,
-                          const double &nz); 
-    inline double nx_interp() const;
-    inline double ny_interp() const;
-    inline double nz_interp() const;
+    void set_scalar_field(const double &scalar_field_value) { _scalar_field = scalar_field_value; }
+	void set_vector_field(const double &nx, const double &ny, const double &nz) { 
+		_field_normal[0] = nx;
+		_field_normal[1] = ny;
+		_field_normal[2] = nz;
+	}
+	// Getters
+	double x() const { return _x; }
+	double y() const { return _y; }
+	double z() const { return _z; }
+	double c() const { return _c; }
+    double nx_interp() const { return _field_normal[0]; }
+    double ny_interp() const { return _field_normal[1]; }
+    double nz_interp() const { return _field_normal[2]; }
 };
-    double Point::nx_interp() const { return _field_normal[0]; }
-    double Point::ny_interp() const { return _field_normal[1]; }
-    double Point::nz_interp() const { return _field_normal[2]; }
 
 class SURFE_LIB_EXPORT Evaluation_Point : public Point {
 public:
@@ -249,7 +243,7 @@ public:
     }
 };
 
-class SURFE_LIB_EXPORT Basic_input {
+class SURFE_LIB_EXPORT Constraints {
 private:
     // Attributes
     double _avg_nn_dist_ie;
@@ -264,47 +258,44 @@ private:
     }  // Not implemented yet. should be tested when 2nd order polynomials are
        // used. Also when unisolvent points are used this should be called.
     // inequality
-    std::vector<double> _get_distinct_inequality_iso_values();
+    std::set<double> _get_distinct_inequality_iso_values();
 
 public:
-    Basic_input();
-    ~Basic_input() {
-        // LG commented this out because it was causing corruption on linux
-        // i think because the data objects don't have the appropriate
-        // destructors?
-        // delete inequality;
-        // delete itrface;
-        // delete planar;
-        // delete tangent;
-        // delete evaluation_pts;
-        // delete interface_iso_values;
-        // delete interface_point_lists;
-        // delete interface_test_points;
-    }
-    void add_interface_data(std::vector<double> x, std::vector<double> y,
-                            std::vector<double> z, std::vector<double> v);
-    void add_evaluation_points(std::vector<double> x, std::vector<double> y,
-                               std::vector<double> z);
-    void add_tangent_data(std::vector<double> x, std::vector<double> y,
-                          std::vector<double> z,
-                          std::vector<std::vector<double> > t);
-    void add_planar_data(std::vector<double> x, std::vector<double> y,
-                         std::vector<double> z,
-                         std::vector<std::vector<double> > n);
-    void reset_evaluation_points();
-    // input data
-    std::vector<Inequality> *inequality;
-    std::vector<Interface> *itrface;
-    std::vector<Planar> *planar;
-    std::vector<Tangent> *tangent;
+	Constraints() {
+		_avg_nn_dist_ie = -99999.0;   // no data value
+		_avg_nn_dist_itr = -99999.0;  // no data value
+		_avg_nn_dist_p = -99999.0;    // no data value
+		_avg_nn_dist_t = -99999.0;    // no data value
+	}
+	//////////////////
+	// Data members //
+	//////////////////
+	// 4 constraint types
+	std::vector<Inequality> inequality;
+	std::vector<Interface> itrface;
+	std::vector<Planar> planar;
+	std::vector<Tangent> tangent;
 
-    // evaluation sites in grid
-    std::vector<Evaluation_Point> *evaluation_pts;
+	// for interface data
+	std::vector<double> interface_iso_values;
+	std::vector<std::vector<Interface> > interface_point_lists;
+	std::vector<Interface> interface_test_points;
 
-    // for interface data
-    std::vector<double> *interface_iso_values;
-    std::vector<std::vector<Interface> > *interface_point_lists;
-    std::vector<Interface> *interface_test_points;
+	// evaluation points - where interpolant is evaluated
+	std::vector<Evaluation_Point> evaluation_pts;
+
+	/////////////
+	// Methods //
+	/////////////
+	// Appending constraints
+	void add_interface_constraint(const Point& pt) { itrface.emplace_back(pt); }
+	void add_planar_constraint(const Planar& planar_pt) { planar.emplace_back(planar_pt); }
+	void add_tangent_constraint(const Tangent& tangent_pt) { tangent.emplace_back(tangent_pt); }
+	void add_inequality_constraint(const Inequality& inequality_pt) { inequality.emplace_back(inequality_pt); }
+
+	// Clear current (if exists) evaluation_pts vector 
+	void reset_evaluation_points() { evaluation_pts.clear(); };
+
     bool get_interface_data();  // fills interface_iso_values,
                                 // interface_point_lists,
                                 // interface_test_points data structures
@@ -312,81 +303,45 @@ public:
     // validation
     bool check_input_data();
 
-    bool get_local_anisotropy() {
-        return true;
-    }  // TO IMPLEMENT using planar data extract local tensors for every planar
-       // point.
-
     // spatial analysis
     double compute_inequality_avg_nn_distance();
     double compute_interface_avg_nn_distance();
     double compute_planar_avg_nn_distance();
     double compute_tangent_avg_nn_distance();
     void compute_avg_nn_distances();
-    inline double GetInequalityAvgNNDist() const;
-    inline double GetInterfaceAvgNNDist() const;
-    inline double GetPlanarAvgNNDist() const;
-    inline double GetTangentAvgNNDist() const;
-    inline void SetInequalityAvgNNDist(const double &dist);
-    inline void SetInterfaceAvgNNDist(const double &dist);
-    inline void SetPlanarAvgNNDist(const double &dist);
-    inline void SetTangentAvgNNDist(const double &dist);
-    void write_to_vtk(std::string file_name);
-    std::vector<double> get_evaluation_values(); /// <\brief returns the scalar field value for the evaluation points as a standard vector ordered as the points are stored
-    std::vector<std::vector<double> > get_evaluation_vectors();
+    double GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
+    double GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }
+    double GetPlanarAvgNNDist() const { return _avg_nn_dist_p; }
+    double GetTangentAvgNNDist() const { return _avg_nn_dist_t; }
+	void SetInequalityAvgNNDist(const double &dist) { _avg_nn_dist_ie = dist; }
+	void SetInterfaceAvgNNDist(const double &dist) { _avg_nn_dist_itr = dist; }
+	void SetPlanarAvgNNDist(const double &dist) { _avg_nn_dist_p = dist; }
+	void SetTangentAvgNNDist(const double &dist) { _avg_nn_dist_t = dist; }
 };
-double Basic_input::GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
-double Basic_input::GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }
-double Basic_input::GetPlanarAvgNNDist() const { return _avg_nn_dist_p; }
-double Basic_input::GetTangentAvgNNDist() const { return _avg_nn_dist_t; }
-void Basic_input::SetInequalityAvgNNDist(const double &dist) {
-    _avg_nn_dist_ie = dist;
-}
-void Basic_input::SetInterfaceAvgNNDist(const double &dist) {
-    _avg_nn_dist_itr = dist;
-}
-void Basic_input::SetPlanarAvgNNDist(const double &dist) {
-    _avg_nn_dist_p = dist;
-}
-void Basic_input::SetTangentAvgNNDist(const double &dist) {
-    _avg_nn_dist_t = dist;
-}
+
 
 double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector<Point> &pts);
-std::vector<int> get_n_nearest_neighbours_to_point(
-    const int &n, const Point &p, const std::vector<Point> &pts);
+std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p, const std::vector<Point> &pts);
 int furtherest_neighbour_index(const Point &p, const std::vector<Point> &pts);
-int furtherest_neighbour_index(const std::vector<Point> &pts1,
-                               const std::vector<Point> &pts2);
+int furtherest_neighbour_index(const std::vector<Point> &pts1, const std::vector<Point> &pts2);
 double avg_nn_distance(const std::vector<Point> &pts);
-bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts,
-                                                 int (&TwoIndexes)[2]);
-int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(
-    const Point &p, const std::vector<Point> &pts, const double &dist);
+bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts, int (&TwoIndexes)[2]);
+int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &p, const std::vector<Point> &pts, const double &dist);
 void calculate_bounds(const std::vector<Point> &pts, double (&bounds)[6]);
-std::vector<int> get_extremal_point_data_indices_from_points(
-    const std::vector<Point> &pts);
+std::vector<int> get_extremal_point_data_indices_from_points(const std::vector<Point> &pts);
 bool is_index_in_list(const int &index, const std::vector<int> &list);
-bool find_fill_distance(const Basic_input &input, double &fill_distance);
+bool find_fill_distance(const Constraints &input, double &fill_distance);
 // The below functions will intelligently* get the indices within the STL vector
 // of points that have large residuals Intelligently* : Doesn't blindly capture
 // all points with large residuals
 //                 - Considers the magnitude of the residuals
 //                 - Considers the distance to other large residual points
 //                 - Considers the variability with close large residual points
-std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(
-    const std::vector<Inequality> *inequality, const double &avg_nn_distance);
-std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(
-    const std::vector<Interface> *itrface, const double &itrface_uncertainty,
-    const double &avg_nn_distance);
-std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-    const std::vector<Planar> *planar, const double &angular_uncertainty,
-    const double &avg_nn_distance);
-std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
-    const std::vector<Tangent> *tangent, const double &angular_uncertainty,
-    const double &avg_nn_distance);
-bool get_maximal_axial_variability_order(
-    const double (&bounds)[6], Parameter_Types::AXIS (&axis_order)[3]);
-}  // end namespace
+std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const std::vector<Inequality> *inequality, const double &avg_nn_distance);
+std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std::vector<Interface> *itrface, const double &itrface_uncertainty,const double &avg_nn_distance);
+std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::vector<Planar> *planar, const double &angular_uncertainty,const double &avg_nn_distance);
+std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::vector<Tangent> *tangent, const double &angular_uncertainty,const double &avg_nn_distance);
+bool get_maximal_axial_variability_order(const double (&bounds)[6], Parameter_Types::AXIS (&axis_order)[3]);
+
 #endif

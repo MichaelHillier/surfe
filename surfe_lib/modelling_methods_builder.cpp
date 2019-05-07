@@ -9,7 +9,7 @@ using namespace Surfe;
 GRBF_Builder::GRBF_Builder() {}
 
 GRBF_Modelling_Methods* GRBF_Builder::get_method(
-    const model_parameters& m_parameters, const Basic_input& input) {
+    const model_parameters& m_parameters, const Constraints& input) {
     if (m_parameters.model_type == Parameter_Types::Single_surface)
         return new Single_Surface(m_parameters, input);
     else if (m_parameters.model_type == Parameter_Types::Lajaunie_approach)

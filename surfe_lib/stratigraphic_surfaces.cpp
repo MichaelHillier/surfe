@@ -283,7 +283,7 @@ bool Stratigraphic_Surfaces::
 }
 
 Stratigraphic_Surfaces::Stratigraphic_Surfaces(const model_parameters &m_p,
-                                               const Basic_input &basic_i) {
+                                               const Constraints &basic_i) {
     // set GUI parameters and basic input (inequality, interface, planar,
     // tangent)
     // data members to class

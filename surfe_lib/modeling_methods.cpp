@@ -374,7 +374,7 @@ bool GRBF_Modelling_Methods::_output_greedy_debug_objects() {
 }
 
 GRBF_Modelling_Methods *GRBF_Modelling_Methods::get_method(
-    const model_parameters &m_parameters, const Basic_input &input) {
+    const model_parameters &m_parameters, const Constraints &input) {
     if (m_parameters.model_type == Parameter_Types::Single_surface)
         return new Single_Surface(m_parameters, input);
     else if (m_parameters.model_type == Parameter_Types::Lajaunie_approach)
@@ -395,7 +395,7 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm() {
 
     greedy_method->b_input.compute_avg_nn_distances();
 
-    Basic_input greedy_input, excluded_input;
+    Constraints greedy_input, excluded_input;
     // initialize starting data
     if (!get_minimial_and_excluded_input(greedy_input, excluded_input))
         return false;

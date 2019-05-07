@@ -45,8 +45,6 @@
 #include <modelling_parameters.h>
 
 #include <Eigen/Core>
-namespace Surfe {
-
 using namespace Eigen;
 
 class SURFE_LIB_EXPORT Kernel {
@@ -572,5 +570,5 @@ private:
     RBFKernel *_aRBFKernel;
     Lagrangian_Polynomial_Basis *_aLPB;
 };
-}
+
 #endif

@@ -42,11 +42,9 @@
 
 #include <surfe_lib_module.h>
 
-#define D2R \
-    0.01745329251994329576923690768489  // degrees to radians conversion factor
-#define R2D \
-    57.295779513082320876798154814105  // radians to degrees conversion factor
-namespace Surfe {
+#define D2R 0.01745329251994329576923690768489  // degrees to radians conversion factor
+#define R2D 57.295779513082320876798154814105  // radians to degrees conversion factor
+
 struct SURFE_LIB_EXPORT Parameter_Types {
     enum DWRT {
         PT1,
@@ -170,5 +168,4 @@ struct SURFE_LIB_EXPORT basic_parameters {
           problem_type(Parameter_Types::Linear),
           restricted_range(false) {}
 };
-}
 #endif

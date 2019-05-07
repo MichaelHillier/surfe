@@ -129,7 +129,7 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 }
 
 Single_Surface::Single_Surface(const model_parameters &m_p,
-                               const Basic_input &basic_i) {
+                               const Constraints &basic_i) {
     // set GUI parameters and basic input (inequality, interface, planar,
     // tangent)
     // data members to class
@@ -271,7 +271,7 @@ bool Single_Surface::setup_system_solver() {
 }
 
 bool Single_Surface::get_minimial_and_excluded_input(
-    Basic_input &greedy_input, Basic_input &excluded_input) {
+    Constraints &greedy_input, Constraints &excluded_input) {
     // get extremal interface points
     // Note:
     // if poly order = 1 find 4 interface points nicely sampling the volume
@@ -307,7 +307,7 @@ bool Single_Surface::get_minimial_and_excluded_input(
     return true;
 }
 
-bool Single_Surface::measure_residuals(Basic_input &input) {
+bool Single_Surface::measure_residuals(Constraints &input) {
     if (solver == NULL) return false;
 
 #pragma omp parallel sections
@@ -380,7 +380,7 @@ bool Single_Surface::measure_residuals(Basic_input &input) {
     return true;
 }
 
-bool Single_Surface::append_greedy_input(Basic_input &input) {
+bool Single_Surface::append_greedy_input(Constraints &input) {
     // This function can most likely be promoted the the Greedy parent class
     // Below section can be a lot of computations - leverage parallelism
     std::vector<int> planar_indices_to_include;      // PLANAR Observations

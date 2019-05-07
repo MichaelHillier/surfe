@@ -164,7 +164,7 @@ bool Lajaunie_Approach::_get_increment_pairs() {
 }
 
 Lajaunie_Approach::Lajaunie_Approach(const model_parameters &m_p,
-                                     const Basic_input &basic_i) {
+                                     const Constraints &basic_i) {
     // set GUI parameters and basic input (interface, planar, tangent) data
     // members to class
     m_parameters = m_p;
@@ -305,7 +305,7 @@ bool Lajaunie_Approach::setup_system_solver() {
 }
 
 bool Lajaunie_Approach::get_minimial_and_excluded_input(
-    Basic_input &greedy_input, Basic_input &excluded_input) {
+    Constraints &greedy_input, Constraints &excluded_input) {
     // get minimial number of interface points from each interface
     // First find the horizon with the largest number of points, from this get 3
     // points that are well separated For the other horizons, get two points
@@ -401,7 +401,7 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(
 
     return true;
 }
-bool Lajaunie_Approach::measure_residuals(Basic_input &input) {
+bool Lajaunie_Approach::measure_residuals(Constraints &input) {
     if (solver == NULL) return false;
 
 #pragma omp parallel sections
@@ -477,7 +477,7 @@ bool Lajaunie_Approach::measure_residuals(Basic_input &input) {
     return true;
 }
 
-bool Lajaunie_Approach::append_greedy_input(Basic_input &input) {
+bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
     // This function can most likely be promoted the the Greedy parent class
     // Below section can be a lot of computations - leverage parallelism
     std::vector<int> planar_indices_to_include;      // PLANAR Observations

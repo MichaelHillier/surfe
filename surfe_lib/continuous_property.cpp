@@ -129,7 +129,7 @@ Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 }
 
 Continuous_Property::Continuous_Property(const model_parameters &m_p,
-                                         const Basic_input &basic_i) {
+                                         const Constraints &basic_i) {
     // set GUI parameters and basic input (inequality, interface, planar,
     // tangent)
     // data members to class
@@ -227,7 +227,7 @@ bool Continuous_Property::setup_system_solver() {
 // 	return true;
 // }
 
-bool Continuous_Property::measure_residuals(Basic_input &input) {
+bool Continuous_Property::measure_residuals(Constraints &input) {
     if (solver == NULL) return false;
 
     // inequalities points
@@ -286,7 +286,7 @@ bool Continuous_Property::measure_residuals(Basic_input &input) {
     return true;
 }
 
-bool Continuous_Property::append_greedy_input(Basic_input &input) {
+bool Continuous_Property::append_greedy_input(Constraints &input) {
     // planar > tangent > interface > inequalities
 
     double r2d = 57.29577951308232;

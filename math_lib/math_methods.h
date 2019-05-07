@@ -52,11 +52,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-namespace Surfe {
 using namespace Eigen;
-using namespace std;
-//some bug with namespaces and preprocessor 
-//class Math_methods {
 
 class MATH_LIB_EXPORT Math_methods {
 private:
@@ -712,6 +708,5 @@ bool Math_methods::sort_vector_w_index(std::vector<T> &arr,
   }
 
   return true;
-}
 }
 #endif
