@@ -102,7 +102,8 @@ protected:
 public:
     RBFKernel()
         : _radius(0), _x_delta(0), _y_delta(0), _z_delta(0), _c_delta(0) {
-        for (int j = 0; j < 3; j++) _Global_Plunge[j] = 0;
+		for (auto &plunge_component : _Global_Plunge) 
+			plunge_component = 0;
         _Transform.setZero();
     }
     virtual ~RBFKernel() {}
@@ -123,41 +124,41 @@ public:
     virtual double dzx() = 0;
     virtual double dzy() = 0;
     virtual double dzz() = 0;
-    double basis_pt_pt();
-    double basis_pt_planar_x();
-    double basis_planar_x_pt();
-    double basis_pt_planar_y();
-    double basis_planar_y_pt();
-    double basis_pt_planar_z();
-    double basis_planar_z_pt();
-    double basis_pt_tangent();
-    double basis_tangent_pt();
-    double basis_planar_planar(const Parameter_Types::SecondDerivatives &sd);
-    double basis_tangent_tangent();
-    double basis_planar_tangent(const Parameter_Types::FirstDerivatives &fd);
-    double basis_tangent_planar(const Parameter_Types::FirstDerivatives &fd);
-    virtual RBFKernel *clone() = 0;
+    double basis_pt_pt() override;
+    double basis_pt_planar_x() override;
+    double basis_planar_x_pt() override;
+    double basis_pt_planar_y() override;
+    double basis_planar_y_pt() override;
+    double basis_pt_planar_z() override;
+    double basis_planar_z_pt() override;
+    double basis_pt_tangent() override;
+    double basis_tangent_pt() override;
+    double basis_planar_planar(const Parameter_Types::SecondDerivatives &sd) override;
+    double basis_tangent_tangent() override;
+    double basis_planar_tangent(const Parameter_Types::FirstDerivatives &fd) override;
+    double basis_tangent_planar(const Parameter_Types::FirstDerivatives &fd) override;
+    RBFKernel *clone() override = 0;
 };
 
 class Cubic : public RBFKernel {
 public:
     ~Cubic() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
+    double basis() override;
+    double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+    double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+    double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+    double dy_p2() override;
+    double dz_p1() override;
+    double dz_p2() override;
+    double dxx() override;
+    double dxy() override;
+    double dxz() override;
+    double dyx() override;
+    double dyy() override;
+    double dyz() override;
+    double dzx() override;
+    double dzy() override;
+    double dzz() override;
     virtual Cubic *clone() { return new Cubic(*this); }
 };
 
@@ -165,23 +166,23 @@ class ACubic : public RBFKernel {
 public:
     ACubic(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
     ~ACubic() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual ACubic *clone() { return new ACubic(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    ACubic *clone() override { return new ACubic(*this); }
 };
 
 class Gaussian : public RBFKernel {
@@ -193,23 +194,23 @@ public:
         _shape_parameter = shape_parameter;
     }
     ~Gaussian() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual Gaussian *clone() { return new Gaussian(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    Gaussian *clone() override { return new Gaussian(*this); }
 };
 
 class AGaussian : public RBFKernel {
@@ -223,23 +224,23 @@ public:
         get_global_anisotropy(planar);
     }
     ~AGaussian() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual AGaussian *clone() { return new AGaussian(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    AGaussian *clone() override { return new AGaussian(*this); }
 };
 
 class MQ : public RBFKernel {
@@ -249,23 +250,23 @@ private:
 public:
     MQ(const double &shape_parameter) { _shape_parameter = shape_parameter; }
     ~MQ() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual MQ *clone() { return new MQ(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    MQ *clone() override { return new MQ(*this); }
 };
 
 class MQ3 : public RBFKernel {
@@ -275,23 +276,23 @@ private:
 public:
     MQ3(const double &shape_parameter) { _c = shape_parameter; }
     ~MQ3() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual MQ3 *clone() { return new MQ3(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    MQ3 *clone() override { return new MQ3(*this); }
 };
 
 class AMQ : public RBFKernel {
@@ -304,68 +305,68 @@ public:
         get_global_anisotropy(planar);
     }
     ~AMQ() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual AMQ *clone() { return new AMQ(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    AMQ *clone() override { return new AMQ(*this); }
 };
 
 class TPS : public RBFKernel {
 public:
     ~TPS() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual TPS *clone() { return new TPS(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    TPS *clone() override { return new TPS(*this); }
 };
 
 class ATPS : public RBFKernel {
 public:
     ATPS(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
     ~ATPS() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual ATPS *clone() { return new ATPS(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    ATPS *clone() override { return new ATPS(*this); }
 };
 
 class IMQ : public RBFKernel {
@@ -375,23 +376,23 @@ private:
 public:
     IMQ(const double &shape_parameter) { _shape_parameter = shape_parameter; }
     ~IMQ() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual IMQ *clone() { return new IMQ(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    IMQ *clone() override { return new IMQ(*this); }
 };
 
 class AIMQ : public RBFKernel {
@@ -404,68 +405,68 @@ public:
         get_global_anisotropy(planar);
     }
     ~AIMQ() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual AIMQ *clone() { return new AIMQ(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    AIMQ *clone() override { return new AIMQ(*this); }
 };
 
 class R : public RBFKernel {
 public:
     ~R() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual R *clone() { return new R(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    R *clone() override { return new R(*this); }
 };
 
 class AR : public RBFKernel {
 public:
     AR(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
     ~AR() {}
-    double basis();
-    double dx_p1();  // derivative w.r.t. p1's x-coordinate variable
-    double dx_p2();  // derivative w.r.t. p2's x-coordinate variable
-    double dy_p1();  // derivative w.r.t. p1's y-coordinate variable ...
-    double dy_p2();
-    double dz_p1();
-    double dz_p2();
-    double dxx();
-    double dxy();
-    double dxz();
-    double dyx();
-    double dyy();
-    double dyz();
-    double dzx();
-    double dzy();
-    double dzz();
-    virtual AR *clone() { return new AR(*this); }
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+    AR *clone() override { return new AR(*this); }
 };
 
 class Polynomial_Basis {
@@ -486,31 +487,31 @@ public:
 class Poly_Zero : public Polynomial_Basis {
 public:
     Poly_Zero(bool truncated = false) { _truncated = truncated; }
-    VectorXd basis();
-    VectorXd dx();
-    VectorXd dy();
-    VectorXd dz();
-    virtual Poly_Zero *clone() { return new Poly_Zero(*this); }
+    VectorXd basis() override;
+    VectorXd dx() override;
+    VectorXd dy() override;
+    VectorXd dz() override;
+    Poly_Zero *clone() override { return new Poly_Zero(*this); }
 };
 
 class Poly_First : public Polynomial_Basis {
 public:
     Poly_First(bool truncated = false) { _truncated = truncated; }
-    VectorXd basis();
-    VectorXd dx();
-    VectorXd dy();
-    VectorXd dz();
-    virtual Poly_First *clone() { return new Poly_First(*this); }
+	VectorXd basis() override;
+	VectorXd dx() override;
+	VectorXd dy() override;
+	VectorXd dz() override;
+    Poly_First *clone() override { return new Poly_First(*this); }
 };
 
 class Poly_Second : public Polynomial_Basis {
 public:
     Poly_Second(bool truncated = false) { _truncated = truncated; }
-    VectorXd basis();
-    VectorXd dx();
-    VectorXd dy();
-    VectorXd dz();
-    virtual Poly_Second *clone() { return new Poly_Second(*this); }
+	VectorXd basis() override;
+	VectorXd dx() override;
+	VectorXd dy() override;
+	VectorXd dz() override;
+    Poly_Second *clone() override { return new Poly_Second(*this); }
 };
 
 class Lagrangian_Polynomial_Basis {
@@ -551,20 +552,20 @@ public:
     Modified_Kernel(const Modified_Kernel &source)
         : _aRBFKernel(source._aRBFKernel->clone()), _aLPB(source._aLPB) {}
     ~Modified_Kernel() { delete this->_aRBFKernel; }
-    double basis_pt_pt();
-    double basis_pt_planar_x();
-    double basis_planar_x_pt();
-    double basis_pt_planar_y();
-    double basis_planar_y_pt();
-    double basis_pt_planar_z();
-    double basis_planar_z_pt();
-    double basis_pt_tangent();
-    double basis_tangent_pt();
-    double basis_planar_planar(const Parameter_Types::SecondDerivatives &sd);
-    double basis_tangent_tangent();
-    double basis_planar_tangent(const Parameter_Types::FirstDerivatives &fd);
-    double basis_tangent_planar(const Parameter_Types::FirstDerivatives &fd);
-    virtual Modified_Kernel *clone() { return new Modified_Kernel(*this); }
+    double basis_pt_pt() override;
+    double basis_pt_planar_x() override;
+    double basis_planar_x_pt() override;
+    double basis_pt_planar_y() override;
+    double basis_planar_y_pt() override;
+    double basis_pt_planar_z() override;
+    double basis_planar_z_pt() override;
+    double basis_pt_tangent() override;
+    double basis_tangent_pt() override;
+    double basis_planar_planar(const Parameter_Types::SecondDerivatives &sd) override;
+    double basis_tangent_tangent() override;
+    double basis_planar_tangent(const Parameter_Types::FirstDerivatives &fd) override;
+    double basis_tangent_planar(const Parameter_Types::FirstDerivatives &fd) override;
+    Modified_Kernel *clone() override { return new Modified_Kernel(*this); }
 
 private:
     RBFKernel *_aRBFKernel;

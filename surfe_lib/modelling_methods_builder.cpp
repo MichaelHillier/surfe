@@ -4,7 +4,6 @@
 #include <lajaunie.h>
 #include <single_surface.h>
 #include <stratigraphic_surfaces.h>
-using namespace Surfe;
 
 GRBF_Builder::GRBF_Builder() {}
 

@@ -338,10 +338,10 @@ bool find_fill_distance(const Constraints &input, double &fill_distance);
 //                 - Considers the magnitude of the residuals
 //                 - Considers the distance to other large residual points
 //                 - Considers the variability with close large residual points
-std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const std::vector<Inequality> *inequality, const double &avg_nn_distance);
-std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std::vector<Interface> *itrface, const double &itrface_uncertainty,const double &avg_nn_distance);
-std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::vector<Planar> *planar, const double &angular_uncertainty,const double &avg_nn_distance);
-std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::vector<Tangent> *tangent, const double &angular_uncertainty,const double &avg_nn_distance);
+std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const std::vector<Inequality> &inequality, const double &avg_nn_distance);
+std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std::vector<Interface> &itrface, const double &itrface_uncertainty,const double &avg_nn_distance);
+std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::vector<Planar> &planar, const double &angular_uncertainty,const double &avg_nn_distance);
+std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::vector<Tangent> &tangent, const double &angular_uncertainty,const double &avg_nn_distance);
 bool get_maximal_axial_variability_order(const double (&bounds)[6], Parameter_Types::AXIS (&axis_order)[3]);
 
 #endif

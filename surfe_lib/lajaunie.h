@@ -41,9 +41,8 @@
 #define lajaunie_h
 
 #include <surfe_lib_module.h>  // macro for importing / exporting dll
+#include <modeling_methods.h>
 
-#include "modeling_methods.h"
-namespace Surfe {
 class SURFE_LIB_EXPORT Lajaunie_Approach : public GRBF_Modelling_Methods {
 private:
     int _n_increment_pair;
@@ -58,21 +57,21 @@ public:
     ~Lajaunie_Approach() {};
     // Methods
     Polynomial_Basis *create_polynomial_basis(const int &poly_order);
-    bool get_interpolation_matrix(MatrixXd &interpolation_matrix);
-    bool get_equality_values(VectorXd &equality_values);
+    bool get_interpolation_matrix(MatrixXd &interpolation_matrix) override;
+    bool get_equality_values(VectorXd &equality_values) override;
     bool get_inequality_values(VectorXd &b, VectorXd &r);
-    void eval_scalar_interpolant_at_point(Point &p);
-    void eval_vector_interpolant_at_point(Point &p);
-    bool get_method_parameters();
-    bool process_input_data();
-    bool setup_system_solver();
-    bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input);
-    bool measure_residuals(Constraints &input);
-    bool append_greedy_input(Constraints &input);
-    bool convert_modified_kernel_to_rbf_kernel();
-    GRBF_Modelling_Methods *clone() { return new Lajaunie_Approach(*this); }
+    void eval_scalar_interpolant_at_point(Point &p) override;
+    void eval_vector_interpolant_at_point(Point &p) override;
+    bool get_method_parameters() override;
+    bool process_input_data() override;
+    bool setup_system_solver() override;
+    bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override;
+    bool measure_residuals(Constraints &input) override;
+    bool append_greedy_input(Constraints &input) override;
+    bool convert_modified_kernel_to_rbf_kernel() override;
+    GRBF_Modelling_Methods *clone() override { return new Lajaunie_Approach(*this); }
     // Attributes
     Polynomial_Basis *p_basis;
 };
-}
+
 #endif

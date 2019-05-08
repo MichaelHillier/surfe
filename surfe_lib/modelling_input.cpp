@@ -42,7 +42,6 @@
 #include <math_methods.h>
 #include <modeling_methods.h>
 #include <modelling_input.h>
-#include <export_to_vtk.h>
 #include <algorithm>
 #include <functional>
 
@@ -864,7 +863,7 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::v
 	// 	{
 	// 		planar_indices_to_include.push_back(ref_index);
 	// 	}
-	if (large_planar_residuals.size() != 0) 
+	if (!large_planar_residuals.empty()) 
 	{
 		// Residual Magnitude Condition
 		// sort all residuals over the threshold(angular_uncertainty) in
@@ -930,7 +929,7 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::
 			large_tangent_residuals_indices.push_back(j);
 		}
 	}
-	if (large_tangent_residuals.size() != 0) {
+	if (!large_tangent_residuals.empty()) {
 		// Residual Magnitude Condition
 		// sort all residuals over the threshold(angular_uncertainty) in
 		// smallest to

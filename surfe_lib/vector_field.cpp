@@ -48,12 +48,11 @@
 #include <iomanip>
 #include <iostream>
 
-using namespace Surfe;
 bool Vector_Field::get_method_parameters() {
     // # of constraints for each constraint type ...
     b_parameters.n_interface = 0;
     b_parameters.n_inequality = 0;
-    b_parameters.n_planar = (int)b_input.planar->size();
+    b_parameters.n_planar = (int)constraints.planar.size();
     b_parameters.n_tangent = 0;
     // Total number of constraints ...
     b_parameters.n_constraints =
@@ -78,10 +77,10 @@ bool Vector_Field::get_method_parameters() {
 bool Vector_Field::process_input_data() { return true; }
 
 bool Vector_Field::get_equality_values(VectorXd &equality_values) {
-    for (int j = 0; j < (int)b_input.planar->size(); j++) {
-        equality_values(3 *j) = b_input.planar->at(j).nx();
-        equality_values(3 *j + 1) = b_input.planar->at(j).ny();
-        equality_values(3 *j + 2) = b_input.planar->at(j).nz();
+    for (int j = 0; j < (int)constraints.planar.size(); j++) {
+        equality_values(3 *j) = constraints.planar[j].nx();
+        equality_values(3 *j + 1) = constraints.planar[j].ny();
+        equality_values(3 *j + 2) = constraints.planar[j].nz();
     }
 
     return true;
@@ -99,7 +98,7 @@ bool Vector_Field::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
     for (int j = 0; j < n_p; j++) {
         // Row:planar/Column:planar block
         for (int k = 0; k < n_p; k++) {
-            kernel->set_points(b_input.planar->at(j), b_input.planar->at(k));
+            kernel->set_points(constraints.planar[j], constraints.planar[j]);
             interpolation_matrix(3 * j, 3 *k) =
                 kernel->basis_planar_planar(Parameter_Types::DXDX);
             interpolation_matrix(3 * j, 3 *k + 1) =
@@ -149,7 +148,7 @@ void Vector_Field::eval_scalar_interpolant_at_point(Point &p) {
     double elemsum_y = 0.0;
     double elemsum_z = 0.0;
     for (int k = 0; k < n_p; k++) {
-        kernel_j->set_points(p, b_input.planar->at(k));
+        kernel_j->set_points(p, constraints.planar[j]);
         elemsum_x += solver->weights[3 * k] *
                      kernel_j->basis_planar_planar(Parameter_Types::DXDX);
         elemsum_x += solver->weights[3 * k + 1] *
@@ -187,7 +186,7 @@ void Vector_Field::eval_vector_interpolant_at_point(Point &p) {
     double elemsum_y = 0.0;
     double elemsum_z = 0.0;
     for (int k = 0; k < n_p; k++) {
-        kernel_j->set_points(p, b_input.planar->at(k));
+        kernel_j->set_points(p, constraints.planar[k]);
         elemsum_x += solver->weights[3 * k] *
                      kernel_j->basis_planar_planar(Parameter_Types::DXDX);
         elemsum_x += solver->weights[3 * k + 1] *

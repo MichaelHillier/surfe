@@ -44,7 +44,6 @@
 #include <iomanip>
 #include <iostream>
 
-using namespace Surfe;
 bool Linear_LU_decomposition::solve() {
 
     if (_constraint_values.rows() != _interpolation_matrix.rows()) return false;
@@ -60,22 +59,20 @@ bool Linear_LU_decomposition::validate_matrix_systems() {
     else
         return false;
 
-    // the other potential problem could be the input has un-initialized values
-    // in
-    // it.
+    // the other potential problem could be the input has un-initialized values in it.
 }
 
-bool Linear_LU_decomposition::check_solution() {
+bool Linear_LU_decomposition::check_solution()
+{
     double relative_error =
-        (_interpolation_matrix * weights - _constraint_values).norm() /
-        _constraint_values.norm();  // norm() is L2 norm
+        (_interpolation_matrix * weights - _constraint_values).norm() / _constraint_values.norm();  // norm() is L2 norm
     std::cout << "The relative error is:\n" << relative_error << std::endl;
     return true;
 }
 
-Matrix<mpf_class, Dynamic, Dynamic>
-Quadratic_Predictor_Corrector::_convert_double_matrix_2_mpf(
-    const MatrixXd &matrix) {
+Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_convert_double_matrix_2_mpf(
+	const MatrixXd &matrix) 
+{
     int nrows = (int)matrix.rows();
     int ncols = (int)matrix.cols();
 
@@ -90,9 +87,9 @@ Quadratic_Predictor_Corrector::_convert_double_matrix_2_mpf(
     return mpf_matrix;
 }
 
-Matrix<mpf_class, Dynamic, 1>
-Quadratic_Predictor_Corrector::_convert_double_vector_2_mpf(
-    const VectorXd &vector) {
+Matrix<mpf_class, Dynamic, 1> Quadratic_Predictor_Corrector::_convert_double_vector_2_mpf(
+    const VectorXd &vector) 
+{
     int nrows = (int)vector.rows();
     Matrix<mpf_class, Dynamic, 1> mpf_vector(nrows);
 
@@ -101,7 +98,8 @@ Quadratic_Predictor_Corrector::_convert_double_vector_2_mpf(
 }
 
 VectorXd Quadratic_Predictor_Corrector::_convert_mpf_vector_2_double(
-    const Matrix<mpf_class, Dynamic, 1> &vector) {
+    const Matrix<mpf_class, Dynamic, 1> &vector)
+{
     int nrows = (int)vector.rows();
     VectorXd v(nrows);
 
@@ -109,9 +107,9 @@ VectorXd Quadratic_Predictor_Corrector::_convert_mpf_vector_2_double(
     return v;
 }
 
-Matrix<mpf_class, Dynamic, Dynamic>
-Quadratic_Predictor_Corrector::_get_hessian_matrix(
-    const Matrix<mpf_class, Dynamic, Dynamic> &matrix) {
+Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_get_hessian_matrix(
+    const Matrix<mpf_class, Dynamic, Dynamic> &matrix)
+{
     int nrows = (int)matrix.rows();
     int ncols = (int)matrix.cols();
     Matrix<mpf_class, Dynamic, Dynamic> hessian(nrows, ncols);
@@ -121,7 +119,8 @@ Quadratic_Predictor_Corrector::_get_hessian_matrix(
     return hessian;
 }
 
-bool Quadratic_Predictor_Corrector::solve() {
+bool Quadratic_Predictor_Corrector::solve()
+{
     int n = (int)_hessian_matrixD.rows();
 
     // Matrix <mpf_class, Dynamic, 1> fvalues(n);

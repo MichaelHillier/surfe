@@ -49,25 +49,25 @@ private:
 	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
 public:
 	// Constructor/Destructor
-	Single_Surface(const model_parameters &m_p, const Constraints &basic_i);
+	Single_Surface(const model_parameters &m_p, const Constraints &s_constraints);
 	~Single_Surface() {};
 	// Methods
 	Polynomial_Basis *create_polynomial_basis(const int &poly_order);
-	bool get_interpolation_matrix(MatrixXd &interpolation_matrix);
-	bool get_equality_values(VectorXd &equality_values);
+	bool get_interpolation_matrix(MatrixXd &interpolation_matrix) override;
+	bool get_equality_values(VectorXd &equality_values) override;
 	bool get_inequality_matrix(const MatrixXd &interpolation_matrix, MatrixXd &inequality_matrix);
 	bool get_inequality_values(VectorXd &inequality_values);
 	bool get_inequality_values(VectorXd &b, VectorXd &r);
-	void eval_scalar_interpolant_at_point(Point &p);
-	void eval_vector_interpolant_at_point(Point &p);
-	bool get_method_parameters();
-	bool process_input_data();
-	bool setup_system_solver();
-	bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input);
-	bool measure_residuals(Constraints &input);
-	bool append_greedy_input(Constraints &input);
-	bool convert_modified_kernel_to_rbf_kernel();
-	GRBF_Modelling_Methods *clone() { return new Single_Surface(*this); }
+	void eval_scalar_interpolant_at_point(Point &p) override;
+	void eval_vector_interpolant_at_point(Point &p) override;
+	bool get_method_parameters() override;
+	bool process_input_data() override;
+	bool setup_system_solver() override;
+	bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override;
+	bool measure_residuals(Constraints &input) override;
+	bool append_greedy_input(Constraints &input) override;
+	bool convert_modified_kernel_to_rbf_kernel() override;
+	GRBF_Modelling_Methods *clone() override { return new Single_Surface(*this); }
 	// Attributes
 	Polynomial_Basis *p_basis;
 };
