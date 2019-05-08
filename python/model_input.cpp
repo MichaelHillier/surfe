@@ -6,7 +6,7 @@
 #include <modeling_methods.h>
 #include <modelling_input.h>
 #include <modelling_methods_builder.h>
-#include <export_to_vtk.h>
+#include <surfe_api.h>
 
 #include <Eigen/LU>
 
@@ -15,8 +15,14 @@
 // ----------------
 
 namespace py = pybind11;
-using namespace Surfe;
 PYBIND11_MODULE(surfe, m) {
+	// setup bindings for Surfe_API
+	py::class_<Surfe_API>(m, "Surfe_API")
+		.def(py::init<const model_parameters &, const Constraints &>())
+		.def("ComputeInterpolant", &Surfe_API::ComputeInterpolant)
+		.def("EvaluateInterpolantAtPoint", &Surfe_API::EvaluateInterpolantAtPoint)
+		.def("EvaluateVectorInterpolantAtPoint", &Surfe_API::EvaluateVectorInterpolantAtPoint);
+
     // setup bindings for the input objects
     py::class_<Point>(m, "Point")
         .def(py::init<const double &, const double &, const double &>())
@@ -34,7 +40,6 @@ PYBIND11_MODULE(surfe, m) {
         .def("scalar_field",
              (double (Point::*)(const int &)const) & Point::scalar_field,
              "get scalar field using index")
-        .def("get_field_list_size", &Point::get_field_list_size)
         .def("set_vector_field", &Point::set_vector_field)
         .def("nx_interp", &Point::nx_interp)
         .def("ny_interp", &Point::ny_interp)
@@ -56,8 +61,6 @@ PYBIND11_MODULE(surfe, m) {
         .def("level", &Inequality::level)
         .def("residual", &Inequality::residual)
         .def("setResidual", &Inequality::setResidual);
-    py::class_<Evaluation_Point, Point>(m, "Evaluation_Point")
-        .def(py::init<const double &, const double &, const double &>());
 
     py::class_<Planar, Point>(m, "Planar")
         .def(py::init<const double, const double, const double, const double,
@@ -94,35 +97,25 @@ PYBIND11_MODULE(surfe, m) {
         .def("setAngleBounds", &Tangent::setAngleBounds)
         .def("setInnerProductConstraint", &Tangent::setInnerProductConstraint);
 
-    py::class_<Basic_input>(m, "Basic_input")
-        .def(py::init<>())
-        .def_readwrite("interfaces", &Basic_input::itrface)
-        .def_readwrite("evaluation_pts", &Basic_input::evaluation_pts)
-        .def_readwrite("inequality", &Basic_input::inequality)
-        .def_readwrite("planar", &Basic_input::planar)
-        .def_readwrite("tangent", &Basic_input::tangent)
-        .def("add_interface_data", &Basic_input::add_interface_data)
-        .def("add_evaluation_points", &Basic_input::add_evaluation_points)
-        .def("add_tangent_data", &Basic_input::add_tangent_data)
-        .def("write_to_vtk",&Basic_input::write_to_vtk)
-        .def("add_planar_data", &Basic_input::add_planar_data)
-        .def("get_evaluation_values",&Basic_input::get_evaluation_values)
-        .def("get_evaluation_vectors",&Basic_input::get_evaluation_vectors)
-        .def("reset_evaluation_points",&Basic_input::reset_evaluation_points);
+	py::class_<Constraints>(m, "Constraints")
+		.def(py::init<>())
+		.def_readwrite("interfaces", &Constraints::itrface)
+		.def_readwrite("inequality", &Constraints::inequality)
+		.def_readwrite("planar", &Constraints::planar)
+		.def_readwrite("tangent", &Constraints::tangent)
+		.def("add_interface_constraint", &Constraints::add_interface_constraint)
+		.def("add_tangent_constraint", &Constraints::add_tangent_constraint)
+		.def("add_planar_constraint", &Constraints::add_planar_constraint)
+		.def("add_inequality_constraint", &Constraints::add_inequality_constraint);
     // we only need to bind the base class because you can choose the
     // interpolation
     // method using the model parameters
-    py::class_<Continuous_Property>(m, "Continuous_Property")
-        .def(py::init<const model_parameters &, const Basic_input &>())
-        .def("run_algorithm", &Continuous_Property::run_algorithm);
+	py::class_<Continuous_Property>(m, "Continuous_Property")
+		.def(py::init<const model_parameters &, const Constraints &>());
 
     py::class_<GRBF_Modelling_Methods>(m, "GRBF")
         .def("run_greedy_algorithm",
              &GRBF_Modelling_Methods::run_greedy_algorithm)
-        .def("run_algorithm", &GRBF_Modelling_Methods::run_algorithm,
-             py::call_guard<py::scoped_ostream_redirect,
-                            py::scoped_estream_redirect>())
-        .def("evaluate_scalar_interpolant",&GRBF_Modelling_Methods::evaluate_scalar_interpolant)
         .def("evaluate_scalar_interpolant_at_point",&GRBF_Modelling_Methods::eval_scalar_interpolant_at_point)
         .def("evaluate_vector_interpolant_at_point",&GRBF_Modelling_Methods::eval_vector_interpolant_at_point);
        
@@ -199,6 +192,4 @@ PYBIND11_MODULE(surfe, m) {
         .value("TPS", Parameter_Types::RBF::TPS)
         .value("R", Parameter_Types::RBF::R)
         .export_values();
-    m.def("write_to_vtk", &write_to_vtk,py::call_guard<py::scoped_ostream_redirect,
-                            py::scoped_estream_redirect>());  // py::class_
 }

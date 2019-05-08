@@ -74,13 +74,15 @@ bool Constraints::check_input_data()
 	// consistent with interface data level property ...
 	if (!inequality.empty()) 
 	{
-		std::set<double> inequality_iso_values = _get_distinct_inequality_iso_values();
-		if (inequality_iso_values.empty()) return false;
+		std::vector<double> inequality_iso_values = _get_distinct_inequality_iso_values();
+		if (inequality_iso_values.empty()) 
+			return false;
 		for (const auto &ineql_iso_value: inequality_iso_values){
 			// if one of the inequality iso values is the same as the
 			// itrface iso values data is not properly conditioned
 			for (const auto &iter_iso_value: interface_iso_values){
-				if (ineql_iso_value == iter_iso_value) return false;
+				if (ineql_iso_value == iter_iso_value) 
+					return false;
 			}
 		}
 	}
@@ -130,10 +132,13 @@ void Constraints::compute_avg_nn_distances()
 void Constraints::_get_distinct_interface_iso_values()
 {
 	std::set<double> distinct_iso_values;
-	for (const auto &interface_constraint : itrface) distinct_iso_values.insert(interface_constraint.level());
+	for (const auto &interface_constraint : itrface) 
+		distinct_iso_values.insert(interface_constraint.level());
 	// sort the vector (largest to smallest) - done for convenience and for functional reasons
-	std::sort(distinct_iso_values.begin(), distinct_iso_values.end(), std::greater<double>());
-	for (const auto& value : distinct_iso_values) interface_iso_values.push_back(value);
+	std::vector<double> distinct_iso_values_vec(distinct_iso_values.begin(), distinct_iso_values.end());
+	std::sort(distinct_iso_values_vec.begin(), distinct_iso_values_vec.end(), std::greater<double>());
+	for (const auto& value : distinct_iso_values_vec)
+		interface_iso_values.push_back(value);
 }
 
 void Constraints::_get_interface_points()
@@ -145,18 +150,18 @@ void Constraints::_get_interface_points()
 	// 76,45,43,4,..... belong to the mth interface
 	interface_point_lists.resize(interface_iso_values.size());
 	for (int j = 0; j < (int)interface_iso_values.size(); j++) {
-		for (int k = 0; k < (int)itrface.size(); k++) {
-			if (itrface.at(k).level() == interface_iso_values.at(j))
+		for (const auto &interface_pt: itrface){
+			if (interface_pt.level() == interface_iso_values.at(j))
 			{
 				// add to 2D vector
-				interface_point_lists[j].emplace_back(itrface.at(k));
+				interface_point_lists[j].push_back(interface_pt);
 			}
 		}
 	}
 
 	for (int j = 0; j < (int)interface_point_lists.size(); j++) {
 		// set the test_interface_points
-		interface_test_points.push_back(interface_point_lists.at(j)[0]);
+		interface_test_points.push_back(interface_point_lists[j][0]);
 		if ((int)interface_point_lists.at(j).size() == 1)
 		{
 			// need to have at least 2 points per interface
@@ -167,19 +172,22 @@ void Constraints::_get_interface_points()
 	}
 }
 
-std::set<double> Constraints::_get_distinct_inequality_iso_values()
+std::vector<double> Constraints::_get_distinct_inequality_iso_values()
 {
 	std::set<double> distinct_iso_values;
 	for (const auto &inequality_constraint : inequality) distinct_iso_values.insert(inequality_constraint.level());
 	// sort the vector (largest to smallest) - done for convenience and for functional reasons
-	std::sort(distinct_iso_values.begin(), distinct_iso_values.end(), std::greater<double>());
-	return distinct_iso_values;
+	std::vector<double> distinct_iso_values_vec(distinct_iso_values.begin(), distinct_iso_values.end());
+	std::sort(distinct_iso_values_vec.begin(), distinct_iso_values_vec.end(), std::greater<double>());
+	return distinct_iso_values_vec;
 }
 
 bool Planar::_compute_strike_dip_polarity_from_normal()
 {
-	if (_normal[2] < 0) _polarity = 1;
-	else _polarity = 0;
+	if (_normal[2] < 0) 
+		_polarity = 1;
+	else 
+		_polarity = 0;
 
 	// get dip first
 	_dip = acos(_normal[2]) * R2D;  // could do better. e.g. for overturn cases
@@ -189,7 +197,8 @@ bool Planar::_compute_strike_dip_polarity_from_normal()
 	double dip_direction = atan2(_normal[1], _normal[0]) * R2D;
 
 	// if negative azimuth get positive angle
-	if (dip_direction < 0) dip_direction += 360;
+	if (dip_direction < 0) 
+		dip_direction += 360;
 
 	// get strike
 	_strike = 360 - dip_direction;
@@ -349,6 +358,16 @@ void Planar::setNormalBounds(const double &delta_strike,const double &delta_dip)
 	_normal_bound[2][1] = nz_upper;
 }
 
+std::vector<Point> convert_constraints_to_points(const Constraints& constraints)
+{
+	std::vector<Point> pts;
+	pts.insert(std::end(pts), std::begin(constraints.inequality), std::end(constraints.inequality));
+	pts.insert(std::end(pts), std::begin(constraints.itrface), std::end(constraints.itrface));
+	pts.insert(std::end(pts), std::begin(constraints.planar), std::end(constraints.planar));
+	pts.insert(std::end(pts), std::begin(constraints.tangent), std::end(constraints.tangent));
+	return pts;
+}
+
 double distance_btw_pts(const Point &p1, const Point &p2) 
 {
 	double dx = p1.x() - p2.x();
@@ -399,7 +418,8 @@ std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p,
 	Math_methods::sort_vector_w_index(dist_arr,	index_arr);  // smallest to largest
 
 	if (n <= n_pts)
-		for (int j = 0; j < n; j++) nn_indices.push_back(index_arr[j]);
+		for (int j = 0; j < n; j++) 
+			nn_indices.push_back(index_arr[j]);
 	else
 		for (int j = 0; j < n_pts; j++)
 			nn_indices.push_back(index_arr[j]);  // will return less than n nn index. best option vs getting seg fault
@@ -451,10 +471,12 @@ double avg_nn_distance(const std::vector<Point> &pts)
 				if (dist < min_dist) min_dist = dist;
 			}
 		}
-		if (n == 1) min_dist = 0;  // trap this edge case
+		if (n == 1) 
+			min_dist = 0;  // trap this edge case
 		average_nn_distance += min_dist;
 	}
-	if (n != 0) average_nn_distance /= n;
+	if (n != 0) 
+		average_nn_distance /= n;
 	return average_nn_distance;
 }
 
@@ -650,47 +672,28 @@ bool get_maximal_axial_variability_order(const double(&bounds)[6], Parameter_Typ
 
 bool is_index_in_list(const int &index, const std::vector<int> &list) 
 {
-	for (int j = 0; j < (int)list.size(); j++) {
-		if (list[j] == index) return true;
+	for (const auto &list_index : list){
+		if (list_index == index) 
+			return true;
 	}
 	return false;
 }
 
-bool find_fill_distance(const Constraints &input, double &fill_distance)
+double get_largest_distance_between_points(const std::vector<Point> &pts)
 {
-	std::vector<double> ndist_j;
-
-	// put all inputted constraints into a vector of Points
-	std::vector<Point> points;
-
-	for (int j = 0; j < (int)input.inequality.size(); j++)
-		points.push_back(input.inequality.at(j));
-	for (int j = 0; j < (int)input.itrface.size(); j++)
-		points.push_back(input.itrface.at(j));
-	for (int j = 0; j < (int)input.planar.size(); j++)
-		points.push_back(input.planar.at(j));
-	for (int j = 0; j < (int)input.tangent.size(); j++)
-		points.push_back(input.tangent.at(j));
-
-	if (points.size() == 0 || input.evaluation_pts.size() == 0) return false;
-
-	for (int j = 0; j < (int)input.evaluation_pts.size(); j++) {
-		// find closest point in points[] to evaluation_pts[j]
-		unsigned int index = nearest_neighbour_index(input.evaluation_pts.at(j), points);
-		// compute nearest neighbour distance and push into ndist_j
-		ndist_j.emplace_back(distance_btw_pts(input.evaluation_pts.at(j), points[index]));
+	double largest_distance = 0.0;
+	for (const auto& pt_a : pts) {
+		for (const auto& pt_b : pts) {
+			double d = distance_btw_pts(pt_a, pt_b);
+			if (d > largest_distance)
+				largest_distance = d;
+		}
 	}
-
-	// find largest element in ndist_j
-	double largest = ndist_j[0];
-	for (int j = 1; j < (int)ndist_j.size(); j++)
-		if (ndist_j[j] > largest) largest = ndist_j[j];
-
-	fill_distance = largest;
-	return true;
+	return largest_distance;
 }
 
-std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const std::vector<Inequality> inequality, const double &avg_nn_distance)
+std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(
+	const std::vector<Inequality> &inequality, const double &avg_nn_distance)
 {
 	// Function will intelligently* get the indices within the STL vector of
 	// Inequality points that have large residuals Intelligently* : Doesn't
@@ -707,29 +710,23 @@ std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const st
 		if (!inequality.at(j).residual())
 			inequality_residuals_indices.push_back(j);
 	}
-	if (inequality_residuals_indices.size() != 0) {
+	if (!inequality_residuals_indices.empty()) {
 		// Will always accept the first residual over the threshold
-		inequality_indices_to_include.push_back(
-			inequality_residuals_indices[0]);
+		inequality_indices_to_include.push_back(inequality_residuals_indices[0]);
 		inequality_residuals_indices.pop_back();
 
-		for (int j = 0; j < (int)inequality_residuals_indices.size(); j++) {
-			// current index being analyzed (next residual in list):
-			int index = inequality_residuals_indices[j];
+		for (const auto &index : inequality_residuals_indices){
 			// find closest point currently in inequality_indices_to_include[]
 			// to
 			// index
 			double nn_dist = Large_distance;
-			int nn_index =
-				-1;  // should always be overwritten. Will get a seg fault
-					 // if this isn't the case
-			for (int k = 0; k < (int)inequality_indices_to_include.size();
-				k++) {
-				double dist = distance_btw_pts(inequality.at(index),inequality.at(inequality_indices_to_include[k]));
+			int nn_index = -1;  // should always be overwritten. Will get a seg fault if this isn't the case
+			for (const auto &ineql_index_to_include: inequality_indices_to_include){
+				double dist = distance_btw_pts(inequality[index],inequality[ineql_index_to_include]);
 				if (dist < nn_dist) 
 				{
 					nn_dist = dist;
-					nn_index = inequality_indices_to_include[k];
+					nn_index = ineql_index_to_include;
 				}
 			}
 			// Distance to other Large Residual Points Condition
@@ -738,13 +735,13 @@ std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const st
 		}
 	}
 
-	std::sort(inequality_indices_to_include.begin(),
-		inequality_indices_to_include.end());
+	std::sort(inequality_indices_to_include.begin(),inequality_indices_to_include.end());
 
 	return inequality_indices_to_include;
 }
 
-std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std::vector<Interface> itrface, const double &itrface_uncertainty,	const double &avg_nn_distance) 
+std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(
+	const std::vector<Interface> &itrface, const double &itrface_uncertainty, const double &avg_nn_distance) 
 {
 	// Function will intelligently* get the indices within the STL vector of
 	// Interface points that have large residuals Intelligently* : Doesn't
@@ -780,40 +777,30 @@ std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std
 	// 	{
 	// 		itrface_indices_to_include.push_back(ref_index);
 	// 	}
-	if (large_itrface_residuals.size() != 0)
+	if (!large_itrface_residuals.empty())
 	{
 		// Residual Magnitude Condition
 		// sort all residuals over the threshold(angular_uncertainty) in
 		// smallest to
 		// largest - along with linked indices
-		Math_methods::sort_vector_w_index(large_itrface_residuals,
-			large_itrface_residuals_indices);
+		Math_methods::sort_vector_w_index(large_itrface_residuals,large_itrface_residuals_indices);
 		// Will always accept largest residual over the threshold
-		itrface_indices_to_include.push_back(
-			large_itrface_residuals_indices
-			[(int)large_itrface_residuals_indices.size() - 1]);
-		large_itrface_residuals.pop_back();  // probably don't need to do this
-											 // since
-											 // we never use it again
+		itrface_indices_to_include.push_back(large_itrface_residuals_indices[(int)large_itrface_residuals_indices.size() - 1]);
+		large_itrface_residuals.pop_back();  // probably don't need to do this since we never use it again
 		large_itrface_residuals_indices.pop_back();
 
 		for (int j = 0; j < (int)large_itrface_residuals_indices.size(); j++) {
 			// current index being analyzed (next largest residual in list):
-			int index = large_itrface_residuals_indices
-				[(int)large_itrface_residuals_indices.size() - j - 1];
+			int index = large_itrface_residuals_indices[(int)large_itrface_residuals_indices.size() - j - 1];
 			// find closest point currently in itrface_indices_to_include[] to
 			// index
 			double nn_dist = Large_distance;
-			int nn_index =
-				-1;  // should always be overwritten. Will get a seg fault
-					 // if this isn't the case
-			for (int k = 0; k < (int)itrface_indices_to_include.size(); k++) {
-				double dist = distance_btw_pts(
-					itrface.at(index),
-					itrface.at(itrface_indices_to_include[k]));
+			int nn_index = -1;  // should always be overwritten. Will get a seg fault if this isn't the case
+			for (const auto &itr_index_to_include : itrface_indices_to_include){
+				double dist = distance_btw_pts(itrface[index],itrface[itr_index_to_include]);
 				if (dist < nn_dist) {
 					nn_dist = dist;
-					nn_index = itrface_indices_to_include[k];
+					nn_index = itr_index_to_include;
 				}
 			}
 			// Distance to other Large Residual Points Condition
@@ -822,13 +809,13 @@ std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std
 		}
 	}
 
-	std::sort(itrface_indices_to_include.begin(),
-		itrface_indices_to_include.end());
+	std::sort(itrface_indices_to_include.begin(),itrface_indices_to_include.end());
 
 	return itrface_indices_to_include;
 }
 
-std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::vector<Planar> planar, const double &angular_uncertainty, const double &avg_nn_distance) {
+std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(
+	const std::vector<Planar> &planar, const double &angular_uncertainty, const double &avg_nn_distance) {
 	// Function will intelligently* get the indices within the STL vector of
 	// Planar points that have large residuals Intelligently* : Doesn't blindly
 	// capture all points with large residuals
@@ -838,9 +825,7 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::v
 	//                 points -- This has been taken out for now.. needs more
 	//                 testing
 
-	std::vector<int> planar_indices_to_include;  // what we are going to
-												 // function
-												 // on function exit
+	std::vector<int> planar_indices_to_include;  // what we are going to function on function exit
 
 	double Large_distance = DBL_MAX;
 
@@ -872,9 +857,7 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::v
 		Math_methods::sort_vector_w_index(large_planar_residuals,large_planar_residuals_indices);
 		// Will always accept largest residual over the threshold
 		planar_indices_to_include.push_back(large_planar_residuals_indices[(int)large_planar_residuals_indices.size() - 1]);
-		large_planar_residuals.pop_back();  // probably don't need to do this
-											// since
-											// we never use it again
+		large_planar_residuals.pop_back();  // probably don't need to do this since we never use it again
 		large_planar_residuals_indices.pop_back();
 
 		for (int j = 0; j < (int)large_planar_residuals_indices.size(); j++) {
@@ -884,12 +867,12 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::v
 			// index
 			double nn_dist = Large_distance;
 			int nn_index = -1;  // should always be overwritten. Will get a seg fault if this isn't the case
-			for (int k = 0; k < (int)planar_indices_to_include.size(); k++) {
-				double dist = distance_btw_pts(planar.at(index), planar.at(planar_indices_to_include[k]));
+			for (const auto &planar_index_to_include : planar_indices_to_include){
+				double dist = distance_btw_pts(planar[index], planar[planar_index_to_include]);
 				if (dist < nn_dist) 
 				{
 					nn_dist = dist;
-					nn_index = planar_indices_to_include[k];
+					nn_index = planar_index_to_include;
 				}
 			}
 			// Distance to other Large Residual Points Condition
@@ -903,7 +886,8 @@ std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::v
 	return planar_indices_to_include;
 }
 
-std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::vector<Tangent> tangent, const double &angular_uncertainty, const double &avg_nn_distance) 
+std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
+	const std::vector<Tangent> &tangent, const double &angular_uncertainty, const double &avg_nn_distance)
 {
 	// Function will intelligently* get the indices within the STL vector of
 	// tangent points that have large residuals Intelligently* : Doesn't blindly
@@ -913,9 +897,7 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::
 	//                 - Considers the variability with close large residual
 	//                 points
 
-	std::vector<int> tangent_indices_to_include;  // what we are going to
-												  // function
-												  // on function exit
+	std::vector<int> tangent_indices_to_include;  // what we are going to function on function exit
 
 	double Large_distance = DBL_MAX;
 
@@ -934,12 +916,10 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::
 		// sort all residuals over the threshold(angular_uncertainty) in
 		// smallest to
 		// largest - along with linked indices
-		Math_methods::sort_vector_w_index(large_tangent_residuals,large_tangent_residuals_indices);
+		Math_methods::sort_vector_w_index(large_tangent_residuals, large_tangent_residuals_indices);
 		// Will always accept largest residual over the threshold
 		tangent_indices_to_include.push_back(large_tangent_residuals_indices[(int)large_tangent_residuals_indices.size() - 1]);
-		large_tangent_residuals.pop_back();  // probably don't need to do this
-											 // since
-											 // we never use it again
+		large_tangent_residuals.pop_back();  // probably don't need to do this since we never use it again
 		large_tangent_residuals_indices.pop_back();
 
 		for (int j = 0; j < (int)large_tangent_residuals_indices.size(); j++) {
@@ -949,21 +929,23 @@ std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::
 			// index
 			double nn_dist = Large_distance;
 			int nn_index = -1;  // should always be overwritten. Will get a seg fault if this isn't the case
-			for (int k = 0; k < (int)tangent_indices_to_include.size(); k++) {
-				double dist = distance_btw_pts(tangent.at(index),tangent.at(tangent_indices_to_include[k]));
-				if (dist < nn_dist) 
-				{
-					nn_dist = dist;
-					nn_index = tangent_indices_to_include[k];
+			for (const auto &tangent_index_to_include : tangent_indices_to_include) {
+				for (int k = 0; k < (int)tangent_indices_to_include.size(); k++) {
+					double dist = distance_btw_pts(tangent[index], tangent[tangent_index_to_include]);
+					if (dist < nn_dist)
+					{
+						nn_dist = dist;
+						nn_index = tangent_index_to_include;
+					}
 				}
+				// Distance to other Large Residual Points Condition
+				if (nn_dist > avg_nn_distance)
+					tangent_indices_to_include.push_back(index);
 			}
-			// Distance to other Large Residual Points Condition
-			if (nn_dist > avg_nn_distance)
-				tangent_indices_to_include.push_back(index);
 		}
+
+		std::sort(tangent_indices_to_include.begin(), tangent_indices_to_include.end());
+
+		return tangent_indices_to_include;
 	}
-
-	std::sort(tangent_indices_to_include.begin(),tangent_indices_to_include.end());
-
-	return tangent_indices_to_include;
 }

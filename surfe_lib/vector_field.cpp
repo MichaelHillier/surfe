@@ -148,7 +148,7 @@ void Vector_Field::eval_scalar_interpolant_at_point(Point &p) {
     double elemsum_y = 0.0;
     double elemsum_z = 0.0;
     for (int k = 0; k < n_p; k++) {
-        kernel_j->set_points(p, constraints.planar[j]);
+        kernel_j->set_points(p, constraints.planar[k]);
         elemsum_x += solver->weights[3 * k] *
                      kernel_j->basis_planar_planar(Parameter_Types::DXDX);
         elemsum_x += solver->weights[3 * k + 1] *

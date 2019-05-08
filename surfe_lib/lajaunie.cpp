@@ -215,24 +215,9 @@ bool Lajaunie_Approach::process_input_data() {
 			planar_pt.setNormalBounds(m_parameters.angular_uncertainty,m_parameters.angular_uncertainty / 2);  
 			// Need more ROBUST METHOD. Try large statistical sampling
             // from von Mises spherical distribution
-            std::cout << " Planar[" << j << "] Bounds: " << std::endl;
-            std::cout << "	nx: " << planar_pt.nx_lower_bound()
-                 << " <= " << planar_pt.nx()
-                 << " <= " << planar_pt.nx_upper_bound() << std::endl;
-            std::cout << "	ny: " << planar_pt.ny_lower_bound()
-                 << " <= " << planar_pt.ny()
-                 << " <= " << planar_pt.ny_upper_bound() << std::endl;
-            std::cout << "	nz: " << planar_pt.nz_lower_bound()
-                 << " <= " << planar_pt.nz()
-                 << " <= " << planar_pt.nz_upper_bound() << std::endl;
         }
 		for (auto &tangent_pt : constraints.tangent){
 			tangent_pt.setAngleBounds(m_parameters.angular_uncertainty);
-            std::cout << " Tangent[" << j << "] Bounds: " << std::endl;
-            std::cout << "	" << tangent_pt.angle_lower_bound()
-                 << " <= " << tangent_pt.inner_product_constraint()
-                 << " <= " << tangent_pt.angle_upper_bound()
-                 << std::endl;
         }
     }
 

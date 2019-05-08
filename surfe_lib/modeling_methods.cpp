@@ -127,7 +127,6 @@ bool GRBF_Modelling_Methods::setup_basis_functions() {
 bool GRBF_Modelling_Methods::check_interpolant() {
 
 	for (auto &interface_pt: constraints.itrface){
-        std::cout << " Interface[" << j << "]: " << std::endl;
         eval_scalar_interpolant_at_point(interface_pt);
         std::cout << "	Scalar field = " << interface_pt.scalar_field() << std::endl;
     }
@@ -137,162 +136,13 @@ bool GRBF_Modelling_Methods::check_interpolant() {
         double vf[3] = {planar_pt.nx_interp(),
 						planar_pt.ny_interp(),
 						planar_pt.nz_interp()};
-        std::cout << " Planar[" << j << "]: " << std::endl;
-		std::cout << "	Nx = " << planar_pt.nx()
-             << " Nx interpolated = " << planar_pt.nx_interp()
-             << std::endl;
-		std::cout << "	Ny = " << planar_pt.ny()
-             << " Ny interpolated = " << planar_pt.ny_interp()
-             << std::endl;
-		std::cout << "	Nz = " << planar_pt.nz()
-             << " Nz interpolated = " << planar_pt.nz_interp()
-             << std::endl;
     }
 	for (auto &tangent_pt: constraints.tangent){
         eval_vector_interpolant_at_point(tangent_pt);
         double vf[3] = {tangent_pt.nx_interp(),
 						tangent_pt.ny_interp(),
 						tangent_pt.nz_interp()};
-        std::cout << " Tangent[" << j << "]: " << std::endl;
-        std::cout << "	Tx = " << tangent_pt.tx()
-             << " Nx interpolated = " << tangent_pt.nx_interp()
-             << std::endl;
-        std::cout << "	Ty = " << tangent_pt.ty()
-             << " Ny interpolated = " << tangent_pt.ny_interp()
-             << std::endl;
-		std::cout << "	Tz = " << tangent_pt.tz()
-             << " Nz interpolated = " << tangent_pt.nz_interp()
-             << std::endl;
-		std::cout << " Tx*nx + Ty*ny + Tz*nz = "
-             << tangent_pt.tx() *tangent_pt.nx_interp() +
-			tangent_pt.ty() * tangent_pt.ny_interp() +
-			tangent_pt.tz() * tangent_pt.nz_interp() << std::endl;
     }
-
-    return true;
-}
-
-bool GRBF_Modelling_Methods::evaluate_scalar_interpolant() {
-    if (solver == nullptr)
-        return false;
-    else {
-        if ((int)solver->weights.size() == 0)
-            return false;
-        else {
-            if (b_parameters.modified_basis) {
-                if (!convert_modified_kernel_to_rbf_kernel()) {
-                    error_msg.append(
-                        " QPP solution conversion to Linear Failure.");
-                    return false;
-                }
-            }
-
-            int N = (int)constraints.evaluation_pts.size();
-            int add = 0;
-            int vv = round((double)N /72.0);  // 72.0 is the width of the progress bar
-            double factor = (100.0 * (double)vv) / (double)N;
-
-#pragma omp parallel for schedule(dynamic)
-            for (int j = 0; j < N; j++) {
-                eval_scalar_interpolant_at_point(constraints.evaluation_pts[j]);
-                eval_vector_interpolant_at_point(constraints.evaluation_pts[j]);
-                if (vv > 0 && j % vv == 0) {
-#pragma omp atomic
-                    add++;
-                    int step = factor * add;
-#pragma omp critical
-                    _Progress(" Computing Scalar field: ", step, 100);
-                }
-            }
-            std::cout << std::endl;
-        }
-    }
-    return true;
-}
-//std::vector<double> GRBF_Modelling_Methods::eval_vector_on_points(std::vector<std::vector<double> > points ){
-//        if (solver == NULL)
-//        return false;
-//    else {
-//        if ((int)solver->weights.size() == 0)
-//            return false;
-//        else {
-//            if (b_parameters.modified_basis) {
-//                if (!convert_modified_kernel_to_rbf_kernel()) {
-//                    error_msg.append(
-//                        " QPP solution conversion to Linear Failure.");
-//                    return false;
-//                }
-//            }
-//
-//            int N = (int)b_input.evaluation_pts->size();
-//            int add = 0;
-//            int vv = round((double)N /
-//                           72.0);  // 72.0 is the width of the progress bar
-//            double factor = (100.0 * (double)vv) / (double)N;
-//
-//#pragma omp parallel for schedule(dynamic)
-//            for (int j = 0; j < N; j++) {
-//                eval_scalar_interpolant_at_point(b_input.evaluation_pts->at(j));
-//                eval_vector_interpolant_at_point(b_input.evaluation_pts->at(j));
-//                if (vv > 0 && j % vv == 0) {
-//#pragma omp atomic
-//                    add++;
-//                    int step = factor * add;
-//#pragma omp critical
-//                    _Progress(" Computing Scalar field: ", step, 100);
-//                }
-//            }
-//            cout << endl;
-//        }
-//    }
-//
-//    }
-bool GRBF_Modelling_Methods::run_algorithm() {
-    clock_t tstart = clock();
-
-    // set OpenMP parameters
-    const int nthreads = omp_get_max_threads();
-    omp_set_dynamic(false);
-    if (nthreads >= 8)
-        omp_set_num_threads(nthreads - 2);
-    else
-        omp_set_num_threads(nthreads - 1);
-    ///////////////////////////////////////
-
-	std::cout << " Starting SURFE algorithm " << std::endl;
-	std::cout << " Processing input data...";
-    if (!process_input_data()) {
-        error_msg = "Error processing input data";
-        return false;
-    }
-	std::cout << "done!" << std::endl;
-	std::cout << " Get method parameters...";
-    if (!get_method_parameters()) {
-        error_msg.append(" Error getting method parameters.");
-        return false;
-    }
-	std::cout << "done!" << std::endl;
-	std::cout << " Setup basis functions...";
-    if (!setup_basis_functions()) {
-        error_msg.append(" Error setting up basis functions.");
-        return false;
-    }
-	std::cout << "done!" << std::endl;
-	std::cout << " Solve mathematical problem...";
-    if (!setup_system_solver()) {
-		std::cout << "failed" << std::endl;
-        error_msg.append(" Error solving mathematical equations.");
-        return false;
-    }
-	std::cout << "done!" << std::endl;
-	std::cout << " Evaluate scalar interpolant at grid nodes...";
-    if (!evaluate_scalar_interpolant()) {
-        error_msg.append(" Error evaluating interpolant in grid of points.");
-        return false;
-    }
-	std::cout << "done!" << std::endl;
-	std::cout << " Total computation time = " << ((double)clock() - tstart) /
-                                                CLOCKS_PER_SEC << std::endl;
 
     return true;
 }
@@ -354,10 +204,10 @@ bool GRBF_Modelling_Methods::_output_greedy_debug_objects() {
         if ((int)solver->weights.size() == 0)
             return false;
         else {
-            if (!constraints.evaluation_pts.empty())
-                evaluate_scalar_interpolant();
-            else
-                return false;
+//             if (!constraints.evaluation_pts.empty()) TODO
+//                 evaluate_scalar_interpolant();
+//             else
+//                 return false;
         }
     }
 
@@ -421,13 +271,13 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm() {
         greedy_method->_SetIteration(iter);
     }
 
-    greedy_method->constraints.evaluation_pts = constraints.evaluation_pts;
-    if (!greedy_method->evaluate_scalar_interpolant()) return false;
-
-    constraints.evaluation_pts = greedy_method->constraints.evaluation_pts;
-    constraints.interface_iso_values.clear();
-    constraints.interface_iso_values =
-		std::vector<double>(greedy_method->constraints.interface_iso_values);
+//     greedy_method->constraints.evaluation_pts = constraints.evaluation_pts;
+//     if (!greedy_method->evaluate_scalar_interpolant()) return false;
+// 
+//     constraints.evaluation_pts = greedy_method->constraints.evaluation_pts;
+//     constraints.interface_iso_values.clear();
+//     constraints.interface_iso_values =
+// 		std::vector<double>(greedy_method->constraints.interface_iso_values);
 
     return true;
 }

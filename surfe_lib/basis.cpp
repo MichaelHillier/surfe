@@ -42,8 +42,6 @@
 
 #include <algorithm>
 
-using namespace std;
-using namespace Surfe;
 inline void RBFKernel::radius() {
   // compute euclidean distance
   // compute component differences
@@ -126,7 +124,7 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	// might have to check eval(0) smallest eigenvalue
 	// if there are normals sampled from a perfect cylinderical fold
 	if (eVals(0) < 1e-8)
-	eVals(0) = 0.0001;
+		eVals(0) = 0.0001;
 	// eval(0) = ~1e-16 machine precision.
 	// perhaps set to eval(0) = 0.0001 ...
 
@@ -175,8 +173,7 @@ double RBFKernel::basis_tangent_pt() {
 			this->dz_p1() * t->tz();
 }
 
-double
-RBFKernel::basis_planar_planar(const Parameter_Types::SecondDerivatives &sd) {
+double RBFKernel::basis_planar_planar(const Parameter_Types::SecondDerivatives &sd) {
 	if (sd == Parameter_Types::DXDX)
 		return this->dxx();
 	else if (sd == Parameter_Types::DXDY)

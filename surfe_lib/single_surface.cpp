@@ -483,16 +483,16 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel() {
     // actually represent horizon interfaces points though)
 	std::vector<Interface> temp_itr;
 	for (const auto& inequality_pt: constraints.inequality){
-        Evaluation_Point test_point(inequality_pt.x(), inequality_pt.y(),inequality_pt.z());
+        Point test_point(inequality_pt.x(), inequality_pt.y(),inequality_pt.z());
         // debug
         // cout<<" Inequality["<<j<<"]: "<<endl;
         eval_scalar_interpolant_at_point(test_point);
         // cout<<"	Scalar field = "<<test_point.scalar_field()<<endl;
         Interface itr_point(test_point.x(), test_point.y(), test_point.z(), test_point.scalar_field());
-        temp_itr->push_back(itr_point);
+        temp_itr.push_back(itr_point);
     }
 	for (auto &interface_pt : constraints.itrface){
-        Evaluation_Point test_point(interface_pt.x(), interface_pt.y(), interface_pt.z());
+        Point test_point(interface_pt.x(), interface_pt.y(), interface_pt.z());
         // debug
         // cout<<" Interface["<<j<<"]: "<<endl;
         eval_scalar_interpolant_at_point(test_point);
@@ -526,9 +526,7 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel() {
         // "<<b_input.tangent->at(j).tx()*b_input.tangent->at(j).nx_interp()
         // + b_input.tangent->at(j).ty()*b_input.tangent->at(j).ny_interp() +
         // 			b_input.tangent->at(j).tz()*b_input.tangent->at(j).nz_interp()<<endl;
-        double vf[3] = {tangent_pt.nx_interp(),
-						tangent_pt.ny_interp(),
-						tangent_pt.nz_interp()};
+        double vf[3] = {tangent_pt.nx_interp(),tangent_pt.ny_interp(),tangent_pt.nz_interp()};
         double inner_product = vf[0] * tangent_pt.tx() +
                                vf[1] * tangent_pt.ty() +
                                vf[2] * tangent_pt.tz();
@@ -821,21 +819,31 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
     int n_p = b_parameters.n_planar;
     int n_t = b_parameters.n_tangent;
 
+
+	// REF:
+	// minimize f = 1/2 xT H x
+	// s.t. b <= Ax <= b + r
+
     // inequality/rock type data
     if (n_ie != 0) {
-        // compute fill distance
-        double fill_distance = 0.0;
-        find_fill_distance(constraints, fill_distance);
+        // compute largest distance between points
+		// this distance will represent the upper 
+		// bound for inequality constraints
+		// NOTE: this notion depends on the norm of gradient of the scalar field
+		// to be ~1. Which is not true in reality. Will affect results.
+		// a possible direction for future work
+		std::vector<Point> aggregated_pts = convert_constraints_to_points(constraints);
+		double distance = get_largest_distance_between_points(aggregated_pts);
         for (int j = 0; j < n_ie; j++) {
             if (constraints.inequality[j].level() > 0)  // stratigraphically above
             {
                 b(j) = 0.0;
-                r(j) = fill_distance;
+                r(j) = distance;
             } 
 			else  // stratigraphically below
             {
-                b(j) = -fill_distance;
-                r(j) = fill_distance;
+                b(j) = -distance;
+                r(j) = distance;
             }
         }
     }
@@ -887,7 +895,7 @@ bool Single_Surface::process_input_data() {
 		for (auto &planar_pt: constraints.planar){
 			planar_pt.setNormalBounds(m_parameters.angular_uncertainty,m_parameters.angular_uncertainty / 2);  // Need more ROBUST
             // METHOD. Try large statistical sampling from von Mises spherical distribution
-            std::cout << " Planar[" << j << "] Bounds: " << std::endl;
+            std::cout << " Planar[] Bounds: " << std::endl;
 			std::cout << "	nx: " << planar_pt.nx_lower_bound()
                  << " <= " << planar_pt.nx()
                  << " <= " << planar_pt.nx_upper_bound() << std::endl;

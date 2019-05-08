@@ -85,13 +85,6 @@ public:
     double nz_interp() const { return _field_normal[2]; }
 };
 
-class SURFE_LIB_EXPORT Evaluation_Point : public Point {
-public:
-    Evaluation_Point(const double &x_coord, const double &y_coord,
-                     const double &z_coord, const double &c_coord = 0)
-        : Point(x_coord, y_coord, z_coord, c_coord) {}
-};
-
 class SURFE_LIB_EXPORT Interface : public Point {
 private:
     double _level;
@@ -258,7 +251,7 @@ private:
     }  // Not implemented yet. should be tested when 2nd order polynomials are
        // used. Also when unisolvent points are used this should be called.
     // inequality
-    std::set<double> _get_distinct_inequality_iso_values();
+    std::vector<double> _get_distinct_inequality_iso_values();
 
 public:
 	Constraints() {
@@ -281,20 +274,14 @@ public:
 	std::vector<std::vector<Interface> > interface_point_lists;
 	std::vector<Interface> interface_test_points;
 
-	// evaluation points - where interpolant is evaluated
-	std::vector<Evaluation_Point> evaluation_pts;
-
 	/////////////
 	// Methods //
 	/////////////
 	// Appending constraints
-	void add_interface_constraint(const Point& pt) { itrface.emplace_back(pt); }
+	void add_interface_constraint(const Interface& pt) { itrface.emplace_back(pt); }
 	void add_planar_constraint(const Planar& planar_pt) { planar.emplace_back(planar_pt); }
 	void add_tangent_constraint(const Tangent& tangent_pt) { tangent.emplace_back(tangent_pt); }
 	void add_inequality_constraint(const Inequality& inequality_pt) { inequality.emplace_back(inequality_pt); }
-
-	// Clear current (if exists) evaluation_pts vector 
-	void reset_evaluation_points() { evaluation_pts.clear(); };
 
     bool get_interface_data();  // fills interface_iso_values,
                                 // interface_point_lists,
@@ -319,7 +306,7 @@ public:
 	void SetTangentAvgNNDist(const double &dist) { _avg_nn_dist_t = dist; }
 };
 
-
+std::vector<Point> convert_constraints_to_points(const Constraints& constraints);
 double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector<Point> &pts);
 std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p, const std::vector<Point> &pts);
@@ -331,7 +318,7 @@ int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &
 void calculate_bounds(const std::vector<Point> &pts, double (&bounds)[6]);
 std::vector<int> get_extremal_point_data_indices_from_points(const std::vector<Point> &pts);
 bool is_index_in_list(const int &index, const std::vector<int> &list);
-bool find_fill_distance(const Constraints &input, double &fill_distance);
+double get_largest_distance_between_points(const std::vector<Point> &pts);
 // The below functions will intelligently* get the indices within the STL vector
 // of points that have large residuals Intelligently* : Doesn't blindly capture
 // all points with large residuals

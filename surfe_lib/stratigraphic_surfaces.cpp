@@ -391,15 +391,21 @@ bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &inequality_values) 
 
 bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &b, VectorXd &r) {
 
-    double fill_distance;
-    find_fill_distance(constraints, fill_distance);  
+	// compute largest distance between points
+	// this distance will represent the upper 
+	// bound for inequality constraints
+	// NOTE: this notion depends on the norm of gradient of the scalar field
+	// to be ~1. Which is not true in reality. Will affect results.
+	// a possible direction for future work
+	std::vector<Point> aggregated_pts = convert_constraints_to_points(constraints);
+	double distance = get_largest_distance_between_points(aggregated_pts);
 	// this could be dangerous when combined with greedy (expensive compute with dense grids)
     int j = 0;
     int k = 0;
     // Sequenced Interface Points 1st
     for (j = 0; j < _n_sequenced_interface_pairs; j++) {
         b(j) = m_parameters.min_stratigraphic_thickness;
-        r(j) = fill_distance - m_parameters.min_stratigraphic_thickness;
+        r(j) = distance - m_parameters.min_stratigraphic_thickness;
     }
     // Sequenced Inequality Points 2nd
     for (k = 0; k < _n_sequenced_inequality_pairs; k++) {

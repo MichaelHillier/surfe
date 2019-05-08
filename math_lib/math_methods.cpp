@@ -41,49 +41,52 @@
 #include <math_methods.h>
 
 double Math_methods::_find_step(const VectorXd &da, const VectorXd &a) {
-  int n = da.rows();
-  double max = DBL_MIN;
-  for (int j = 0; j < n; j++) {
-    double alpha = std::max(abs(da[j] / a[j]) / 0.95, 1.0);
-    if (alpha > max)
-      max = alpha;
-    // std::cout<<" alpha = "<<alpha<<" max= "<<max<<std::endl;
-  }
-  return max;
+	int n = da.rows();
+	double max = DBL_MIN;
+	for (int j = 0; j < n; j++) {
+		double alpha = std::max(abs(da[j] / a[j]) / 0.95, 1.0);
+		if (alpha > max)
+			max = alpha;
+		// std::cout<<" alpha = "<<alpha<<" max= "<<max<<std::endl;
+	}
+	return max;
 }
 
-double Math_methods::_find_positivity_step(const VectorXd &da, const VectorXd &a,
-                                    const VectorXd &db, const VectorXd &b,
-                                    const VectorXd &dc, const VectorXd &c,
-                                    const VectorXd &dd, const VectorXd &d) {
-  double max = DBL_MIN;
+double Math_methods::_find_positivity_step(
+	const VectorXd &da, const VectorXd &a,
+	const VectorXd &db, const VectorXd &b,
+	const VectorXd &dc, const VectorXd &c,
+	const VectorXd &dd, const VectorXd &d) 
+{
+	double max = DBL_MIN;
 
-  double max_a = _find_step(da, a);
-  double max_b = _find_step(db, b);
-  double max_c = _find_step(dc, c);
-  double max_d = _find_step(dd, d);
+	double max_a = _find_step(da, a);
+	double max_b = _find_step(db, b);
+	double max_c = _find_step(dc, c);
+	double max_d = _find_step(dd, d);
 
-  if (max_a > max)
-    max = max_a;
-  if (max_b > max)
-    max = max_b;
-  if (max_c > max)
-    max = max_c;
-  if (max_d > max)
-    max = max_d;
+	if (max_a > max)
+		max = max_a;
+	if (max_b > max)
+		max = max_b;
+	if (max_c > max)
+		max = max_c;
+	if (max_d > max)
+		max = max_d;
 
-  return max;
+	return max;
 }
 
 double Math_methods::RandomDouble(const double &min, const double &max) 
 {
-  double f = (double)rand() / RAND_MAX;
-  return min + f * (max - min);
+	double f = (double)rand() / RAND_MAX;
+	return min + f * (max - min);
 }
 
-bool Math_methods::quadratic_solver_loqo(const MatrixXd &H, const MatrixXd &A,
-                                         const VectorXd &b, const VectorXd &r,
-                                         VectorXd &fvalues) 
+bool Math_methods::quadratic_solver_loqo(
+	const MatrixXd &H, const MatrixXd &A,                                 
+	const VectorXd &b, const VectorXd &r,                                   
+	VectorXd &fvalues) 
 {
 	// minimize f = 1/2 xT H x
 	// s.t. b <= Ax <= b + r
@@ -98,8 +101,7 @@ bool Math_methods::quadratic_solver_loqo(const MatrixXd &H, const MatrixXd &A,
 	rhs << c, b;
 	// std::cout<<" rhs:\n"<< rhs << std::endl;
 
-	KKT << -(H + MatrixXd::Identity(n, n)), A.transpose(), A,
-		MatrixXd::Identity(n, n);
+	KKT << -(H + MatrixXd::Identity(n, n)), A.transpose(), A, MatrixXd::Identity(n, n);
 	// std::cout<<" Initial KKT matrix:\n"<< KKT << std::endl;
 
 	VectorXd soln(2 * n);
@@ -217,8 +219,7 @@ bool Math_methods::quadratic_solver_loqo(const MatrixXd &H, const MatrixXd &A,
 		double primal_obj = 0.5 * x.transpose() * H * x;
 		double dual_obj = b.dot(y) - 0.5 * x.transpose() * H * x - r.dot(q);
 
-		double sigfig = std::max(
-			-std::log10(abs(primal_obj - dual_obj) / (abs(primal_obj) + 1.0)), 0.0);
+		double sigfig = std::max(-std::log10(abs(primal_obj - dual_obj) / (abs(primal_obj) + 1.0)), 0.0);
 
 		primal_infeasibility = sqrt(rho.dot(rho) + tau.dot(tau) + alpha.dot(alpha) + nu.dot(nu)) /(sqrt(b.dot(b)) + 1.0);
 		dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
@@ -296,8 +297,7 @@ bool Math_methods::quadratic_solver_loqo(const MatrixXd &H, const MatrixXd &A,
 		// (rho,nu,alpha,sigma,tau,beta,gamma_z,gamma_w,gamma_s,gamma_q,tauh,betah,alphah,nuh):\n"<<
 		// RHSV << std::endl;
 
-		rhs << (sigma - D * (nuh + S.inverse() * T * tauh)),
-			(rho - E * (betah - P.inverse() * Q * alphah));
+		rhs << (sigma - D * (nuh + S.inverse() * T * tauh)),(rho - E * (betah - P.inverse() * Q * alphah));
 
 		KKT << -(H + D), A.transpose(), A, E;
 		// 		std::cout<<" Predictor KKT matrix:\n"<< KKT << std::endl;
@@ -307,8 +307,7 @@ bool Math_methods::quadratic_solver_loqo(const MatrixXd &H, const MatrixXd &A,
 
 		if (!soln.allFinite())
 		{
-			std::cout << " Numerical issue with solving linear system..."
-					<< std::endl;
+			std::cout << " Numerical issue with solving linear system..."<< std::endl;
 			return false;
 		}
 
@@ -356,8 +355,7 @@ bool Math_methods::quadratic_solver_loqo(const MatrixXd &H, const MatrixXd &A,
 
 		// update mu
 		mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q)) * (fraction) / (4 * n);
-		std::cout << "	mu (predictor) = " << mu << " fraction = " << fraction
-					<< std::endl;
+		std::cout << "	mu (predictor) = " << mu << " fraction = " << fraction << std::endl;
 
 		// update rhs variables rho,nu,alpha,sigma,tau,beta,gamma's
 		// first compute dG,dV,dT,and dP matrices from dg,dv,dt, and dp vectors
@@ -384,8 +382,7 @@ bool Math_methods::quadratic_solver_loqo(const MatrixXd &H, const MatrixXd &A,
 		soln = KKT.partialPivLu().solve(rhs);
 
 		if (!soln.allFinite()) {
-			std::cout << " Numerical issue with solving linear system..."
-					<< std::endl;
+			std::cout << " Numerical issue with solving linear system..."<< std::endl;
 			return false;
 		}
 
