@@ -63,8 +63,10 @@ PYBIND11_MODULE(surfe, m) {
         .def("setResidual", &Inequality::setResidual);
 
     py::class_<Planar, Point>(m, "Planar")
-        .def(py::init<const double, const double, const double, const double,
-                      const double, const double>())
+        .def(py::init<const double&, const double&, const double&, const double&,
+                      const double&, const double&>())
+		.def(py::init<const double&, const double&, const double&, const double&,
+			const double&, const int&>())
         //.def("getDipVector",&Planar::getDipVector)
         //.def("getStrikeVector",&Planar::getStrikeVector)
         .def("dip", &Planar::dip)
@@ -84,8 +86,8 @@ PYBIND11_MODULE(surfe, m) {
         .def("setResidual", &Planar::setResidual)
         .def("setNormal", &Planar::setNormal);
     py::class_<Tangent, Point>(m, "Tangent")
-        .def(py::init<const double, const double, const double, const double,
-                      const double, const double>())
+        .def(py::init<const double&, const double&, const double&, const double&,
+                      const double&, const double&>())
         .def("tx", &Tangent::tx)
         .def("ty", &Tangent::ty)
         .def("tz", &Tangent::tz)
