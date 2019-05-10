@@ -70,6 +70,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_SOURCE_DIR}
 
 add_subdirectory(pybind11)
 #setup python
-pybind11_add_module(surfe python/model_input.cpp)
-target_link_libraries(surfe surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
+pybind11_add_module(surfepy surfe_pybindings/pybindings.cpp)
+target_link_libraries(surfepy surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
 
