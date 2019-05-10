@@ -44,7 +44,7 @@
 
 #include <modeling_methods.h>
 
-class SURFE_LIB_EXPORT Stratigraphic_Surfaces : public GRBF_Modelling_Methods {
+class Stratigraphic_Surfaces : public GRBF_Modelling_Methods {
 private:
     // Methods
     bool _get_increment_pairs();

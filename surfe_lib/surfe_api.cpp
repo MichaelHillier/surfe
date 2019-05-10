@@ -1,16 +1,18 @@
 #include <surfe_api.h>
 
-GRBF_Modelling_Methods* Surfe_API::get_method(const model_parameters& params, const Constraints& constraints)
+GRBF_Modelling_Methods* Surfe_API::get_method(const model_parameters& params)
 {
+	// TODO
+// 	if (params.model_type == Parameter_Types::Single_surface)
+// 		return new Single_Surface(params, constraints);
+// 	else if (params.model_type == Parameter_Types::Lajaunie_approach)
+// 		return new Lajaunie_Approach(params, constraints);
+// 	else if (params.model_type == Parameter_Types::Stratigraphic_horizons)
+// 		return new Stratigraphic_Surfaces(params, constraints);
+// 	else
+// 		return new Continuous_Property(params, constraints);
 
-	if (params.model_type == Parameter_Types::Single_surface)
-		return new Single_Surface(params, constraints);
-	else if (params.model_type == Parameter_Types::Lajaunie_approach)
-		return new Lajaunie_Approach(params, constraints);
-	else if (params.model_type == Parameter_Types::Stratigraphic_horizons)
-		return new Stratigraphic_Surfaces(params, constraints);
-	else
-		return new Continuous_Property(params, constraints);
+	return nullptr;
 }
 
 bool Surfe_API::ComputeInterpolant()

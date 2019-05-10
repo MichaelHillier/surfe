@@ -44,7 +44,7 @@
 
 #include <modeling_methods.h>
 
-class SURFE_LIB_EXPORT Vector_Field : public GRBF_Modelling_Methods {
+class Vector_Field : public GRBF_Modelling_Methods {
 public:
 	// Constructor/Destructor
 	Vector_Field(const model_parameters &m_p, const Constraints &vec_constraints) 

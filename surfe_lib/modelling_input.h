@@ -57,6 +57,7 @@ private:
     double _field_normal[3];
 
 public:
+	Point() {}
     Point(const double &x_coord, const double &y_coord, const double &z_coord,
           const double &c_coord = 0)
         : _x(x_coord), _y(y_coord), _z(z_coord), _c(c_coord) {
@@ -92,6 +93,7 @@ private:
     double _level_bound[2];
 
 public:
+	Interface() {}
     Interface(const double &x_coord, const double &y_coord,
               const double &z_coord, const double &lvl,
               const double &c_coord = 0)
@@ -118,6 +120,7 @@ private:
     bool _residual;
 
 public:
+	Inequality() {}
     Inequality(const double &x_coord, const double &y_coord,
                const double &z_coord, const double &lvl,
                const double &c_coord = 0)
@@ -141,6 +144,7 @@ private:
     bool _compute_normal_from_strike_dip_polarity();
 
 public:
+	Planar() {}
     Planar(const double &x_coord, const double &y_coord, const double &z_coord,
            const double &nx, const double &ny, const double &nz,
            const double &c_coord = 0)
@@ -196,6 +200,7 @@ private:
     double _inner_product_constraint;
 
 public:
+	Tangent() {}
     Tangent(const double &x_coord, const double &y_coord, const double &z_coord,
             const double &tx, const double &ty, const double &tz,
             const double &c_coord = 0)
@@ -236,7 +241,7 @@ public:
     }
 };
 
-class SURFE_LIB_EXPORT Constraints {
+class Constraints {
 private:
     // Attributes
     double _avg_nn_dist_ie;
@@ -277,11 +282,6 @@ public:
 	/////////////
 	// Methods //
 	/////////////
-	// Appending constraints
-	void add_interface_constraint(const Interface& pt) { itrface.emplace_back(pt); }
-	void add_planar_constraint(const Planar& planar_pt) { planar.emplace_back(planar_pt); }
-	void add_tangent_constraint(const Tangent& tangent_pt) { tangent.emplace_back(tangent_pt); }
-	void add_inequality_constraint(const Inequality& inequality_pt) { inequality.emplace_back(inequality_pt); }
 
     bool get_interface_data();  // fills interface_iso_values,
                                 // interface_point_lists,

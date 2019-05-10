@@ -43,7 +43,7 @@
 #include <surfe_lib_module.h>  // macro for importing / exporting dll
 
 #include <modeling_methods.h>
-class SURFE_LIB_EXPORT Single_Surface : public GRBF_Modelling_Methods {
+class Single_Surface : public GRBF_Modelling_Methods {
 private:
 	bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
 	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);

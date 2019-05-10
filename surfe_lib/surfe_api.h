@@ -15,12 +15,16 @@ private:
 	GRBF_Modelling_Methods *method_;
 	model_parameters params_;
 	Constraints constraints_;
-	GRBF_Modelling_Methods* get_method(const model_parameters& params, const Constraints& constraints);
+	GRBF_Modelling_Methods* get_method(const model_parameters& params);
 public:
-	Surfe_API(const model_parameters& params, const Constraints& constraints) : params_(params), constraints_(constraints)
+	Surfe_API(const model_parameters& params) : params_(params)
 	{
-		method_ = get_method(params_, constraints_);
+		method_ = get_method(params_);
 	}
+	void AddInterfaceConstraint(const Interface& pt);
+	void AddPlanarConstraint(const Planar& planar_pt);
+	void AddTangentConstraint(const Tangent& tangent_pt);
+	void AddInequalityConstraint(const Inequality& inequality_pt);
 	bool ComputeInterpolant();
 	double EvaluateInterpolantAtPoint(const double &x, const double &y, const double &z);
 	std::vector<double> EvaluateVectorInterpolantAtPoint(const double &x, const double &y, const double &z);

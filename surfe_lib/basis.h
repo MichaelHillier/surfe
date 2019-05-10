@@ -47,7 +47,7 @@
 #include <Eigen/Core>
 using namespace Eigen;
 
-class SURFE_LIB_EXPORT Kernel {
+class Kernel {
 protected:
     Point *_p1;
     Point *_p2;

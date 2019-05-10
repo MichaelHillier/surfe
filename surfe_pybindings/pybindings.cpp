@@ -18,7 +18,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(surfe, m) {
 	// setup bindings for Surfe_API
 	py::class_<Surfe_API>(m, "Surfe_API")
-		.def(py::init<const model_parameters &, const Constraints &>())
+		.def(py::init<const model_parameters &>())
 		.def("ComputeInterpolant", &Surfe_API::ComputeInterpolant)
 		.def("EvaluateInterpolantAtPoint", &Surfe_API::EvaluateInterpolantAtPoint)
 		.def("EvaluateVectorInterpolantAtPoint", &Surfe_API::EvaluateVectorInterpolantAtPoint);
@@ -98,32 +98,6 @@ PYBIND11_MODULE(surfe, m) {
         .def("setResidual", &Tangent::setResidual)
         .def("setAngleBounds", &Tangent::setAngleBounds)
         .def("setInnerProductConstraint", &Tangent::setInnerProductConstraint);
-
-	py::class_<Constraints>(m, "Constraints")
-		.def(py::init<>())
-		.def_readwrite("interfaces", &Constraints::itrface)
-		.def_readwrite("inequality", &Constraints::inequality)
-		.def_readwrite("planar", &Constraints::planar)
-		.def_readwrite("tangent", &Constraints::tangent)
-		.def("add_interface_constraint", &Constraints::add_interface_constraint)
-		.def("add_tangent_constraint", &Constraints::add_tangent_constraint)
-		.def("add_planar_constraint", &Constraints::add_planar_constraint)
-		.def("add_inequality_constraint", &Constraints::add_inequality_constraint);
-    // we only need to bind the base class because you can choose the
-    // interpolation
-    // method using the model parameters
-	py::class_<Continuous_Property>(m, "Continuous_Property")
-		.def(py::init<const model_parameters &, const Constraints &>());
-
-    py::class_<GRBF_Modelling_Methods>(m, "GRBF")
-        .def("run_greedy_algorithm",
-             &GRBF_Modelling_Methods::run_greedy_algorithm)
-        .def("evaluate_scalar_interpolant_at_point",&GRBF_Modelling_Methods::eval_scalar_interpolant_at_point)
-        .def("evaluate_vector_interpolant_at_point",&GRBF_Modelling_Methods::eval_vector_interpolant_at_point);
-       
-
-    py::class_<GRBF_Builder>(m, "GRBF_Builder").def(py::init<>()).def(
-        "get_method", &GRBF_Builder::get_method);
 
     py::class_<model_parameters>(m, "model_parameters")
         .def(py::init<>())
