@@ -18,9 +18,30 @@ PYBIND11_MODULE(surfe, m) {
 	// setup bindings for Surfe_API
 	py::class_<Surfe_API>(m, "Surfe_API")
 		.def(py::init<const model_parameters &>())
+		.def("AddInterfaceConstraint", &Surfe_API::AddInterfaceConstraint)
+		.def("AddPlanarConstraint", &Surfe_API::AddPlanarConstraint)
+		.def("AddTangentConstraint", &Surfe_API::AddTangentConstraint)
+		.def("AddInequalityConstraint", &Surfe_API::AddInequalityConstraint)
 		.def("ComputeInterpolant", &Surfe_API::ComputeInterpolant)
 		.def("EvaluateInterpolantAtPoint", &Surfe_API::EvaluateInterpolantAtPoint)
-		.def("EvaluateVectorInterpolantAtPoint", &Surfe_API::EvaluateVectorInterpolantAtPoint);
+		.def("EvaluateVectorInterpolantAtPoint",
+			&Surfe_API::EvaluateVectorInterpolantAtPoint,
+			py::return_value_policy::copy)
+		.def("ConstructRegularGridOutput", 
+		( void (Surfe_API::*)(const double&, const double &, const double &, const double &)) 
+			&Surfe_API::ConstructRegularGridOutput, "Build SGrid from zmin/zmax and resolution")
+		.def("ConstructRegularGridOutput",
+		(void (Surfe_API::*)(const double&, const double &, const double &, const double &, const double &, const double&, const double &))
+			&Surfe_API::ConstructRegularGridOutput, "Build SGrid from bounds and resolution")
+		.def("GetEvaluatedvtkStructuredGrid",
+			&Surfe_API::GetEvaluatedvtkStructuredGrid,
+			py::return_value_policy::reference_internal)
+		.def("GetConstraintsAndOutputAsVTKObjects",
+			&Surfe_API::GetConstraintsAndOutputAsVTKObjects,
+			py::return_value_policy::reference_internal)
+		.def("GetIsoSurfacesAsvtkPolyData",
+			&Surfe_API::GetIsoSurfacesAsvtkPolyData,
+			py::return_value_policy::reference_internal);
 
     // setup bindings for the input objects
     py::class_<Point>(m, "Point")
