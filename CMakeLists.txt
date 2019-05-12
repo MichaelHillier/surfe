@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
  
 PROJECT(surfe)
+#SET(BUILD_SHARED_LIBS_ON)
 SET(CMAKE_CXX_STANDARD 11 )
 # Get GMP dependency
 find_path(GMP_INCLUDE_DIR gmp.h gmpxx.h)
@@ -25,16 +26,11 @@ if (OPENMP_FOUND)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
+
 # Get Eigen dependency
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
-
-find_package(OpenMP)
-if (OpenMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-endif()	
 
 # Set link directories
 link_directories(${GMP_LIBRARY_C_DIR} ${GMP_LIBRARY_CPP_DIR})

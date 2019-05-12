@@ -40,8 +40,6 @@
 #ifndef single_surface_h
 #define single_surface_h
 
-#include <surfe_lib_module.h>  // macro for importing / exporting dll
-
 #include <modeling_methods.h>
 class Single_Surface : public GRBF_Modelling_Methods {
 private:
@@ -49,7 +47,7 @@ private:
 	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
 public:
 	// Constructor/Destructor
-	Single_Surface(const model_parameters &m_p, const Constraints &s_constraints);
+	Single_Surface(const model_parameters &mparams);
 	~Single_Surface() {};
 	// Methods
 	Polynomial_Basis *create_polynomial_basis(const int &poly_order);
@@ -60,9 +58,9 @@ public:
 	bool get_inequality_values(VectorXd &b, VectorXd &r);
 	void eval_scalar_interpolant_at_point(Point &p) override;
 	void eval_vector_interpolant_at_point(Point &p) override;
-	bool get_method_parameters() override;
-	bool process_input_data() override;
-	bool setup_system_solver() override;
+	void get_method_parameters() override;
+	void process_input_data() override;
+	void setup_system_solver() override;
 	bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override;
 	bool measure_residuals(Constraints &input) override;
 	bool append_greedy_input(Constraints &input) override;

@@ -126,15 +126,12 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
     return true;
 }
 
-Single_Surface::Single_Surface(const model_parameters &m_p,
-                               const Constraints &s_constraints) {
-    // set GUI parameters and basic input (inequality, interface, planar,
-    // tangent)
-    // data members to class
-    m_parameters = m_p;
-    constraints = s_constraints;
+Single_Surface::Single_Surface(const model_parameters& mparams)
+{
+	// set GUI parameters
+	m_parameters = mparams;
 
-    _iteration = 0;
+	_iteration = 0;
 }
 
 Polynomial_Basis *Single_Surface::create_polynomial_basis(
@@ -147,7 +144,7 @@ Polynomial_Basis *Single_Surface::create_polynomial_basis(
         return new Poly_Second;
 }
 
-bool Single_Surface::get_method_parameters() {
+void Single_Surface::get_method_parameters() {
     // # of constraints for each constraint type ...
     b_parameters.n_interface = (int)constraints.itrface.size();
     b_parameters.n_inequality = (int)constraints.inequality.size();
@@ -179,11 +176,9 @@ bool Single_Surface::get_method_parameters() {
 
     int m = m_parameters.polynomial_order + 1;
     b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);  // for 3D only...
-
-    return true;
 }
 
-bool Single_Surface::setup_system_solver() {
+void Single_Surface::setup_system_solver() {
     // the type of mathematical solver to be used can depends on the following
     // 1) Linear or Quadratic system
     // 2) What type of RBF is used
@@ -200,17 +195,16 @@ bool Single_Surface::setup_system_solver() {
             get_inequality_values(b, r);
 
             MatrixXd interpolation_matrix(n_c, n_c);
-            if (!get_interpolation_matrix(interpolation_matrix)) return false;
+			if (!get_interpolation_matrix(interpolation_matrix))
+				std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
             MatrixXd inequality_matrix(n_c, n_c);
             inequality_matrix = interpolation_matrix;
 
             Quadratic_Predictor_Corrector_LOQO *qpc =
                 new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
-            if (!qpc->solve()) {
-                error_msg.append(" LOQO Quadratic Solver failure.");
-                return false;
-            }
+			if (!qpc->solve())
+				std::throw_with_nested(GRBF_Exceptions::loqo_quadratic_solver_failure);
             solver = qpc;
         } else {
             VectorXd inequality_values(n_ie);
@@ -220,25 +214,23 @@ bool Single_Surface::setup_system_solver() {
             get_equality_values(equality_values);
 
             MatrixXd interpolation_matrix(n_c, n_c);
-            if (!get_interpolation_matrix(interpolation_matrix)) return false;
+			if (!get_interpolation_matrix(interpolation_matrix))
+				std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
             MatrixXd inequality_matrix(n_ie, n_c);
-            if (!get_inequality_matrix(interpolation_matrix, inequality_matrix))
-                return false;
+			if (!get_inequality_matrix(interpolation_matrix, inequality_matrix))
+				std::throw_with_nested(GRBF_Exceptions::error_computing_inequality_vector);
 
             MatrixXd equality_matrix(n_e, n_c);
-            if (!get_equality_matrix(interpolation_matrix, equality_matrix))
-                return false;
+			if (!get_equality_matrix(interpolation_matrix, equality_matrix))
+				std::throw_with_nested(GRBF_Exceptions::error_computing_equality_vector);
 
             Quadratic_Predictor_Corrector *qpc =
                 new Quadratic_Predictor_Corrector(
                     interpolation_matrix, equality_matrix, inequality_matrix,
                     equality_values, inequality_values);
-            if (!qpc->solve()) {
-                error_msg.append(
-                    " Predictor-Corrector Quadratic Solver failure.");
-                return false;
-            }
+			if (!qpc->solve())
+				std::throw_with_nested(GRBF_Exceptions::pc_quadratic_solver_failure);
             solver = qpc;
         }
     } else  // Linear
@@ -248,20 +240,17 @@ bool Single_Surface::setup_system_solver() {
         get_equality_values(equality_values);
 
         MatrixXd interpolation_matrix(n_e + n_p, n_e + n_p);
-        if (!get_interpolation_matrix(interpolation_matrix)) return false;
+		if (!get_interpolation_matrix(interpolation_matrix))
+			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
         Linear_LU_decomposition *llu =
             new Linear_LU_decomposition(interpolation_matrix, equality_values);
-        if (!llu->solve()) {
-            error_msg.append(" Linear Solver failure.");
-            return false;
-        }
+		if (!llu->solve())
+			std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
         solver = llu;
     }
 
     // check_interpolant();
-
-    return true;
 }
 
 bool Single_Surface::get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input)
@@ -877,13 +866,11 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
     return true;
 }
 
-bool Single_Surface::process_input_data() {
-    if (constraints.itrface.empty())
-        return false;
-    else {
-        if (!constraints.get_interface_data()) return false;
-    }
+void Single_Surface::process_input_data() {
 
+	if (!get_interface_data())
+		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
+  
     if (m_parameters.use_restricted_range) {
 		for (auto &interface_pt: constraints.itrface){
 			interface_pt.setLevelBounds(m_parameters.interface_uncertainty);
@@ -915,8 +902,6 @@ bool Single_Surface::process_input_data() {
                  << std::endl;
         }
     }
-
-    return true;
 }
 
 bool Single_Surface::get_interpolation_matrix(MatrixXd &interpolation_matrix) {

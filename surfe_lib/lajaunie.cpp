@@ -37,16 +37,14 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#include <algorithm>
-#include <basis.h>
 #include <lajaunie.h>
 #include <math_methods.h>
-#include <matrix_solver.h>
-#include <vector>
 
+#include <vector>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <algorithm>
 
 bool Lajaunie_Approach::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
     int n_ip = _n_increment_pair;
@@ -139,10 +137,12 @@ Lajaunie_Approach::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 
 bool Lajaunie_Approach::_get_increment_pairs() {
     // the interface increment pairs
-    int _n_interface_pairs = 0;
-	for (const auto &point_list : constraints.interface_point_lists)
-		_n_interface_pairs += (int)point_list.size() - 1;
-	for (const auto &point_list : constraints.interface_point_lists){
+	_n_increment_pair = 0;
+	for (const auto &point_list : interface_point_lists)
+		_n_increment_pair += (int)point_list.size() - 1;
+	if (_n_increment_pair == 0)
+		return false;
+	for (const auto &point_list : interface_point_lists){
         for (int k = 0; k < ((int)point_list.size() - 1); k++) {
             std::vector<Interface> interface_incr_p;
             interface_incr_p.push_back(point_list[0]);
@@ -150,21 +150,19 @@ bool Lajaunie_Approach::_get_increment_pairs() {
             _increment_pairs.push_back(interface_incr_p);
         }
     }
-    _n_increment_pair = _n_interface_pairs;
 
     return true;
 }
 
-Lajaunie_Approach::Lajaunie_Approach(const model_parameters &m_p, const Constraints &laj_constraints) {
-    // set GUI parameters and basic input (interface, planar, tangent) data
-    // members to class
-    m_parameters = m_p;
-    constraints = laj_constraints;
+Lajaunie_Approach::Lajaunie_Approach(const model_parameters& m_p)
+{
+	// set GUI parameters
+	m_parameters = m_p;
 
-    _iteration = 0;
+	_iteration = 0;
 }
 
-bool Lajaunie_Approach::get_method_parameters() {
+void  Lajaunie_Approach::get_method_parameters() {
     // # of constraints for each constraint type ...
     b_parameters.n_interface = (int)constraints.itrface.size();
     b_parameters.n_inequality = 0;  // no support for inequality. if there is inequalities use the stratigraphic horizon method
@@ -192,23 +190,21 @@ bool Lajaunie_Approach::get_method_parameters() {
     b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6) - 1;  
 	// minus 1 due to the nature of the indepentent pair constraints and
     // the vanishing of the constant term in the polynomial
-
-    return true;
 }
 
-bool Lajaunie_Approach::process_input_data() {
-    if ((int)constraints.itrface.size() == 0)
-        return false;
-    else {
-        if (!constraints.get_interface_data()) return false;
+void Lajaunie_Approach::process_input_data() {
 
-        // For greedy algorithm this function can get called many times.
-        // Need to take some care and make sure we are not appending
-        // to existing _increment_pairs list. clear if necessary
-        if ((int)_increment_pairs.size() != 0) _increment_pairs.clear();
+	if (!get_interface_data())
+		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
 
-        if (!_get_increment_pairs()) return false;
-    }
+    // For greedy algorithm this function can get called many times.
+    // Need to take some care and make sure we are not appending
+    // to existing _increment_pairs list. clear if necessary
+    if (!_increment_pairs.empty()) _increment_pairs.clear();
+
+	if (!_get_increment_pairs())
+		std::throw_with_nested(GRBF_Exceptions::no_interface_increment_pairs);
+    
 
     if (m_parameters.use_restricted_range) {
 		for (auto &planar_pt : constraints.planar){
@@ -221,10 +217,9 @@ bool Lajaunie_Approach::process_input_data() {
         }
     }
 
-    return true;
 }
 
-bool Lajaunie_Approach::setup_system_solver() {
+void Lajaunie_Approach::setup_system_solver() {
     if (b_parameters.restricted_range) {
         int n_c = b_parameters.n_constraints;
 
@@ -233,36 +228,34 @@ bool Lajaunie_Approach::setup_system_solver() {
         get_inequality_values(b, r);
 
         MatrixXd interpolation_matrix(n_c, n_c);
-        if (!get_interpolation_matrix(interpolation_matrix)) return false;
+		if (!get_interpolation_matrix(interpolation_matrix))
+			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
         MatrixXd inequality_matrix(n_c, n_c);
         inequality_matrix = interpolation_matrix;
 
         Quadratic_Predictor_Corrector_LOQO *qpc =
             new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
-        if (!qpc->solve()) {
-            error_msg.append(" LOQO Quadratic Solver failure.");
-            return false;
-        }
+		if (!qpc->solve())
+			std::throw_with_nested(GRBF_Exceptions::pc_quadratic_solver_failure);
         solver = qpc;
     } else {
         int n = b_parameters.n_equality + b_parameters.n_poly_terms;
         VectorXd equality_values(n);
         get_equality_values(equality_values);
         MatrixXd interpolation_matrix(n, n);
-        if (!get_interpolation_matrix(interpolation_matrix)) return false;
+		if (!get_interpolation_matrix(interpolation_matrix))
+			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
         Linear_LU_decomposition *llu =
             new Linear_LU_decomposition(interpolation_matrix, equality_values);
-        if (!llu->solve()) {
-            error_msg.append(" Linear Solver failure.");
-            return false;
-        }
+		if (!llu->solve())
+			std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
         solver = llu;
     }
 
-    if (!_update_interface_iso_values()) return false;
+	if (!_update_interface_iso_values())
+		std::throw_with_nested(GRBF_Exceptions::error_updating_interface_iso_values);
 
-    return true;
 }
 
 bool Lajaunie_Approach::get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) {
@@ -272,13 +265,13 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(Constraints &greedy_inpu
     // that
     // are well separated
 
-    constraints.get_interface_data();  // get required interface data
+    get_interface_data();  // get required interface data
 
     // Find horizon with largest number of points -- ref_index
     int ref_index = -1;
     int largest_num_of_points = 0;
-    for (int j = 0; j < (int)constraints.interface_point_lists.size(); j++) {
-        int num_of_points = (int)constraints.interface_point_lists[j].size();
+    for (int j = 0; j < (int)interface_point_lists.size(); j++) {
+        int num_of_points = (int)interface_point_lists[j].size();
         if (num_of_points > largest_num_of_points) {
             largest_num_of_points = num_of_points;
             ref_index = j;
@@ -287,8 +280,9 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(Constraints &greedy_inpu
     // put all of the points from the horizon with the largest num of points in
     // a
     // Point vector for distance analysis routines
-    std::vector<Point> dense_horizon(constraints.interface_point_lists[ref_index].begin(),
-        constraints.interface_point_lists[ref_index].end());
+    std::vector<Point> dense_horizon(
+		interface_point_lists[ref_index].begin(),
+        interface_point_lists[ref_index].end());
     // find the two points that are furtherest from each other from this horizon
     int TwoIndexes[2];
     double largest_separation_distance = 0;
@@ -311,14 +305,14 @@ bool Lajaunie_Approach::get_minimial_and_excluded_input(Constraints &greedy_inpu
     for (int j = 0; j < 3; j++)
         cur_included_pts.push_back(dense_horizon[dense_horizon_indices[j]]);
 
-    for (int j = 0; j < (int)constraints.interface_point_lists.size(); j++) {
+    for (int j = 0; j < (int)interface_point_lists.size(); j++) {
         if (j != ref_index)  // already processed horizon
                              // b_input.interface_point_lists[ref_index]
         {
             // find a point in these horizon that is the furthest from the
             // already
             // included points
-            std::vector<Point> j_horizon(constraints.interface_point_lists[j].begin(),constraints.interface_point_lists[j].end());
+            std::vector<Point> j_horizon(interface_point_lists[j].begin(),interface_point_lists[j].end());
             int index1 = furtherest_neighbour_index(j_horizon, cur_included_pts);
             cur_included_pts.push_back(j_horizon[index1]);
             // find a point that is furthest from the index1 point
@@ -368,7 +362,7 @@ bool Lajaunie_Approach::measure_residuals(Constraints &input) {
                 // the same
                 // reference level
                 double actual_level_value;
-				for (auto &interface_test_point: this->constraints.interface_test_points){
+				for (auto &interface_test_point: this->interface_test_points){
                     if (interface_test_point.level() == reference_level) {
 						eval_scalar_interpolant_at_point(interface_test_point);
                         actual_level_value = interface_test_point.scalar_field();  // this is the value it should be

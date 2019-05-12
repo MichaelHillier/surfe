@@ -40,17 +40,14 @@
 #ifndef vector_field_h
 #define vector_field_h
 
-#include <surfe_lib_module.h>  // macro for importing / exporting dll
-
 #include <modeling_methods.h>
 
 class Vector_Field : public GRBF_Modelling_Methods {
 public:
 	// Constructor/Destructor
-	Vector_Field(const model_parameters &m_p, const Constraints &vec_constraints) 
+	Vector_Field(const model_parameters &m_params) 
 	{
-		m_parameters = m_p;
-		constraints = vec_constraints;
+		m_parameters = m_params;
 
 		_iteration = 0;
 	}
@@ -60,9 +57,9 @@ public:
 	bool get_equality_values(VectorXd &equality_values) override;
 	void eval_scalar_interpolant_at_point(Point &p) override;
 	void eval_vector_interpolant_at_point(Point &p) override;
-	bool get_method_parameters() override;
-	bool process_input_data() override;
-	bool setup_system_solver() override;
+	void get_method_parameters() override;
+	void process_input_data() override {};
+	void setup_system_solver() override;
 	bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override { return true; }  // TO implement
 	bool measure_residuals(Constraints &input) override { return true; }  // TO implement
 	bool append_greedy_input(Constraints &input) override { return true; }  // TO implement

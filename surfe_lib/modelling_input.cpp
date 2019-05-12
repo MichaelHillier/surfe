@@ -45,51 +45,6 @@
 #include <algorithm>
 #include <functional>
 
-bool Constraints::get_interface_data()
-{
-	if (itrface.size() < 2) return false;
-	
-	// flush existing interface data containers - useful for greedy methods
-	interface_iso_values.clear();
-	interface_point_lists.clear();
-	interface_test_points.clear();
-
-	_get_distinct_interface_iso_values();
-	_get_interface_points();
-
-	return true;
-}
-
-bool Constraints::check_input_data()
-{
-	// check interface data...
-
-	// check planar data ...
-
-	// check tangent data ...
-
-	// check inequality data ...
-
-	// if using inequality data, check the level property data to ensure it is
-	// consistent with interface data level property ...
-	if (!inequality.empty()) 
-	{
-		std::vector<double> inequality_iso_values = _get_distinct_inequality_iso_values();
-		if (inequality_iso_values.empty()) 
-			return false;
-		for (const auto &ineql_iso_value: inequality_iso_values){
-			// if one of the inequality iso values is the same as the
-			// itrface iso values data is not properly conditioned
-			for (const auto &iter_iso_value: interface_iso_values){
-				if (ineql_iso_value == iter_iso_value) 
-					return false;
-			}
-		}
-	}
-
-	return true;
-}
-
 double Constraints::compute_inequality_avg_nn_distance()
 {
 	std::vector<Point> pts(inequality.begin(), inequality.end());
@@ -127,59 +82,6 @@ void Constraints::compute_avg_nn_distances()
 #pragma omp section
 		{ _avg_nn_dist_t = compute_tangent_avg_nn_distance(); }
 	}
-}
-
-void Constraints::_get_distinct_interface_iso_values()
-{
-	std::set<double> distinct_iso_values;
-	for (const auto &interface_constraint : itrface) 
-		distinct_iso_values.insert(interface_constraint.level());
-	// sort the vector (largest to smallest) - done for convenience and for functional reasons
-	std::vector<double> distinct_iso_values_vec(distinct_iso_values.begin(), distinct_iso_values.end());
-	std::sort(distinct_iso_values_vec.begin(), distinct_iso_values_vec.end(), std::greater<double>());
-	for (const auto& value : distinct_iso_values_vec)
-		interface_iso_values.push_back(value);
-}
-
-void Constraints::_get_interface_points()
-{
-	// interface[0][0,1,2,3,....] points 0,1,2,3,.... belong to the 0th
-	// interface
-	// ...
-	// interface[m = interface_iso_values.size()][76,45,43,4,.....] points
-	// 76,45,43,4,..... belong to the mth interface
-	interface_point_lists.resize(interface_iso_values.size());
-	for (int j = 0; j < (int)interface_iso_values.size(); j++) {
-		for (const auto &interface_pt: itrface){
-			if (interface_pt.level() == interface_iso_values.at(j))
-			{
-				// add to 2D vector
-				interface_point_lists[j].push_back(interface_pt);
-			}
-		}
-	}
-
-	for (int j = 0; j < (int)interface_point_lists.size(); j++) {
-		// set the test_interface_points
-		interface_test_points.push_back(interface_point_lists[j][0]);
-		if ((int)interface_point_lists.at(j).size() == 1)
-		{
-			// need to have at least 2 points per interface
-			// remove this interface from the list
-			interface_point_lists.erase(interface_point_lists.begin() + j);
-			j--;
-		}
-	}
-}
-
-std::vector<double> Constraints::_get_distinct_inequality_iso_values()
-{
-	std::set<double> distinct_iso_values;
-	for (const auto &inequality_constraint : inequality) distinct_iso_values.insert(inequality_constraint.level());
-	// sort the vector (largest to smallest) - done for convenience and for functional reasons
-	std::vector<double> distinct_iso_values_vec(distinct_iso_values.begin(), distinct_iso_values.end());
-	std::sort(distinct_iso_values_vec.begin(), distinct_iso_values_vec.end(), std::greater<double>());
-	return distinct_iso_values_vec;
 }
 
 bool Planar::_compute_strike_dip_polarity_from_normal()

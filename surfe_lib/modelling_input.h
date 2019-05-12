@@ -40,8 +40,11 @@
 #ifndef _modelling_input_h
 #define _modelling_input_h
 
-#include <modelling_parameters.h>
 #include <surfe_lib_module.h>
+
+#include <modelling_parameters.h>
+
+#include <iostream>
 #include <cmath>
 #include <vector>
 #include <string>
@@ -76,6 +79,14 @@ public:
 		_field_normal[1] = ny;
 		_field_normal[2] = nz;
 	}
+	bool operator < (const Point &point) {
+		if (x() != point.x())
+			return x() < point.x();
+		else if (y() != point.y())
+			return y() < point.y();
+		else
+			return z() < point.z();
+	}
 	// Getters
 	double x() const { return _x; }
 	double y() const { return _y; }
@@ -85,6 +96,14 @@ public:
     double ny_interp() const { return _field_normal[1]; }
     double nz_interp() const { return _field_normal[2]; }
 };
+
+inline bool collocated(const Point &pointa, const Point &pointb) {
+	return
+		(fabs(pointa.x() - pointb.x()) < Epilson &&
+		fabs(pointa.y() - pointb.y()) < Epilson &&
+		fabs(pointa.z() - pointb.z()) < Epilson);
+
+}
 
 class SURFE_LIB_EXPORT Interface : public Point {
 private:
@@ -248,16 +267,6 @@ private:
     double _avg_nn_dist_itr;
     double _avg_nn_dist_p;
     double _avg_nn_dist_t;
-    // interface
-    void _get_distinct_interface_iso_values();
-    void _get_interface_points();
-    bool _interface_points_are_coplanar() {
-        return true;
-    }  // Not implemented yet. should be tested when 2nd order polynomials are
-       // used. Also when unisolvent points are used this should be called.
-    // inequality
-    std::vector<double> _get_distinct_inequality_iso_values();
-
 public:
 	Constraints() {
 		_avg_nn_dist_ie = -99999.0;   // no data value
@@ -274,21 +283,9 @@ public:
 	std::vector<Planar> planar;
 	std::vector<Tangent> tangent;
 
-	// for interface data
-	std::vector<double> interface_iso_values;
-	std::vector<std::vector<Interface> > interface_point_lists;
-	std::vector<Interface> interface_test_points;
-
 	/////////////
 	// Methods //
 	/////////////
-
-    bool get_interface_data();  // fills interface_iso_values,
-                                // interface_point_lists,
-                                // interface_test_points data structures
-
-    // validation
-    bool check_input_data();
 
     // spatial analysis
     double compute_inequality_avg_nn_distance();

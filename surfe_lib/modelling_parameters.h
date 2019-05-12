@@ -44,6 +44,7 @@
 
 #define D2R 0.01745329251994329576923690768489  // degrees to radians conversion factor
 #define R2D 57.295779513082320876798154814105  // radians to degrees conversion factor
+#define Epilson 1E-3 // for comparing double/float variables e.g. position accuracy
 
 struct SURFE_LIB_EXPORT Parameter_Types {
     enum DWRT {

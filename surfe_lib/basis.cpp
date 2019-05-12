@@ -75,7 +75,7 @@ inline void RBFKernel::scaled_radius() {
 bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 {
 	if ((int)planar.size() < 2)
-	return false;
+		std::throw_with_nested(GRBF_Exceptions::failure_computing_global_anisotropy);
 
 	double SumXX = 0; // Sum(x_i *  x_i)
 	double SumXY = 0; // Sum(x_i *  y_i)
@@ -84,15 +84,15 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	double SumYZ = 0; // Sum(y_i *  z_i)
 	double SumZZ = 0; // Sum(z_i *  z_i)
 	Matrix3f covMat;
-	for (int j = 0; j < (int)planar.size(); j++) {
-	double VNormal[3] = {planar[j].nx(), planar[j].ny(), planar[j].nz()};
-	// Normals...
-	SumXX += VNormal[0] * VNormal[0];
-	SumYY += VNormal[1] * VNormal[1];
-	SumZZ += VNormal[2] * VNormal[2];
-	SumXY += VNormal[0] * VNormal[1];
-	SumXZ += VNormal[0] * VNormal[2];
-	SumYZ += VNormal[1] * VNormal[2];
+	for (const auto &planar_pt : planar){
+		double VNormal[3] = { planar_pt.nx(), planar_pt.ny(), planar_pt.nz()};
+		// Normals...
+		SumXX += VNormal[0] * VNormal[0];
+		SumYY += VNormal[1] * VNormal[1];
+		SumZZ += VNormal[2] * VNormal[2];
+		SumXY += VNormal[0] * VNormal[1];
+		SumXZ += VNormal[0] * VNormal[2];
+		SumYZ += VNormal[1] * VNormal[2];
 	}
 	covMat(0, 0) = SumXX;
 	covMat(0, 1) = SumXY;
@@ -1575,8 +1575,7 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector<std::
 	// find horizon with largest number of points
 	int index = 0;
 	for (int j = 1; j < (int)interface_point_lists.size(); j++) {
-		if ((int)interface_point_lists[j].size() >
-			(int)interface_point_lists[index].size())
+		if ((int)interface_point_lists[j].size() > (int)interface_point_lists[index].size())
 			index = j;
 	}
 	if ((int)interface_point_lists[index].size() < 4)
@@ -1798,20 +1797,20 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector<std::
 	if (!found_unique_point) {
 		if (add_x == (Q - 1))
 		unisolvent_subset_points[0].set_x(unisolvent_subset_points[0].x() +
-											0.0001);
+											Epilson);
 		if (add_y == (Q - 1))
 		unisolvent_subset_points[0].set_y(unisolvent_subset_points[0].y() +
-											0.0001);
+											Epilson);
 		if (add_z == (Q - 1))
 		unisolvent_subset_points[0].set_z(unisolvent_subset_points[0].z() +
-											0.0001);
+											Epilson);
 	}
 	}
 
 	if ((int)unisolvent_subset_points.size() == 4)
-	return true;
+		return true;
 	else
-	return false;
+		return false;
 }
 
 void Lagrangian_Polynomial_Basis::_initialize_basis() {

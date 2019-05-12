@@ -50,11 +50,11 @@
 
 bool Stratigraphic_Surfaces::_get_increment_pairs() {
     // 1) sequenced contacts
-    _n_sequenced_interface_pairs = (int)constraints.interface_test_points.size() - 1;
+    _n_sequenced_interface_pairs = (int)interface_test_points.size() - 1;
     _increment_pairs.resize(_n_sequenced_interface_pairs);
     for (int j = 0; j < _n_sequenced_interface_pairs; j++) {
-        _increment_pairs[j].push_back(constraints.interface_test_points[j]);
-        _increment_pairs[j].push_back(constraints.interface_test_points[j]);
+        _increment_pairs[j].push_back(interface_test_points[j]);
+        _increment_pairs[j].push_back(interface_test_points[j]);
     }
     // 2) lithostratigraphic inequalities
     _n_sequenced_inequality_pairs = 0;
@@ -74,7 +74,7 @@ bool Stratigraphic_Surfaces::_get_increment_pairs() {
     }
     // 3) the interface increment pairs
     _n_interface_pairs = 0;
-    for (const auto &point_list : constraints.interface_point_lists) {
+    for (const auto &point_list : interface_point_lists) {
 		_n_interface_pairs += ((int)point_list.size() - 1);
         for (int k = 0; k < ((int)point_list.size() - 1); k++) {
             std::vector<Interface> interface_incr_p;
@@ -104,14 +104,14 @@ std::vector<std::vector<Point> > Stratigraphic_Surfaces::
     int n_pair = 0;
 
     std::vector<double> horizon_levels;
-	for (const auto &test_point: constraints.interface_test_points)
+	for (const auto &test_point: interface_test_points)
         horizon_levels.push_back(test_point.level());
 
     // are there horizons above ie_pt ?
     double level_above = _get_closest_horizon_level_above_given_level(ie_pt.level(), horizon_levels);
     if (level_above != NULL) {
         strati_incr_p.resize(n_pair + 1);
-		for (const auto &test_point : constraints.interface_test_points){
+		for (const auto &test_point : interface_test_points){
             if (test_point.level() == level_above) {
                 strati_incr_p[n_pair].push_back(test_point);
                 strati_incr_p[n_pair].push_back(ie_pt);
@@ -124,7 +124,7 @@ std::vector<std::vector<Point> > Stratigraphic_Surfaces::
     double level_below = _get_closest_horizon_level_below_given_level(ie_pt.level(), horizon_levels);
     if (level_below != NULL) {
         strati_incr_p.resize(n_pair + 1);
-		for (const auto &test_point : constraints.interface_test_points) {
+		for (const auto &test_point : interface_test_points) {
             if (test_point.level() == level_below) {
                 strati_incr_p[n_pair].push_back(ie_pt);
                 strati_incr_p[n_pair].push_back(test_point);
@@ -263,23 +263,20 @@ bool Stratigraphic_Surfaces::_insert_polynomial_matrix_blocks_in_interpolation_m
     return true;
 }
 
-Stratigraphic_Surfaces::Stratigraphic_Surfaces(const model_parameters &m_p, const Constraints &strat_constraints)
+Stratigraphic_Surfaces::Stratigraphic_Surfaces(const model_parameters& m_params)
 {
-    // set GUI parameters and basic input (inequality, interface, planar,
-    // tangent)
-    // data members to class
-    m_parameters = m_p;
-    constraints = strat_constraints;
+	// set GUI parameters
+	m_parameters = m_params;
 
-    _n_increment_pairs = 0;
-    _n_sequenced_interface_pairs = 0;
-    _n_sequenced_inequality_pairs = 0;
-    _n_interface_pairs = 0;
+	_n_increment_pairs = 0;
+	_n_sequenced_interface_pairs = 0;
+	_n_sequenced_inequality_pairs = 0;
+	_n_interface_pairs = 0;
 
-    _iteration = 0;
+	_iteration = 0;
 }
 
-bool Stratigraphic_Surfaces::get_method_parameters() {
+void Stratigraphic_Surfaces::get_method_parameters() {
     // # of constraints for each constraint type ...
     b_parameters.n_interface = (int)constraints.itrface.size();
     b_parameters.n_inequality = (int)constraints.inequality.size();
@@ -306,18 +303,16 @@ bool Stratigraphic_Surfaces::get_method_parameters() {
 
     int m = m_parameters.polynomial_order + 1;
     b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);
-
-    return true;
 }
 
-bool Stratigraphic_Surfaces::process_input_data() {
-    if (constraints.itrface.empty())
-        return false;
-    else {
-        if (!constraints.get_interface_data()) return false;
-        if (!_get_increment_pairs()) return false;
-        if (!constraints.check_input_data()) return false;
-    }
+void Stratigraphic_Surfaces::process_input_data() {
+
+	if (!get_interface_data())
+		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
+	if (!_get_increment_pairs())
+		std::throw_with_nested(GRBF_Exceptions::no_interface_increment_pairs);
+	if (!check_input_data())
+		std::throw_with_nested(GRBF_Exceptions::invalid_input_data);
 
     if (m_parameters.use_restricted_range) {
         for (int j = 0; j < (int)constraints.planar.size(); j++) {
@@ -346,7 +341,6 @@ bool Stratigraphic_Surfaces::process_input_data() {
                  << std::endl;
         }
     }
-    return true;
 }
 
 bool Stratigraphic_Surfaces::get_equality_values(VectorXd &equality_values) {
@@ -618,7 +612,7 @@ bool Stratigraphic_Surfaces::get_inequality_matrix(
     return true;
 }
 
-bool Stratigraphic_Surfaces::setup_system_solver() {
+void Stratigraphic_Surfaces::setup_system_solver() {
     // only way to solve this problem is via a quadratic optimization problem
     int n_ie = b_parameters.n_inequality;
     int n_e = b_parameters.n_equality;
@@ -630,17 +624,16 @@ bool Stratigraphic_Surfaces::setup_system_solver() {
         get_inequality_values(b, r);
 
         MatrixXd interpolation_matrix(n_c, n_c);
-        if (!get_interpolation_matrix(interpolation_matrix)) return false;
+		if (!get_interpolation_matrix(interpolation_matrix))
+			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
         MatrixXd inequality_matrix(n_c, n_c);
         inequality_matrix = interpolation_matrix;
 
         Quadratic_Predictor_Corrector_LOQO *qpc =
             new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
-        if (!qpc->solve()) {
-            error_msg.append(" LOQO Quadratic Solver failure.");
-            return false;
-        }
+        if (!qpc->solve())
+			std::throw_with_nested(GRBF_Exceptions::loqo_quadratic_solver_failure);
         solver = qpc;
     } else {
         VectorXd inequality_values(n_ie);
@@ -650,29 +643,27 @@ bool Stratigraphic_Surfaces::setup_system_solver() {
         get_equality_values(equality_values);
 
         MatrixXd interpolation_matrix(n_c, n_c);
-        if (!get_interpolation_matrix(interpolation_matrix)) return false;
+        if (!get_interpolation_matrix(interpolation_matrix))
+			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
         MatrixXd inequality_matrix(n_ie, n_c);
-        if (!get_inequality_matrix(interpolation_matrix, inequality_matrix))
-            return false;
+		if (!get_inequality_matrix(interpolation_matrix, inequality_matrix))
+			std::throw_with_nested(GRBF_Exceptions::error_computing_inequality_vector);
 
         MatrixXd equality_matrix(n_e, n_c);
         if (!get_equality_matrix(interpolation_matrix, equality_matrix))
-            return false;
+			std::throw_with_nested(GRBF_Exceptions::error_computing_equality_vector);
 
         Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(
             interpolation_matrix, equality_matrix, inequality_matrix,
             equality_values, inequality_values);
-        if (!qpc->solve()) {
-            error_msg.append(" Predictor-Corrector Quadratic Solver failure.");
-            return false;
-        }
+		if (!qpc->solve())
+			std::throw_with_nested(GRBF_Exceptions::pc_quadratic_solver_failure);
         solver = qpc;
     }
 
-    if (!_update_interface_iso_values()) return false;
-
-    return true;
+	if (!_update_interface_iso_values())
+		std::throw_with_nested(GRBF_Exceptions::error_updating_interface_iso_values);
 }
 
 bool Stratigraphic_Surfaces::convert_modified_kernel_to_rbf_kernel() {

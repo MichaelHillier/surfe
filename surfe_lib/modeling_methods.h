@@ -40,13 +40,11 @@
 #ifndef modeling_methods_h
 #define modeling_methods_h
 
-#include <surfe_lib_module.h>  // macro for importing / exporting dll
-
 #include <Eigen/Core>
+#include <grbf_exceptions.h>
 #include <basis.h>
 #include <matrix_solver.h>
-#include <modelling_input.h>
-#include <modelling_parameters.h>
+
 
 #include <omp.h>
 
@@ -54,12 +52,29 @@ using namespace Eigen;
 
 // Abstract base class
 class GRBF_Modelling_Methods {
+private:
+	void _get_distinct_interface_iso_values();
+	void _get_interface_points();
+	std::vector<double> _get_distinct_inequality_iso_values();
+	bool _interface_points_are_coplanar() {
+		return true;
+	}  // Not implemented yet. should be tested when 2nd order polynomials are
+	   // used. Also when unisolvent points are used this should be called.
 protected:
     // ATTRIBUTES
     model_parameters m_parameters;  // QT GUI parameters
     basic_parameters b_parameters;  // algorithm parameters
-    Constraints constraints;            // algorithm input
     int _iteration;                 // for greedy progress
+	// for interface data
+	std::vector<double> interface_iso_values;
+	std::vector<std::vector<Interface> > interface_point_lists;
+	std::vector<Interface> interface_test_points;
+
+	bool get_interface_data();  
+	// fills interface_iso_values, interface_point_lists, interface_test_points data structures
+	// validation
+	bool check_input_data();
+
     // METHODS
     bool _update_interface_iso_values();  // this is to prep for output. Is the
     // computed scalar field value using the
@@ -73,12 +88,13 @@ public:
     // Destructor
     virtual ~GRBF_Modelling_Methods() {}
     // Methods
-    GRBF_Modelling_Methods *get_method(const model_parameters &m_parameters, const Constraints &input);  // factory method to get create the appropriate pointer for given problem
+    GRBF_Modelling_Methods *get_method(const model_parameters &m_parameters);  // factory method to get create the appropriate pointer for given problem
     RBFKernel *create_rbf_kernel(const Parameter_Types::RBF &rbf_type, const bool &anisotropy);
     std::vector<Interface> get_interface_points_ouput() const { return constraints.itrface; }
-    Constraints get_b_input() const { return constraints; }
-    std::vector<double> get_interface_iso_values() const { return constraints.interface_iso_values; }
-    bool setup_basis_functions();
+	Constraints constraints;// algorithm input
+	void remove_collocated_constraints(); // cleaning method to ensure valid interpolation matrix
+    std::vector<double> get_interface_iso_values() const { return interface_iso_values; }
+    void setup_basis_functions();
     bool check_interpolant();
     bool run_greedy_algorithm();
     bool get_equality_matrix(const MatrixXd &interpolation_matrix, MatrixXd &equality_matrix);
@@ -86,9 +102,9 @@ public:
     virtual bool get_equality_values(VectorXd &equality_values) = 0;
     virtual void eval_scalar_interpolant_at_point(Point &p) = 0;
     virtual void eval_vector_interpolant_at_point(Point &p) = 0;
-    virtual bool get_method_parameters() = 0;
-    virtual bool process_input_data() = 0;
-    virtual bool setup_system_solver() = 0;
+    virtual void get_method_parameters() = 0;
+    virtual void process_input_data() = 0;
+    virtual void setup_system_solver() = 0;
     virtual bool get_minimial_and_excluded_input(
         Constraints &greedy_input, Constraints &excluded_input) = 0;
     virtual bool measure_residuals(Constraints &input) = 0;

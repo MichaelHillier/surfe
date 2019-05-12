@@ -53,7 +53,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-namespace Surfe {
+
 typedef mpf_class mpfc;
 
 void open_console_window();
@@ -112,5 +112,5 @@ void outc(const std::vector<std::vector<T> > &m,
         std::cout << std::endl;
     }
 }
-}
+
 #endif

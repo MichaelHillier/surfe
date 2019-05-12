@@ -42,7 +42,7 @@
 
 #include <gmpxx.h>
 #include <modelling_input.h>
-#include <modelling_parameters.h>
+#include <grbf_exceptions.h>
 
 #include <Eigen/Core>
 using namespace Eigen;
@@ -159,12 +159,21 @@ public:
     double dzx() override;
     double dzy() override;
     double dzz() override;
-    virtual Cubic *clone() { return new Cubic(*this); }
+    virtual Cubic *clone() override { return new Cubic(*this); }
 };
 
 class ACubic : public RBFKernel {
 public:
-    ACubic(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
+    ACubic(const std::vector<Planar> &planar) { 
+		try
+		{
+			get_global_anisotropy(planar);
+		}
+		catch (std::exception& e)
+		{
+			throw;
+		}
+	}
     ~ACubic() {}
 	double basis() override;
 	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
@@ -218,11 +227,17 @@ private:
     double _shape_parameter;
 
 public:
-    AGaussian(const double &shape_parameter,
-              const std::vector<Planar> &planar) {
+    AGaussian(const double &shape_parameter, const std::vector<Planar> &planar) {
         _shape_parameter = shape_parameter;
-        get_global_anisotropy(planar);
-    }
+		try
+		{
+			get_global_anisotropy(planar);
+		}
+		catch (std::exception& e)
+		{
+			throw;
+		}
+	}
     ~AGaussian() {}
 	double basis() override;
 	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
@@ -300,10 +315,17 @@ private:
     double _shape_parameter;
 
 public:
-    AMQ(const double &shape_parameter, const std::vector<Planar> &planar) {
-        _shape_parameter = shape_parameter;
-        get_global_anisotropy(planar);
-    }
+	AMQ(const double &shape_parameter, const std::vector<Planar> &planar) {
+		_shape_parameter = shape_parameter;
+		try
+		{
+			get_global_anisotropy(planar);
+		}
+		catch (std::exception& e)
+		{
+			throw;
+		}
+	}
     ~AMQ() {}
 	double basis() override;
 	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
@@ -348,7 +370,16 @@ public:
 
 class ATPS : public RBFKernel {
 public:
-    ATPS(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
+	ATPS(const std::vector<Planar> &planar) {
+		try
+		{
+			get_global_anisotropy(planar);
+		}
+		catch (std::exception& e)
+		{
+			throw;
+		}
+	}
     ~ATPS() {}
 	double basis() override;
 	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
@@ -400,10 +431,17 @@ private:
     double _shape_parameter;
 
 public:
-    AIMQ(const double &shape_parameter, const std::vector<Planar> &planar) {
-        _shape_parameter = shape_parameter;
-        get_global_anisotropy(planar);
-    }
+	AIMQ(const double &shape_parameter, const std::vector<Planar> &planar) {
+		_shape_parameter = shape_parameter;
+		try
+		{
+			get_global_anisotropy(planar);
+		}
+		catch (std::exception& e)
+		{
+			throw;
+		}
+	}
     ~AIMQ() {}
 	double basis() override;
 	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
@@ -448,7 +486,16 @@ public:
 
 class AR : public RBFKernel {
 public:
-    AR(const std::vector<Planar> &planar) { get_global_anisotropy(planar); }
+	AR(const std::vector<Planar> &planar) {
+		try
+		{
+			get_global_anisotropy(planar);
+		}
+		catch (std::exception& e)
+		{
+			throw;
+		}
+	}
     ~AR() {}
 	double basis() override;
 	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
@@ -524,12 +571,13 @@ private:
 
 public:
     Lagrangian_Polynomial_Basis(
-        const std::vector<std::vector<Interface> > &interface_point_lists) {
+        const std::vector<std::vector<Interface> > &interface_point_lists)
+	{
         mpf_set_default_prec(128.0);
         if (_get_unisolvent_subset(interface_point_lists))
             _initialize_basis();
         else {
-            // throw exception
+			std::throw_with_nested(GRBF_Exceptions::failure_creating_lagrangian_polynomial_basis);
         }
     }
     Matrix<mpf_class, Dynamic, 1> poly(const Point *p);
@@ -542,11 +590,18 @@ public:
 class Modified_Kernel : public Kernel {
 public:
     Modified_Kernel(
-        RBFKernel *arbfkernel,
-        const std::vector<std::vector<Interface> > &interface_point_lists) {
+        RBFKernel *arbfkernel, const std::vector<std::vector<Interface> > &interface_point_lists) 
+	{
         mpf_set_default_prec(128.0);
         _aRBFKernel = arbfkernel;
-        _aLPB = new Lagrangian_Polynomial_Basis(interface_point_lists);
+		try
+		{
+			_aLPB = new Lagrangian_Polynomial_Basis(interface_point_lists);
+		}
+		catch (std::exception& e)
+		{
+			std::throw_with_nested(GRBF_Exceptions::failure_creating_lagrangian_polynomial_basis);
+		}
     }
     // copy constructor
     Modified_Kernel(const Modified_Kernel &source)

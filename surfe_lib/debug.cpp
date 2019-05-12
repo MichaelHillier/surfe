@@ -39,8 +39,6 @@
 
 #include <debug.h>
 
-using namespace Surfe;
-
 void open_console_window() {
 #ifdef _WIN32
 

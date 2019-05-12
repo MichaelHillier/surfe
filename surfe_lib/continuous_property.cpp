@@ -124,15 +124,14 @@ bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matr
     return true;
 }
 
-Continuous_Property::Continuous_Property(const model_parameters &mparams, const Constraints &cont_constraints) {
-    // set GUI parameters and basic input (inequality, interface, planar,
-    // tangent)
-    // data members to class
-    m_parameters = mparams;
-    constraints = cont_constraints;
+Continuous_Property::Continuous_Property(const model_parameters& mparams)
+{
+	// set GUI parameters
+	m_parameters = mparams;
 
-    _iteration = 0;
+	_iteration = 0;
 }
+
 Continuous_Property::~Continuous_Property() {
     std::cout << "dest" << std::endl;
 }
@@ -146,7 +145,7 @@ Polynomial_Basis *Continuous_Property::create_polynomial_basis(
         return new Poly_Second;
 }
 
-bool Continuous_Property::get_method_parameters() {
+void Continuous_Property::get_method_parameters() {
     // # of constraints for each constraint type ...
     b_parameters.n_interface = (int)constraints.itrface.size();
     b_parameters.n_inequality = 0;
@@ -174,26 +173,22 @@ bool Continuous_Property::get_method_parameters() {
 
     int m = m_parameters.polynomial_order + 1;
     b_parameters.n_poly_terms = 0;  // for 3D only...
-
-    return true;
 }
 
-bool Continuous_Property::setup_system_solver() {
+void Continuous_Property::setup_system_solver() {
     int n = b_parameters.n_equality + b_parameters.n_poly_terms;
-    if (n < 2) {
-        // just avoid eigen errors
-        return false;
-    }
+
     VectorXd equality_values(n);
     get_equality_values(equality_values);
     MatrixXd interpolation_matrix(n, n);
 
-    if (!get_interpolation_matrix(interpolation_matrix)) return false;
+	if (!get_interpolation_matrix(interpolation_matrix))
+		std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
     Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix, equality_values);
-    if (!llu->solve()) return false;
+	if (!llu->solve())
+		std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
     solver = llu;
-    return true;
 }
 
 // bool Continuous_Property::get_minimial_greedy_input( Basic_input
@@ -456,11 +451,9 @@ bool Continuous_Property::get_equality_values(VectorXd &equality_values) {
     return true;
 }
 
-bool Continuous_Property::process_input_data() {
-    if ((int)constraints.itrface.size() == 0) return false;
-
-    // b_input.transform_data_to_4D_isotropic_space();
-    return true;
+void Continuous_Property::process_input_data() {
+	if (constraints.itrface.empty())
+		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
 }
 
 bool Continuous_Property::get_interpolation_matrix(

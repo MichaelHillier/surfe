@@ -53,37 +53,133 @@
 #include <time.h>
 #include <vector>
 
-double round(double d) { return floor(d + 0.5); }
+void GRBF_Modelling_Methods::_get_distinct_interface_iso_values()
+{
+	std::set<double> distinct_iso_values;
+	for (const auto &interface_constraint : constraints.itrface)
+		distinct_iso_values.insert(interface_constraint.level());
+	// sort the vector (largest to smallest) - done for convenience and for functional reasons
+	std::vector<double> distinct_iso_values_vec(distinct_iso_values.begin(), distinct_iso_values.end());
+	std::sort(distinct_iso_values_vec.begin(), distinct_iso_values_vec.end(), std::greater<double>());
+	for (const auto& value : distinct_iso_values_vec)
+		interface_iso_values.push_back(value);
+}
+
+void GRBF_Modelling_Methods::_get_interface_points()
+{
+	// interface[0][0,1,2,3,....] points 0,1,2,3,.... belong to the 0th
+	// interface
+	// ...
+	// interface[m = interface_iso_values.size()][76,45,43,4,.....] points
+	// 76,45,43,4,..... belong to the mth interface
+	interface_point_lists.resize(interface_iso_values.size());
+	for (int j = 0; j < (int)interface_iso_values.size(); j++) {
+		for (const auto &interface_pt : constraints.itrface) {
+			if (interface_pt.level() == interface_iso_values.at(j))
+			{
+				// add to 2D vector
+				interface_point_lists[j].push_back(interface_pt);
+			}
+		}
+	}
+
+	for (int j = 0; j < (int)interface_point_lists.size(); j++) {
+		// set the test_interface_points
+		interface_test_points.push_back(interface_point_lists[j][0]);
+		if ((int)interface_point_lists.at(j).size() <= 1)
+		{
+			// need to have at least 2 points per interface
+			// remove this interface from the list
+			interface_point_lists.erase(interface_point_lists.begin() + j);
+			j--;
+		}
+	}
+}
+
+std::vector<double> GRBF_Modelling_Methods::_get_distinct_inequality_iso_values()
+{
+	std::set<double> distinct_iso_values;
+	for (const auto &inequality_constraint : constraints.inequality) distinct_iso_values.insert(inequality_constraint.level());
+	// sort the vector (largest to smallest) - done for convenience and for functional reasons
+	std::vector<double> distinct_iso_values_vec(distinct_iso_values.begin(), distinct_iso_values.end());
+	std::sort(distinct_iso_values_vec.begin(), distinct_iso_values_vec.end(), std::greater<double>());
+	return distinct_iso_values_vec;
+}
+
+bool GRBF_Modelling_Methods::get_interface_data()
+{
+	if (constraints.itrface.empty())
+		return false;
+
+	// flush existing interface data containers - useful for greedy methods
+	interface_iso_values.clear();
+	interface_point_lists.clear();
+	interface_test_points.clear();
+
+	_get_distinct_interface_iso_values();
+	_get_interface_points();
+
+	return true;
+}
+
+bool GRBF_Modelling_Methods::check_input_data()
+{
+	// check interface data...
+
+	// check planar data ...
+
+	// check tangent data ...
+
+	// check inequality data ...
+
+	// if using inequality data, check the level property data to ensure it is
+	// consistent with interface data level property ...
+	if (!constraints.inequality.empty())
+	{
+		std::vector<double> inequality_iso_values = _get_distinct_inequality_iso_values();
+		if (inequality_iso_values.empty())
+			return false;
+		for (const auto &ineql_iso_value : inequality_iso_values) {
+			// if one of the inequality iso values is the same as the
+			// itrface iso values data is not properly conditioned
+			for (const auto &iter_iso_value : interface_iso_values) {
+				if (ineql_iso_value == iter_iso_value)
+					return false;
+			}
+		}
+	}
+
+	return true;
+}
 
 bool GRBF_Modelling_Methods::_update_interface_iso_values() {
     // this is a messy method.
     // should really only be called if it is a Lajaunie method or Stratigraphic
     // method have put in safe guards to ensure no seg faults function purpose:
     // When using increment approaches we do not know what the scalar field
-    // value
-    // will be at interface points. Therefore, we wouldn't be able to do a
-    // iso-surface extraction. To solve this issue, after the interpolant have
-    // been determined we evaluate the interpolant at a interface point (in
-    // b_input.interface_test_points) for each interace. Then we will know the
+    // value will be at the interface points. Therefore, we wouldn't be able to do a
+    // iso-surface extraction. To solve this issue, after the interpolant has
+    // been determined, we evaluate the interpolant at a interface point (in
+    // constraints.interface_test_points) for each interace. Then we will know the
     // right scalar field value for each interface to complete an iso-surface
     // extraction.
 
-    if (constraints.interface_test_points.empty()) return false;
+    if (interface_test_points.empty()) return false;
 
     // evaluate the interpolant at these interface_test_points
-    if (solver != nullptr)  // check if we have a valid interpolant first
+    if (!solver)  // check if we have a valid interpolant first
     {
-		for (auto &interface_test_point: constraints.interface_test_points)
+		for (auto &interface_test_point: interface_test_points)
             eval_scalar_interpolant_at_point(interface_test_point);
     } 
 	else
         return false;
 
-    if (constraints.interface_iso_values.size() != constraints.interface_test_points.size())
+    if (interface_iso_values.size() != interface_test_points.size())
         return false;
     // update interface_iso_values to computed scalar field values
-    for (int j = 0; j < (int)constraints.interface_iso_values.size(); j++)
-        constraints.interface_iso_values[j] = constraints.interface_test_points[j].scalar_field();
+    for (int j = 0; j < (int)interface_iso_values.size(); j++)
+        interface_iso_values[j] = interface_test_points[j].scalar_field();
 
     return true;
 }
@@ -108,20 +204,49 @@ void GRBF_Modelling_Methods::_Progress(char message[], const int &step,
     printf(" %3d%%\r", percent);
 }
 
-bool GRBF_Modelling_Methods::setup_basis_functions() {
-    rbf_kernel = this->create_rbf_kernel(m_parameters.basis_type, m_parameters.model_global_anisotropy);
-    // check RBFKernel pointer
-    if (rbf_kernel == nullptr) return false;
+void GRBF_Modelling_Methods::remove_collocated_constraints()
+{
+	std::sort(constraints.inequality.begin(), constraints.inequality.end());
+	auto ie_unique_end = std::unique(constraints.inequality.begin(), constraints.inequality.end(), collocated);
+	constraints.inequality.erase(ie_unique_end, constraints.inequality.end());
+
+	std::sort(constraints.itrface.begin(), constraints.itrface.end());
+	auto itr_unique_end = std::unique(constraints.itrface.begin(), constraints.itrface.end(), collocated);
+	constraints.itrface.erase(itr_unique_end, constraints.itrface.end());
+
+	std::sort(constraints.planar.begin(), constraints.planar.end());
+	auto p_unique_end = std::unique(constraints.planar.begin(), constraints.planar.end(), collocated);
+	constraints.planar.erase(p_unique_end, constraints.planar.end());
+
+	std::sort(constraints.tangent.begin(), constraints.tangent.end());
+	auto t_unique_end = std::unique(constraints.tangent.begin(), constraints.tangent.end(), collocated);
+	constraints.tangent.erase(t_unique_end, constraints.tangent.end());
+}
+
+void GRBF_Modelling_Methods::setup_basis_functions() {
+	try
+	{
+		rbf_kernel = this->create_rbf_kernel(m_parameters.basis_type, m_parameters.model_global_anisotropy);
+	}
+	catch (std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+		throw GRBF_Exceptions::failure_setting_up_basis_functions;
+	}
+
     if (b_parameters.modified_basis) {
-        if (!constraints.interface_point_lists.empty())
-            kernel = new Modified_Kernel(rbf_kernel, constraints.interface_point_lists);
-        else
-            return false;
+		try
+		{
+			kernel = new Modified_Kernel(rbf_kernel, interface_point_lists);
+		}
+		catch (std::exception& e)
+		{
+			std::cout << e.what() << std::endl;
+			throw GRBF_Exceptions::failure_creating_modified_kernel;
+		}
     }
 	else
         kernel = rbf_kernel;
-
-    return true;
 }
 
 bool GRBF_Modelling_Methods::check_interpolant() {
@@ -167,21 +292,68 @@ bool GRBF_Modelling_Methods::get_equality_matrix(
 
 RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF &rbf_type, const bool &anisotropy) {
     if (anisotropy) {
-        if (rbf_type == Parameter_Types::Cubic)
-            return new ACubic(constraints.planar);
-        else if (rbf_type == Parameter_Types::Gaussian)
-            return new AGaussian(m_parameters.shape_parameter, constraints.planar);
-        else if (rbf_type == Parameter_Types::IMQ)
-            return new AIMQ(m_parameters.shape_parameter, constraints.planar);
-        else if (rbf_type == Parameter_Types::MQ)
-            return new AMQ(m_parameters.shape_parameter, constraints.planar);
-        else if (rbf_type == Parameter_Types::R)
-            return new AR(constraints.planar);
-        else
-            return new ATPS(constraints.planar);
+		if (rbf_type == Parameter_Types::Cubic) {
+			try
+			{
+				return new ACubic(constraints.planar);
+			}
+			catch (std::exception& e)
+			{
+				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
+			}
+		}
+		else if (rbf_type == Parameter_Types::Gaussian) {
+			try
+			{
+				return new AGaussian(m_parameters.shape_parameter, constraints.planar);
+			}
+			catch (std::exception& e)
+			{
+				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
+			}
+		}
+		else if (rbf_type == Parameter_Types::IMQ) {
+			try
+			{
+				return new AIMQ(m_parameters.shape_parameter, constraints.planar);
+			}
+			catch (std::exception& e)
+			{
+				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
+			}
+		}
+		else if (rbf_type == Parameter_Types::MQ) {
+			try
+			{
+				return new AMQ(m_parameters.shape_parameter, constraints.planar);
+			}
+			catch (std::exception& e)
+			{
+				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
+			}
+		}
+		else if (rbf_type == Parameter_Types::R) {
+			try
+			{
+				return new AR(constraints.planar);
+			}
+			catch (std::exception& e)
+			{
+				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
+			}
+		}
+		else {
+			try
+			{
+				return new ATPS(constraints.planar);
+			}
+			catch (std::exception& e)
+			{
+				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
+			}
+		}
     } else {
-        // if (b_input._weights.size() != 0) return new
-        // Scaled_Cubic(b_input._weights,b_input._points);
+        // if (b_input._weights.size() != 0) return new Scaled_Cubic(b_input._weights,b_input._points);
         if (rbf_type == Parameter_Types::Cubic)
             return new Cubic;
         else if (rbf_type == Parameter_Types::Gaussian)
@@ -214,17 +386,16 @@ bool GRBF_Modelling_Methods::_output_greedy_debug_objects() {
     return true;
 }
 
-GRBF_Modelling_Methods *GRBF_Modelling_Methods::get_method(
-	const model_parameters &m_parameters, const Constraints &input)
+GRBF_Modelling_Methods* GRBF_Modelling_Methods::get_method(const model_parameters& m_parameters)
 {
-    if (m_parameters.model_type == Parameter_Types::Single_surface)
-        return new Single_Surface(m_parameters, input);
-    else if (m_parameters.model_type == Parameter_Types::Lajaunie_approach)
-        return new Lajaunie_Approach(m_parameters, input);
-    else if (m_parameters.model_type == Parameter_Types::Stratigraphic_horizons)
-        return new Stratigraphic_Surfaces(m_parameters, input);
-    else
-        return new Continuous_Property(m_parameters, input);
+	if (m_parameters.model_type == Parameter_Types::Single_surface)
+		return new Single_Surface(m_parameters);
+	else if (m_parameters.model_type == Parameter_Types::Lajaunie_approach)
+		return new Lajaunie_Approach(m_parameters);
+	else if (m_parameters.model_type == Parameter_Types::Stratigraphic_horizons)
+		return new Stratigraphic_Surfaces(m_parameters);
+	else
+		return new Continuous_Property(m_parameters);
 }
 
 bool GRBF_Modelling_Methods::run_greedy_algorithm() {
@@ -232,7 +403,7 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm() {
     if (m_parameters.interface_uncertainty == 0 && m_parameters.angular_uncertainty == 0)
         return false;
 
-    GRBF_Modelling_Methods *greedy_method = get_method(m_parameters, constraints);
+    GRBF_Modelling_Methods *greedy_method = get_method(m_parameters);
 
     greedy_method->constraints.compute_avg_nn_distances();
 
@@ -251,10 +422,32 @@ bool GRBF_Modelling_Methods::run_greedy_algorithm() {
     int iter = 0;
     while (!converged) {
         // run normal algorithm
-        if (!greedy_method->process_input_data()) return false;
-        if (!greedy_method->get_method_parameters()) return false;
-        if (!greedy_method->setup_basis_functions()) return false;
-        if (!greedy_method->setup_system_solver()) return false;
+		try
+		{
+			greedy_method->process_input_data();
+		}
+		catch (std::exception& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+		greedy_method->get_method_parameters();
+		try
+		{
+			greedy_method->setup_basis_functions();
+		}
+		catch (std::exception& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+
+		try
+		{
+			greedy_method->setup_system_solver();
+		}
+		catch (std::exception& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
 
         // measure residuals
         if (!greedy_method->measure_residuals(excluded_input)) return false;

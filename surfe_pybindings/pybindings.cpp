@@ -5,7 +5,6 @@
 #include <continuous_property.h>
 #include <modeling_methods.h>
 #include <modelling_input.h>
-#include <modelling_methods_builder.h>
 #include <surfe_api.h>
 
 #include <Eigen/LU>

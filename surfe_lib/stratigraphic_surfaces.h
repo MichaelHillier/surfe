@@ -40,8 +40,6 @@
 #ifndef stratigraphic_surfaces_h
 #define stratigraphic_surfaces_h
 
-#include <surfe_lib_module.h>  // macro for importing / exporting dll
-
 #include <modeling_methods.h>
 
 class Stratigraphic_Surfaces : public GRBF_Modelling_Methods {
@@ -62,7 +60,7 @@ private:
 
 public:
     // Constructor/Destructor
-    Stratigraphic_Surfaces(const model_parameters &m_p, const Constraints &strat_constraints);
+    Stratigraphic_Surfaces(const model_parameters &m_params);
     ~Stratigraphic_Surfaces() {};
     // Methods
     Polynomial_Basis *create_polynomial_basis(const int &poly_order);
@@ -73,9 +71,9 @@ public:
     bool get_inequality_values(VectorXd &b, VectorXd &r);
     void eval_scalar_interpolant_at_point(Point &p) override;
     void eval_vector_interpolant_at_point(Point &p) override;
-    bool get_method_parameters() override;
-    bool process_input_data() override;
-    bool setup_system_solver() override;
+    void get_method_parameters() override;
+    void process_input_data() override;
+    void setup_system_solver() override;
     bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override { return true; } // TO implement
     bool measure_residuals(Constraints &input) override { return true; }  // TO implement
     bool append_greedy_input(Constraints &input) override { return true; }  // TO implement

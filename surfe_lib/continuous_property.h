@@ -40,8 +40,6 @@
 #ifndef continuous_property_h
 #define continuous_property_h
 
-#include <surfe_lib_module.h>  // macro for importing / exporting dll
-
 #include <modeling_methods.h>
 
 class Continuous_Property : public GRBF_Modelling_Methods {
@@ -51,7 +49,7 @@ private:
 
 public:
     // Constructor/Destructor
-    Continuous_Property(const model_parameters &mparams,const Constraints &cont_constraints);
+    Continuous_Property(const model_parameters &mparams);
     ~Continuous_Property();
     // Methods
     Polynomial_Basis *create_polynomial_basis(const int &poly_order);
@@ -59,9 +57,9 @@ public:
     bool get_equality_values(VectorXd &equality_values) override;
     void eval_scalar_interpolant_at_point(Point &p) override;
     void eval_vector_interpolant_at_point(Point &p) override;
-    bool get_method_parameters() override;
-    bool process_input_data() override;
-    bool setup_system_solver() override;
+    void get_method_parameters() override;
+    void process_input_data() override;
+	void setup_system_solver() override;
     bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override { return true; }
     bool measure_residuals(Constraints &input) override;
     bool append_greedy_input(Constraints &input) override;

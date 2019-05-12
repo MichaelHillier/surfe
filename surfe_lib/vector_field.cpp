@@ -48,7 +48,7 @@
 #include <iomanip>
 #include <iostream>
 
-bool Vector_Field::get_method_parameters() {
+void Vector_Field::get_method_parameters() {
     // # of constraints for each constraint type ...
     b_parameters.n_interface = 0;
     b_parameters.n_inequality = 0;
@@ -70,11 +70,7 @@ bool Vector_Field::get_method_parameters() {
     b_parameters.problem_type = Parameter_Types::Linear;
 
     b_parameters.n_poly_terms = 0;
-
-    return true;
 }
-
-bool Vector_Field::process_input_data() { return true; }
 
 bool Vector_Field::get_equality_values(VectorXd &equality_values) {
     for (int j = 0; j < (int)constraints.planar.size(); j++) {
@@ -123,7 +119,7 @@ bool Vector_Field::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
     return true;
 }
 
-bool Vector_Field::setup_system_solver() {
+void Vector_Field::setup_system_solver() {
 
     int n = b_parameters.n_equality + b_parameters.n_poly_terms;
 
@@ -131,13 +127,13 @@ bool Vector_Field::setup_system_solver() {
     get_equality_values(equality_values);
 
     MatrixXd interpolation_matrix(n, n);
-    if (!get_interpolation_matrix(interpolation_matrix)) return false;
+	if (!get_interpolation_matrix(interpolation_matrix))
+		std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
 
     Linear_LU_decomposition llu(interpolation_matrix, equality_values);
-    if (!llu.solve()) return false;
+	if (!llu.solve())
+		std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
     solver = &llu;
-
-    return true;
 }
 
 void Vector_Field::eval_scalar_interpolant_at_point(Point &p) {
