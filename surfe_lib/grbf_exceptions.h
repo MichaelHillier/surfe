@@ -108,6 +108,12 @@ class errorcomputinginterpolant : public exception {
 	}
 };
 
+class nosgridexists : public exception {
+	const char* what() const throw() override {
+		return "vtkStructureGrid is nullptr";
+	}
+};
+
 class SurfeExceptions : public exception {
 private:
 	std::string errors;
@@ -159,6 +165,7 @@ namespace GRBF_Exceptions {
 	const errorcomputinginequalityvector error_computing_inequality_vector;
 	const errorupdatinginterfaceisovalues error_updating_interface_iso_values;
 	const errorcomputinginterpolant error_computing_interpolant;
+	const nosgridexists no_sgrid_exists;
 }
 
 

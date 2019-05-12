@@ -68,7 +68,7 @@ protected:
 	// for interface data
 	std::vector<double> interface_iso_values;
 	std::vector<std::vector<Interface> > interface_point_lists;
-	std::vector<Interface> interface_test_points;
+	//std::vector<Interface> interface_test_points;
 
 	bool get_interface_data();  
 	// fills interface_iso_values, interface_point_lists, interface_test_points data structures
@@ -116,6 +116,7 @@ public:
     Kernel *kernel;
     RBFKernel *rbf_kernel;
     std::string error_msg;
+	std::vector<Interface> interface_test_points;
 };
 
 #endif

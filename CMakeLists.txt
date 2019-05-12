@@ -3,6 +3,28 @@ cmake_minimum_required(VERSION 2.8)
 PROJECT(surfe)
 #SET(BUILD_SHARED_LIBS_ON)
 SET(CMAKE_CXX_STANDARD 11 )
+
+find_package(VTK COMPONENTS
+	vtkCommonCore
+	vtkCommonDataModel
+	vtkCommonMisc
+	vtkCommonMath
+	vtkCommonSystem
+	vtkCommonColor
+	vtkIOXML
+	vtkIOXMLParser
+	vtkFiltersCore
+	vtkFiltersGeneral
+)
+if (NOT VTK_FOUND)
+	MESSAGE(FATAL_ERROR "Could not find VTK")
+endif()
+
+MESSAGE(STATUS "VTK VERSION is: " ${VTK_VERSION})
+if (${VTK_VERSION} VERSION_LESS_EQUAL 8.2)
+	include(${VTK_USE_FILE})
+endif()
+
 # Get GMP dependency
 find_path(GMP_INCLUDE_DIR gmp.h gmpxx.h)
 find_library(GMP_LIBRARY_C NAMES gmp)
@@ -58,14 +80,14 @@ FILE(GLOB TEST_SOURCES "test/*.cpp")
 include_directories(${GMP_INCLUDE_DIR})
 
 target_link_libraries(math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
-target_link_libraries(surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
+target_link_libraries(surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP} ${VTK_LIBRARIES})
 ADD_EXECUTABLE(test_func test/test.cpp)
-target_link_libraries(test_func surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
+target_link_libraries(test_func surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP} ${VTK_LIBRARIES})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_SOURCE_DIR}/surfe_lib
                                             ${CMAKE_CURRENT_SOURCE_DIR}/math_lib)
 
 add_subdirectory(pybind11)
 #setup python
 pybind11_add_module(surfepy surfe_pybindings/pybindings.cpp)
-target_link_libraries(surfepy surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
+target_link_libraries(surfepy surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP} ${VTK_LIBRARIES})
 
