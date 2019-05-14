@@ -73,7 +73,8 @@ struct SURFE_LIB_EXPORT Parameter_Types {
         MQ,
         IMQ,
         TPS,
-        R
+        R,
+		WendlandC2
     };
     enum SolverType {
         Linear,
@@ -93,7 +94,7 @@ struct SURFE_LIB_EXPORT Parameter_Types {
     };
 };
 
-struct SURFE_LIB_EXPORT model_parameters {
+struct SURFE_LIB_EXPORT UI_Parameters {
     ////////////////////////////////
     //        UI parameters       //
     ////////////////////////////////
@@ -102,8 +103,8 @@ struct SURFE_LIB_EXPORT model_parameters {
     Parameter_Types::ModelType model_type;
     double min_stratigraphic_thickness;
     // interface input
-    bool use_interface_data;
-    bool use_planar_data;
+    bool use_interface;
+    bool use_planar;
     bool use_tangent;
     bool use_inequality;
     // basis parameters
@@ -115,26 +116,40 @@ struct SURFE_LIB_EXPORT model_parameters {
     bool model_global_anisotropy;
     bool use_greedy;
     bool use_restricted_range;
+	double smoothing_amount;
+	bool use_regression_smoothing;
     double interface_uncertainty;
     double angular_uncertainty;
 
-    // initialization ...
-    model_parameters()
-        : model_type(Parameter_Types::Single_surface),
-          min_stratigraphic_thickness(0),
-          use_interface_data(true),
-          use_planar_data(true),
-          use_tangent(false),
-          use_inequality(false),
-          basis_type(Parameter_Types::Cubic),
-          shape_parameter(100),
-          polynomial_order(1),
-          advanced_parameters(false),
-          model_global_anisotropy(false),
-          use_greedy(false),
-          use_restricted_range(false),
-          interface_uncertainty(0),
-          angular_uncertainty(0) {}
+	const char *interface_file;
+	const char *planar_file;
+	const char *tangent_file;
+	const char *inequality_file;
+
+	// initialization ...
+	UI_Parameters():
+		model_type(Parameter_Types::Single_surface),
+		min_stratigraphic_thickness(0),
+		use_interface(true),
+		use_planar(true),
+		use_tangent(false),
+		use_inequality(false),
+		basis_type(Parameter_Types::Cubic),
+		shape_parameter(100),
+		polynomial_order(1),
+		advanced_parameters(false),
+		model_global_anisotropy(false),
+		use_greedy(false),
+		use_restricted_range(false),
+		smoothing_amount(0),
+		use_regression_smoothing(false),
+		interface_uncertainty(0),
+		angular_uncertainty(0),
+		interface_file(""),
+		planar_file(""),
+		tangent_file(""),
+		inequality_file("")
+	{}
 };
 
 struct SURFE_LIB_EXPORT basic_parameters {

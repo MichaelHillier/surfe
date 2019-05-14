@@ -26,15 +26,15 @@
 class SURFE_LIB_EXPORT Surfe_API {
 private:
 	GRBF_Modelling_Methods *method_;
-	model_parameters params_;
-	GRBF_Modelling_Methods* get_method(const model_parameters& params);
+	UI_Parameters params_;
+	GRBF_Modelling_Methods* get_method(const UI_Parameters& params);
 	vtkStructuredGrid *sgrid;
 
 	bool have_interpolant_;
 	bool evaluation_completed_;
 	vtkDataObjectCollection *convert_constraints_to_vtk();
 public:
-	Surfe_API(const model_parameters& params) : params_(params)
+	Surfe_API(const UI_Parameters& params) : params_(params)
 	{
 		sgrid = nullptr;
 		have_interpolant_ = false;

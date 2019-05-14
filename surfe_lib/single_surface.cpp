@@ -56,7 +56,7 @@ bool Single_Surface::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 
     int nl = n_i + n_ie;  // n_ie should always be zero.
 
-    p_basis = create_polynomial_basis(m_parameters.polynomial_order);
+    p_basis = create_polynomial_basis(ui_parameters.polynomial_order);
 
     if ((int)poly_matrix.rows() != b_parameters.n_poly_terms) return false;
     // for interface points ...
@@ -126,10 +126,10 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
     return true;
 }
 
-Single_Surface::Single_Surface(const model_parameters& mparams)
+Single_Surface::Single_Surface(const UI_Parameters& mparams)
 {
 	// set GUI parameters
-	m_parameters = mparams;
+	ui_parameters = mparams;
 
 	_iteration = 0;
 }
@@ -155,7 +155,7 @@ void Single_Surface::get_method_parameters() {
         b_parameters.n_interface + b_parameters.n_inequality +
         3 * b_parameters.n_planar + b_parameters.n_tangent;
     // Total number of equality constraints
-    if (m_parameters.use_restricted_range)
+    if (ui_parameters.use_restricted_range)
         b_parameters.restricted_range = true;
     else
         b_parameters.n_equality = b_parameters.n_interface +
@@ -164,7 +164,7 @@ void Single_Surface::get_method_parameters() {
 
     // polynomial parameters ...
     if (b_parameters.n_inequality != 0 ||
-        m_parameters.use_restricted_range != 0) {
+        ui_parameters.use_restricted_range != 0) {
         b_parameters.poly_term = false;
         b_parameters.modified_basis = true;
         b_parameters.problem_type = Parameter_Types::Quadratic;
@@ -174,7 +174,7 @@ void Single_Surface::get_method_parameters() {
         b_parameters.problem_type = Parameter_Types::Linear;
     }
 
-    int m = m_parameters.polynomial_order + 1;
+    int m = ui_parameters.polynomial_order + 1;
     b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);  // for 3D only...
 }
 
@@ -264,7 +264,7 @@ bool Single_Surface::get_minimial_and_excluded_input(Constraints &greedy_input, 
     std::vector<int> interface_indices =
         get_extremal_point_data_indices_from_points(pts);
     int num_extremal_itr_pts = 4;
-    if (m_parameters.polynomial_order == 2) num_extremal_itr_pts = 6;
+    if (ui_parameters.polynomial_order == 2) num_extremal_itr_pts = 6;
     if ((int)interface_indices.size() < num_extremal_itr_pts) return false;
 	for (const auto& inequality_pt : constraints.inequality)
         excluded_input.inequality.push_back(inequality_pt);
@@ -378,7 +378,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
     if (_iteration == 0)
         planar_indices_to_include =
             Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-                input.planar, m_parameters.angular_uncertainty,
+                input.planar, ui_parameters.angular_uncertainty,
                 constraints.GetPlanarAvgNNDist());
     else {
 #pragma omp parallel sections
@@ -388,7 +388,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
                 // PLANAR Observations
                 planar_indices_to_include =
                     Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-                        input.planar, m_parameters.angular_uncertainty,
+                        input.planar, ui_parameters.angular_uncertainty,
                         constraints.GetPlanarAvgNNDist());
             }
 #pragma omp section
@@ -396,7 +396,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
                 // TANGENT Observations
                 tangent_indices_to_include =
                     Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
-                        input.tangent, m_parameters.angular_uncertainty,
+                        input.tangent, ui_parameters.angular_uncertainty,
                         constraints.GetPlanarAvgNNDist());
             }
 #pragma omp section
@@ -404,7 +404,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
                 // INTERFACE Observations
                 interface_indices_to_include =
                     Get_Interface_STL_Vector_Indices_With_Large_Residuals(
-                        input.itrface, m_parameters.interface_uncertainty,
+                        input.itrface, ui_parameters.interface_uncertainty,
                         constraints.GetInterfaceAvgNNDist());
             }
 #pragma omp section
@@ -530,7 +530,7 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel() {
     constraints.itrface = temp_itr;
 
     int n_p = b_parameters.n_poly_terms;
-    if (m_parameters.use_restricted_range)
+    if (ui_parameters.use_restricted_range)
         b_parameters.restricted_range = false;
     b_parameters.n_interface = (int)constraints.itrface.size();
     b_parameters.n_inequality = (int)constraints.inequality.size();
@@ -871,16 +871,16 @@ void Single_Surface::process_input_data() {
 	if (!get_interface_data())
 		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
   
-    if (m_parameters.use_restricted_range) {
+    if (ui_parameters.use_restricted_range) {
 		for (auto &interface_pt: constraints.itrface){
-			interface_pt.setLevelBounds(m_parameters.interface_uncertainty);
+			interface_pt.setLevelBounds(ui_parameters.interface_uncertainty);
             std::cout << " Oncontact Bounds: " << std::endl;
             std::cout << "	" << interface_pt.level_lower_bound()
                  << " <= 0 <= " << interface_pt.level_upper_bound()
                  << std::endl;
         }
 		for (auto &planar_pt: constraints.planar){
-			planar_pt.setNormalBounds(m_parameters.angular_uncertainty,m_parameters.angular_uncertainty / 2);  // Need more ROBUST
+			planar_pt.setNormalBounds(ui_parameters.angular_uncertainty,ui_parameters.angular_uncertainty / 2);  // Need more ROBUST
             // METHOD. Try large statistical sampling from von Mises spherical distribution
             std::cout << " Planar[] Bounds: " << std::endl;
 			std::cout << "	nx: " << planar_pt.nx_lower_bound()
@@ -894,7 +894,7 @@ void Single_Surface::process_input_data() {
                  << " <= " << planar_pt.nz_upper_bound() << std::endl;
         }
 		for (auto &tangent_pt: constraints.tangent){
-			tangent_pt.setAngleBounds(m_parameters.angular_uncertainty);
+			tangent_pt.setAngleBounds(ui_parameters.angular_uncertainty);
 			std::cout << " Tangent Bounds: " << std::endl;
 			std::cout << "	" << tangent_pt.angle_lower_bound()
                  << " <= " << tangent_pt.inner_product_constraint()

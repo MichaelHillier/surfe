@@ -226,7 +226,7 @@ void GRBF_Modelling_Methods::remove_collocated_constraints()
 void GRBF_Modelling_Methods::setup_basis_functions() {
 	try
 	{
-		rbf_kernel = this->create_rbf_kernel(m_parameters.basis_type, m_parameters.model_global_anisotropy);
+		rbf_kernel = this->create_rbf_kernel(ui_parameters.basis_type, ui_parameters.model_global_anisotropy);
 	}
 	catch (std::exception& e)
 	{
@@ -305,7 +305,7 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 		else if (rbf_type == Parameter_Types::Gaussian) {
 			try
 			{
-				return new AGaussian(m_parameters.shape_parameter, constraints.planar);
+				return new AGaussian(ui_parameters.shape_parameter, constraints.planar);
 			}
 			catch (std::exception& e)
 			{
@@ -315,7 +315,7 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 		else if (rbf_type == Parameter_Types::IMQ) {
 			try
 			{
-				return new AIMQ(m_parameters.shape_parameter, constraints.planar);
+				return new AIMQ(ui_parameters.shape_parameter, constraints.planar);
 			}
 			catch (std::exception& e)
 			{
@@ -325,7 +325,7 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 		else if (rbf_type == Parameter_Types::MQ) {
 			try
 			{
-				return new AMQ(m_parameters.shape_parameter, constraints.planar);
+				return new AMQ(ui_parameters.shape_parameter, constraints.planar);
 			}
 			catch (std::exception& e)
 			{
@@ -357,11 +357,11 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
         if (rbf_type == Parameter_Types::Cubic)
             return new Cubic;
         else if (rbf_type == Parameter_Types::Gaussian)
-            return new Gaussian(m_parameters.shape_parameter);
+            return new Gaussian(ui_parameters.shape_parameter);
         else if (rbf_type == Parameter_Types::IMQ)
-            return new IMQ(m_parameters.shape_parameter);
+            return new IMQ(ui_parameters.shape_parameter);
         else if (rbf_type == Parameter_Types::MQ)
-            return new MQ(m_parameters.shape_parameter);
+            return new MQ(ui_parameters.shape_parameter);
         else if (rbf_type == Parameter_Types::R)
             return new R;
         else
@@ -386,7 +386,7 @@ bool GRBF_Modelling_Methods::_output_greedy_debug_objects() {
     return true;
 }
 
-GRBF_Modelling_Methods* GRBF_Modelling_Methods::get_method(const model_parameters& m_parameters)
+GRBF_Modelling_Methods* GRBF_Modelling_Methods::get_method(const UI_Parameters& m_parameters)
 {
 	if (m_parameters.model_type == Parameter_Types::Single_surface)
 		return new Single_Surface(m_parameters);
@@ -400,10 +400,10 @@ GRBF_Modelling_Methods* GRBF_Modelling_Methods::get_method(const model_parameter
 
 bool GRBF_Modelling_Methods::run_greedy_algorithm() {
     // check if there are non-zero errors permitted on the data
-    if (m_parameters.interface_uncertainty == 0 && m_parameters.angular_uncertainty == 0)
+    if (ui_parameters.interface_uncertainty == 0 && ui_parameters.angular_uncertainty == 0)
         return false;
 
-    GRBF_Modelling_Methods *greedy_method = get_method(m_parameters);
+    GRBF_Modelling_Methods *greedy_method = get_method(ui_parameters);
 
     greedy_method->constraints.compute_avg_nn_distances();
 

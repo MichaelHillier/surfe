@@ -52,7 +52,7 @@ private:
 
 public:
     // Constructor/Destructor
-    Lajaunie_Approach(const model_parameters &m_p);
+    Lajaunie_Approach(const UI_Parameters &m_p);
     ~Lajaunie_Approach() {};
     // Methods
     Polynomial_Basis *create_polynomial_basis(const int &poly_order);

@@ -263,10 +263,10 @@ bool Stratigraphic_Surfaces::_insert_polynomial_matrix_blocks_in_interpolation_m
     return true;
 }
 
-Stratigraphic_Surfaces::Stratigraphic_Surfaces(const model_parameters& m_params)
+Stratigraphic_Surfaces::Stratigraphic_Surfaces(const UI_Parameters& m_params)
 {
 	// set GUI parameters
-	m_parameters = m_params;
+	ui_parameters = m_params;
 
 	_n_increment_pairs = 0;
 	_n_sequenced_interface_pairs = 0;
@@ -286,7 +286,7 @@ void Stratigraphic_Surfaces::get_method_parameters() {
     b_parameters.n_constraints =
         _n_increment_pairs + 3 * b_parameters.n_planar + b_parameters.n_tangent;
     // Total number of equality constraints
-    if (m_parameters.use_restricted_range)
+    if (ui_parameters.use_restricted_range)
         b_parameters.restricted_range = true;
     else {
         b_parameters.n_equality = _n_interface_pairs +
@@ -301,7 +301,7 @@ void Stratigraphic_Surfaces::get_method_parameters() {
     b_parameters.modified_basis = true;
     b_parameters.problem_type = Parameter_Types::Quadratic;
 
-    int m = m_parameters.polynomial_order + 1;
+    int m = ui_parameters.polynomial_order + 1;
     b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);
 }
 
@@ -314,11 +314,11 @@ void Stratigraphic_Surfaces::process_input_data() {
 	if (!check_input_data())
 		std::throw_with_nested(GRBF_Exceptions::invalid_input_data);
 
-    if (m_parameters.use_restricted_range) {
+    if (ui_parameters.use_restricted_range) {
         for (int j = 0; j < (int)constraints.planar.size(); j++) {
             constraints.planar[j].setNormalBounds(
-				m_parameters.angular_uncertainty,
-                m_parameters.angular_uncertainty / 2);  
+				ui_parameters.angular_uncertainty,
+                ui_parameters.angular_uncertainty / 2);  
 			// Need more ROBUST METHOD. Try large statistical sampling
             // from von Mises spherical distribution
             std::cout << " Planar[" << j << "] Bounds: " << std::endl;
@@ -333,7 +333,7 @@ void Stratigraphic_Surfaces::process_input_data() {
                  << " <= " << constraints.planar[j].nz_upper_bound() << std::endl;
         }
         for (int j = 0; j < (int)constraints.tangent.size(); j++) {
-            constraints.tangent[j].setAngleBounds(m_parameters.angular_uncertainty);
+            constraints.tangent[j].setAngleBounds(ui_parameters.angular_uncertainty);
             std::cout << " Tangent[" << j << "] Bounds: " << std::endl;
 			std::cout << "	" << constraints.tangent[j].angle_lower_bound()
                  << " <= " << constraints.tangent[j].inner_product_constraint()
@@ -376,7 +376,7 @@ bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &inequality_values) 
     int j = 0;
     int k = 0;
     for (j = 0; j < _n_sequenced_interface_pairs; j++)
-        inequality_values(j) = m_parameters.min_stratigraphic_thickness;
+        inequality_values(j) = ui_parameters.min_stratigraphic_thickness;
     for (k = 0; k < _n_sequenced_inequality_pairs; k++)
         inequality_values(k + j) = 0.0;
 
@@ -398,18 +398,18 @@ bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &b, VectorXd &r) {
     int k = 0;
     // Sequenced Interface Points 1st
     for (j = 0; j < _n_sequenced_interface_pairs; j++) {
-        b(j) = m_parameters.min_stratigraphic_thickness;
-        r(j) = distance - m_parameters.min_stratigraphic_thickness;
+        b(j) = ui_parameters.min_stratigraphic_thickness;
+        r(j) = distance - ui_parameters.min_stratigraphic_thickness;
     }
     // Sequenced Inequality Points 2nd
     for (k = 0; k < _n_sequenced_inequality_pairs; k++) {
         b(k + j) = 0.0;
-        r(k + j) = m_parameters.min_stratigraphic_thickness;
+        r(k + j) = ui_parameters.min_stratigraphic_thickness;
     }
     // Interface increment pairs
     for (int l = 0; l < _n_interface_pairs; l++) {
-        b(k + j + l) = -m_parameters.interface_uncertainty;
-        r(k + j + l) = 2 * m_parameters.interface_uncertainty;
+        b(k + j + l) = -ui_parameters.interface_uncertainty;
+        r(k + j + l) = 2 * ui_parameters.interface_uncertainty;
     }
 
     int n_ip = _n_increment_pairs;
@@ -700,7 +700,7 @@ bool Stratigraphic_Surfaces::convert_modified_kernel_to_rbf_kernel() {
     // switch from modified kernel to normal rbf kernel
     kernel = rbf_kernel;
 
-    if (m_parameters.use_restricted_range)
+    if (ui_parameters.use_restricted_range)
         b_parameters.restricted_range = false;
     b_parameters.n_equality =
         _n_increment_pairs + 3 * b_parameters.n_planar + b_parameters.n_tangent;

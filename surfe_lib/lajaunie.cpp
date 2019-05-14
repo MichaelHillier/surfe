@@ -51,7 +51,7 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
     int n_p = b_parameters.n_planar;
     int n_t = b_parameters.n_tangent;
 
-    p_basis = create_polynomial_basis(m_parameters.polynomial_order);
+    p_basis = create_polynomial_basis(ui_parameters.polynomial_order);
 
     if ((int)poly_matrix.rows() != b_parameters.n_poly_terms) return false;
 
@@ -154,10 +154,10 @@ bool Lajaunie_Approach::_get_increment_pairs() {
     return true;
 }
 
-Lajaunie_Approach::Lajaunie_Approach(const model_parameters& m_p)
+Lajaunie_Approach::Lajaunie_Approach(const UI_Parameters& m_p)
 {
 	// set GUI parameters
-	m_parameters = m_p;
+	ui_parameters = m_p;
 
 	_iteration = 0;
 }
@@ -171,7 +171,7 @@ void  Lajaunie_Approach::get_method_parameters() {
     // Total number of constraints ...
     b_parameters.n_constraints = _n_increment_pair + 3 * b_parameters.n_planar + b_parameters.n_tangent;
     // Total number of equality constraints
-    if (m_parameters.use_restricted_range)
+    if (ui_parameters.use_restricted_range)
         b_parameters.restricted_range = true;
     else
         b_parameters.n_equality = _n_increment_pair + 3 * b_parameters.n_planar + b_parameters.n_tangent;
@@ -186,7 +186,7 @@ void  Lajaunie_Approach::get_method_parameters() {
         b_parameters.modified_basis = true;
         b_parameters.problem_type = Parameter_Types::Quadratic;
     }
-    int m = m_parameters.polynomial_order + 1;
+    int m = ui_parameters.polynomial_order + 1;
     b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6) - 1;  
 	// minus 1 due to the nature of the indepentent pair constraints and
     // the vanishing of the constant term in the polynomial
@@ -206,14 +206,14 @@ void Lajaunie_Approach::process_input_data() {
 		std::throw_with_nested(GRBF_Exceptions::no_interface_increment_pairs);
     
 
-    if (m_parameters.use_restricted_range) {
+    if (ui_parameters.use_restricted_range) {
 		for (auto &planar_pt : constraints.planar){
-			planar_pt.setNormalBounds(m_parameters.angular_uncertainty,m_parameters.angular_uncertainty / 2);  
+			planar_pt.setNormalBounds(ui_parameters.angular_uncertainty,ui_parameters.angular_uncertainty / 2);  
 			// Need more ROBUST METHOD. Try large statistical sampling
             // from von Mises spherical distribution
         }
 		for (auto &tangent_pt : constraints.tangent){
-			tangent_pt.setAngleBounds(m_parameters.angular_uncertainty);
+			tangent_pt.setAngleBounds(ui_parameters.angular_uncertainty);
         }
     }
 
@@ -452,7 +452,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
     if (_iteration == 0)
         planar_indices_to_include =
             Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-                input.planar, m_parameters.angular_uncertainty,
+                input.planar, ui_parameters.angular_uncertainty,
                 constraints.GetPlanarAvgNNDist());
     else {
 #pragma omp parallel sections
@@ -462,7 +462,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
                 // PLANAR Observations
                 planar_indices_to_include =
                     Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-                        input.planar, m_parameters.angular_uncertainty,
+                        input.planar, ui_parameters.angular_uncertainty,
                         constraints.GetPlanarAvgNNDist());
             }
 #pragma omp section
@@ -470,7 +470,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
                 // TANGENT Observations
                 tangent_indices_to_include =
                     Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
-                        input.tangent, m_parameters.angular_uncertainty,
+                        input.tangent, ui_parameters.angular_uncertainty,
                         constraints.GetTangentAvgNNDist());
             }
 #pragma omp section
@@ -478,7 +478,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
                 // INTERFACE Observations
                 interface_indices_to_include =
                     Get_Interface_STL_Vector_Indices_With_Large_Residuals(
-                        input.itrface, m_parameters.interface_uncertainty,
+                        input.itrface, ui_parameters.interface_uncertainty,
                         constraints.GetInterfaceAvgNNDist());
             }
 #pragma omp section
@@ -574,7 +574,7 @@ bool Lajaunie_Approach::convert_modified_kernel_to_rbf_kernel() {
     // switch from modified kernel to normal rbf kernel
     kernel = rbf_kernel;
 
-    if (m_parameters.use_restricted_range)
+    if (ui_parameters.use_restricted_range)
         b_parameters.restricted_range = false;
     b_parameters.n_equality =
         _n_increment_pair + 3 * b_parameters.n_planar + b_parameters.n_tangent;
@@ -630,8 +630,8 @@ bool Lajaunie_Approach::get_inequality_values(VectorXd &b, VectorXd &r) {
 
     // interface data
     for (int j = 0; j < n_ip; j++) {
-        b(j) = -m_parameters.interface_uncertainty;
-        r(j) = 2 * m_parameters.interface_uncertainty;
+        b(j) = -ui_parameters.interface_uncertainty;
+        r(j) = 2 * ui_parameters.interface_uncertainty;
     }
 
     // planar data

@@ -45,9 +45,9 @@
 class Vector_Field : public GRBF_Modelling_Methods {
 public:
 	// Constructor/Destructor
-	Vector_Field(const model_parameters &m_params) 
+	Vector_Field(const UI_Parameters &m_params) 
 	{
-		m_parameters = m_params;
+		ui_parameters = m_params;
 
 		_iteration = 0;
 	}

@@ -49,7 +49,7 @@ private:
 
 public:
     // Constructor/Destructor
-    Continuous_Property(const model_parameters &mparams);
+    Continuous_Property(const UI_Parameters &mparams);
     ~Continuous_Property();
     // Methods
     Polynomial_Basis *create_polynomial_basis(const int &poly_order);

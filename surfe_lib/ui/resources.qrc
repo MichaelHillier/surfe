@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="images">
+    <file>images/blank-yellow-folder.png</file>
+  </qresource>
+</RCC>

@@ -60,7 +60,7 @@ private:
 
 public:
     // Constructor/Destructor
-    Stratigraphic_Surfaces(const model_parameters &m_params);
+    Stratigraphic_Surfaces(const UI_Parameters &m_params);
     ~Stratigraphic_Surfaces() {};
     // Methods
     Polynomial_Basis *create_polynomial_basis(const int &poly_order);

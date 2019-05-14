@@ -17,7 +17,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(surfe, m) {
 	// setup bindings for Surfe_API
 	py::class_<Surfe_API>(m, "Surfe_API")
-		.def(py::init<const model_parameters &>())
+		.def(py::init<const UI_Parameters &>())
 		.def("AddInterfaceConstraint", &Surfe_API::AddInterfaceConstraint)
 		.def("AddPlanarConstraint", &Surfe_API::AddPlanarConstraint)
 		.def("AddTangentConstraint", &Surfe_API::AddTangentConstraint)
@@ -119,32 +119,32 @@ PYBIND11_MODULE(surfe, m) {
         .def("setAngleBounds", &Tangent::setAngleBounds)
         .def("setInnerProductConstraint", &Tangent::setInnerProductConstraint);
 
-    py::class_<model_parameters>(m, "model_parameters")
+    py::class_<UI_Parameters>(m, "ui_parameters")
         .def(py::init<>())
-        .def_readwrite("model_type", &model_parameters::model_type)
+        .def_readwrite("model_type", &UI_Parameters::model_type)
         .def_readwrite("min_stratigraphic_thickness",
-                       &model_parameters::min_stratigraphic_thickness)
+                       &UI_Parameters::min_stratigraphic_thickness)
         .def_readwrite("use_interface_data",
-                       &model_parameters::use_interface_data)
-        .def_readwrite("use_planar_data", &model_parameters::use_planar_data)
-        .def_readwrite("use_tangent", &model_parameters::use_tangent)
-        .def_readwrite("use_inequality", &model_parameters::use_inequality)
-        .def_readwrite("basis_type", &model_parameters::basis_type)
-        .def_readwrite("shape_parameter", &model_parameters::shape_parameter)
-        .def_readwrite("polynomial_order", &model_parameters::polynomial_order)
-        .def_readwrite("shape_parameter", &model_parameters::shape_parameter)
+                       &UI_Parameters::use_interface)
+        .def_readwrite("use_planar_data", &UI_Parameters::use_planar)
+        .def_readwrite("use_tangent", &UI_Parameters::use_tangent)
+        .def_readwrite("use_inequality", &UI_Parameters::use_inequality)
+        .def_readwrite("basis_type", &UI_Parameters::basis_type)
+        .def_readwrite("shape_parameter", &UI_Parameters::shape_parameter)
+        .def_readwrite("polynomial_order", &UI_Parameters::polynomial_order)
+        .def_readwrite("shape_parameter", &UI_Parameters::shape_parameter)
         .def_readwrite("advanced_parameters",
-                       &model_parameters::advanced_parameters)
+                       &UI_Parameters::advanced_parameters)
         .def_readwrite("model_global_anisotropy",
-                       &model_parameters::model_global_anisotropy)
-        .def_readwrite("use_greedy", &model_parameters::use_greedy)
+                       &UI_Parameters::model_global_anisotropy)
+        .def_readwrite("use_greedy", &UI_Parameters::use_greedy)
         .def_readwrite("use_restricted_range",
-                       &model_parameters::use_restricted_range)
-        .def_readwrite("use_greedy", &model_parameters::use_greedy)
+                       &UI_Parameters::use_restricted_range)
+        .def_readwrite("use_greedy", &UI_Parameters::use_greedy)
         .def_readwrite("interface_uncertainty",
-                       &model_parameters::interface_uncertainty)
+                       &UI_Parameters::interface_uncertainty)
         .def_readwrite("angular_uncertainty",
-                       &model_parameters::angular_uncertainty);
+                       &UI_Parameters::angular_uncertainty);
 
     // bind parameter type enums
     py::class_<Parameter_Types> Parameter_Types(m, "Parameter_Types");

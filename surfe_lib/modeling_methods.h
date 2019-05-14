@@ -62,7 +62,7 @@ private:
 	   // used. Also when unisolvent points are used this should be called.
 protected:
     // ATTRIBUTES
-    model_parameters m_parameters;  // QT GUI parameters
+    UI_Parameters ui_parameters;  // QT GUI parameters
     basic_parameters b_parameters;  // algorithm parameters
     int _iteration;                 // for greedy progress
 	// for interface data
@@ -88,7 +88,7 @@ public:
     // Destructor
     virtual ~GRBF_Modelling_Methods() {}
     // Methods
-    GRBF_Modelling_Methods *get_method(const model_parameters &m_parameters);  // factory method to get create the appropriate pointer for given problem
+    GRBF_Modelling_Methods *get_method(const UI_Parameters &m_parameters);  // factory method to get create the appropriate pointer for given problem
     RBFKernel *create_rbf_kernel(const Parameter_Types::RBF &rbf_type, const bool &anisotropy);
     std::vector<Interface> get_interface_points_ouput() const { return constraints.itrface; }
 	Constraints constraints;// algorithm input

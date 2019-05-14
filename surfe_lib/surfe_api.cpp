@@ -1,6 +1,6 @@
 #include <surfe_api.h>
 
-GRBF_Modelling_Methods* Surfe_API::get_method(const model_parameters& params)
+GRBF_Modelling_Methods* Surfe_API::get_method(const UI_Parameters& params)
 {
 	if (params.model_type == Parameter_Types::Single_surface)
 		return new Single_Surface(params);

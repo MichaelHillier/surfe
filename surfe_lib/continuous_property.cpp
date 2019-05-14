@@ -56,7 +56,7 @@ bool Continuous_Property::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 
     int nl = n_i + n_ie;  // n_ie should always be zero.
 
-    p_basis = create_polynomial_basis(m_parameters.polynomial_order);
+    p_basis = create_polynomial_basis(ui_parameters.polynomial_order);
 
     if ((int)poly_matrix.size() != b_parameters.n_poly_terms) return false;
     // for interface points ...
@@ -124,10 +124,10 @@ bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matr
     return true;
 }
 
-Continuous_Property::Continuous_Property(const model_parameters& mparams)
+Continuous_Property::Continuous_Property(const UI_Parameters& mparams)
 {
 	// set GUI parameters
-	m_parameters = mparams;
+	ui_parameters = mparams;
 
 	_iteration = 0;
 }
@@ -171,7 +171,7 @@ void Continuous_Property::get_method_parameters() {
         b_parameters.problem_type = Parameter_Types::Quadratic;
     }
 
-    int m = m_parameters.polynomial_order + 1;
+    int m = ui_parameters.polynomial_order + 1;
     b_parameters.n_poly_terms = 0;  // for 3D only...
 }
 
@@ -282,7 +282,7 @@ bool Continuous_Property::append_greedy_input(Constraints &input) {
     std::vector<int> large_planar_residuals_indices;
     for (int j = 0; j < (int)input.planar.size(); j++) {
         double grad_err = input.planar[j].residual() * r2d;
-        if (grad_err > m_parameters.angular_uncertainty) {
+        if (grad_err > ui_parameters.angular_uncertainty) {
             large_planar_residuals.push_back(grad_err);
             large_planar_residuals_indices.push_back(j);
         }
@@ -294,7 +294,7 @@ bool Continuous_Property::append_greedy_input(Constraints &input) {
     }
     // TANGENT Observations
 	for (auto &tangent_pt : input.tangent){
-        if (tangent_pt.residual() * r2d > m_parameters.angular_uncertainty) {
+        if (tangent_pt.residual() * r2d > ui_parameters.angular_uncertainty) {
             this->constraints.tangent.emplace_back(tangent_pt);
             return true;
         }
@@ -304,7 +304,7 @@ bool Continuous_Property::append_greedy_input(Constraints &input) {
     std::vector<int> large_interface_residuals_indices;
     for (int j = 0; j < (int)input.itrface.size(); j++) {
         double interface_err = input.itrface.at(j).residual();
-        if (interface_err > m_parameters.interface_uncertainty) {
+        if (interface_err > ui_parameters.interface_uncertainty) {
             large_interface_residuals.push_back(interface_err);
             large_interface_residuals_indices.push_back(j);
         }
