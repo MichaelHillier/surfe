@@ -1,21 +1,46 @@
-#include <modelling_input.h>
-#include <continuous_property.h>
-#include <modeling_methods.h>
-#include <inputImpl.h>
+#include <surfe_api.h>
+#include <iostream>
 
-#include <vector>
+#include <vtkSmartPointer.h>
+#include <vtkPolyData.h>
+
+using namespace std;
 
 
 int main(int argc, char* argv[]) {
 
-// 	QApplication app(argc, argv);
-// 
-// 	InputImpl *dialog = new InputImpl;
-// 	dialog->show();
-// 	app.exec();
-// 	UI_Parameters parameters = dialog->get_parameters();
+	Surfe_API surfe;
 
-	UI_Parameters params = InputImpl::GetDialogParameters();
+	try
+	{
+		surfe.GetUIParameters();
+	}
+	catch (const std::exception&e)
+	{
+		cout << "Exception: " << e.what() << endl;
+	}
+
+	try
+	{
+		surfe.ComputeInterpolant();
+	}
+	catch (const std::exception&e)
+	{
+		cout << "Exception: " << e.what() << endl;
+	}
+
+	surfe.ConstructRegularGridOutput(-10, 10, 1);
+
+	vtkSmartPointer<vtkPolyData> iso_surfaces = vtkSmartPointer<vtkPolyData>::New();
+	try
+	{
+		iso_surfaces = surfe.GetIsoSurfacesAsvtkPolyData();
+	}
+	catch (const std::exception&e)
+	{
+		cout << "Exception: " << e.what() << endl;
+	}
+
 
 	return 0;
 }

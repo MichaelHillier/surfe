@@ -7,7 +7,7 @@
 #include <QDoubleValidator>
 #include <QFileDialog>
 
-class SURFE_LIB_EXPORT InputImpl : public QDialog, private Ui::SurfeInputDialog {
+class InputImpl : public QDialog, private Ui::SurfeInputDialog {
 	Q_OBJECT;
 public:
 	InputImpl(QWidget *parent = 0);

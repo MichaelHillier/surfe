@@ -1,5 +1,7 @@
 #include <surfe_api.h>
 
+#include <read_csv_files.h>
+
 GRBF_Modelling_Methods* Surfe_API::get_method(const UI_Parameters& params)
 {
 	if (params.model_type == Parameter_Types::Single_surface)
@@ -101,28 +103,97 @@ vtkDataObjectCollection * Surfe_API::convert_constraints_to_vtk()
 	return collection;
 }
 
+void Surfe_API::build_constraints_from_csv_files()
+{
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+	try
+	{
+		if (strlen(params_.interface_file) != 0) {
+			std::vector<Interface> interface_constraints;
+			interface_constraints = build_interface_constraints(params_.interface_file);
+			method_->constraints.itrface = interface_constraints;
+		}
+		if (strlen(params_.inequality_file) != 0) {
+			std::vector<Inequality> inequality_constraints;
+			inequality_constraints = build_inequality_constraints(params_.inequality_file);
+			method_->constraints.inequality = inequality_constraints;
+		}
+		if (strlen(params_.planar_file) != 0) {
+			std::vector<Planar> planar_constraints;
+			planar_constraints = build_planar_constraints(params_.planar_file);
+			method_->constraints.planar = planar_constraints;
+		}
+		if (strlen(params_.tangent_file) != 0) {
+			std::vector<Tangent> tangent_constraints;
+			tangent_constraints = build_tangent_constraints(params_.tangent_file);
+			method_->constraints.tangent = tangent_constraints;
+		}
+	}
+	catch (const std::exception&e)
+	{
+		SurfeExceptions exceptions(e);
+		throw exceptions.what();
+	}
+
+	constraint_files_changed_ = false; // since they have been loaded
+	constraints_changed_ = true;
+}
+
+void Surfe_API::GetUIParameters()
+{
+	params_ = InputImpl::GetDialogParameters();
+	parameters_changed_ = true;
+	constraint_files_changed_ = true;
+	method_ = get_method(params_);
+	try
+	{
+		build_constraints_from_csv_files();
+	}
+	catch (const std::exception&e)
+	{
+		throw;
+	}
+}
+
 void Surfe_API::AddInterfaceConstraint(const Interface& pt)
 {
 	method_->constraints.itrface.push_back(pt);
+	constraints_changed_ = true;
 }
 
 void Surfe_API::AddPlanarConstraint(const Planar& planar_pt)
 {
 	method_->constraints.planar.push_back(planar_pt);
+	constraints_changed_ = true;
 }
 
 void Surfe_API::AddTangentConstraint(const Tangent& tangent_pt)
 {
 	method_->constraints.tangent.push_back(tangent_pt);
+	constraints_changed_ = true;
 }
 
 void Surfe_API::AddInequalityConstraint(const Inequality& inequality_pt)
 {
 	method_->constraints.inequality.push_back(inequality_pt);
+	constraints_changed_ = true;
 }
 
 void Surfe_API::ComputeInterpolant()
 {
+	if (constraint_files_changed_)
+	{
+		try
+		{
+			build_constraints_from_csv_files();
+		}
+		catch (const std::exception&e)
+		{
+			throw;
+		}
+	}
+
 	method_->remove_collocated_constraints();
 
 	try
@@ -158,28 +229,118 @@ void Surfe_API::ComputeInterpolant()
 	}
 
 	have_interpolant_ = true;
+	constraints_changed_ = false;
+	parameters_changed_ = false;
+}
+
+void Surfe_API::SetRBFKernel(const Parameter_Types::RBF &rbf)
+{
+	params_.basis_type = rbf;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetRBFShapeParameter(const double &shape_param)
+{
+	params_.shape_parameter = shape_param;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetPolynomialOrder(const int &poly_order)
+{
+	params_.polynomial_order = poly_order;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetGlobalAnisotropy(const bool &g_anisotropy)
+{
+	params_.model_global_anisotropy = g_anisotropy;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetGreedy(const bool &greedy)
+{
+	params_.use_greedy = greedy;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetRestrictedRange(const bool &rr)
+{
+	params_.use_restricted_range = rr;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetRegressionSmoothing(const bool &rs)
+{
+	params_.use_regression_smoothing = rs;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetInterfaceUncertainty(const double &interface_uncertainty)
+{
+	params_.interface_uncertainty = interface_uncertainty;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetAngularUncertainty(const double &angular_uncertainty)
+{
+	params_.angular_uncertainty = angular_uncertainty;
+	parameters_changed_ = true;
+}
+
+void Surfe_API::SetInterfaceDataCSVFile(const char *interface_file)
+{
+	params_.interface_file = interface_file;
+	constraint_files_changed_ = true;
+}
+
+void Surfe_API::SetPlanarDataCSVFile(const char *planar_file)
+{
+	params_.planar_file = planar_file;
+	constraint_files_changed_ = true;
+}
+
+void Surfe_API::SetTangentDataCSVFile(const char *tangent_file)
+{
+	params_.tangent_file = tangent_file;
+	constraint_files_changed_ = true;
+}
+
+void Surfe_API::SetInequalityDataCSVFile(const char *inequality_file)
+{
+	params_.inequality_file = inequality_file;
+	constraint_files_changed_ = true;
 }
 
 double Surfe_API::EvaluateInterpolantAtPoint(const double &x, const double &y, const double &z)
 {
-	// convert x,y,z to Point
-	Point pt(x, y, z);
-	// evaluate scalar field at point
-	method_->eval_scalar_interpolant_at_point(pt);
-	return pt.scalar_field();
+	if (have_interpolant_)
+	{
+		// convert x,y,z to Point
+		Point pt(x, y, z);
+		// evaluate scalar field at point
+		method_->eval_scalar_interpolant_at_point(pt);
+		return pt.scalar_field();
+	}
+	else
+		throw GRBF_Exceptions::missing_interpolant;
 }
 
 double *Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const double &y, const double &z)
 {
-	double gradient[3] = { 0,0,0 };
-	// convert x,y,z to Point
-	Point pt(x, y, z);
-	// evaluate vector field at point
-	method_->eval_vector_interpolant_at_point(pt);
-	gradient[0] = pt.nx_interp();
-	gradient[1] = pt.ny_interp();
-	gradient[2] = pt.nz_interp();
-	return gradient;
+	if (have_interpolant_)
+	{
+		double gradient[3] = { 0,0,0 };
+		// convert x,y,z to Point
+		Point pt(x, y, z);
+		// evaluate vector field at point
+		method_->eval_vector_interpolant_at_point(pt);
+		gradient[0] = pt.nx_interp();
+		gradient[1] = pt.ny_interp();
+		gradient[2] = pt.nz_interp();
+		return gradient;
+	}
+	else
+		throw GRBF_Exceptions::missing_interpolant;
 }
 
 void Surfe_API::ConstructRegularGridOutput(const double &zmin, const double &zmax, const double &resolution, const double &xy_percent_padding /*= 0*/)
@@ -269,7 +430,6 @@ vtkStructuredGrid * Surfe_API::GetEvaluatedvtkStructuredGrid()
 		{
 			throw;
 		}
-		have_interpolant_ = true;
 	}
 
 	vtkSmartPointer<vtkDoubleArray> sfield = vtkSmartPointer<vtkDoubleArray>::New();
@@ -305,7 +465,7 @@ vtkDataObjectCollection * Surfe_API::GetConstraintsAndOutputAsVTKObjects()
 	{
 		sgrid = GetEvaluatedvtkStructuredGrid();
 	}
-	catch (std::exception& e)
+	catch (std::exception& e) 
 	{
 		throw;
 	}

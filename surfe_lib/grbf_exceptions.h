@@ -114,6 +114,36 @@ class nosgridexists : public exception {
 	}
 };
 
+class missingcoordsincsvfile : public exception {
+	const char* what() const throw() override {
+		return "There are no x,y,z coordinates in the csv file";
+	}
+};
+
+class missingorientationinfoincsvfile : public exception {
+	const char* what() const throw() override {
+		return "Orientation information missing in csv file";
+	}
+};
+
+class missinglevelinfoincsvfile : public exception {
+	const char* what() const throw() override {
+		return "Level information missing in csv file";
+	}
+};
+
+class grbfmethodisnull : public exception {
+	const char* what() const throw() override {
+		return "GRBF modelling method is null";
+	}
+};
+
+class missinginterpolant : public exception {
+	const char* what() const throw() override {
+		return "Interpolant has not yet been computed";
+	}
+};
+
 class SurfeExceptions : public exception {
 private:
 	std::string errors;
@@ -166,6 +196,11 @@ namespace GRBF_Exceptions {
 	const errorupdatinginterfaceisovalues error_updating_interface_iso_values;
 	const errorcomputinginterpolant error_computing_interpolant;
 	const nosgridexists no_sgrid_exists;
+	const missingcoordsincsvfile missing_coords_in_file;
+	const missingorientationinfoincsvfile missing_orientation_in_file;
+	const missinglevelinfoincsvfile missing_level_info_in_file;
+	const grbfmethodisnull grbf_method_is_null;
+	const missinginterpolant missing_interpolant;
 }
 
 

@@ -1,4 +1,5 @@
 #include <inputImpl.h>
+#include <QStyleFactory>
 
 InputImpl::InputImpl(QWidget *parent /*= 0*/)
 {
@@ -9,6 +10,7 @@ InputImpl::InputImpl(QWidget *parent /*= 0*/)
 	planar_frame->setVisible(false);
 	tangent_frame->setVisible(false);
 	inequality_frame->setVisible(false);
+	uncertainty_frame->setVisible(false);
 
 
 	QDoubleValidator *doubleValues = new QDoubleValidator(this);
@@ -19,20 +21,40 @@ InputImpl::InputImpl(QWidget *parent /*= 0*/)
 	interface_uncertainty_lineedit->setValidator(doubleValues);
 	angular_uncertainty_lineedit->setValidator(doubleValues);
 
+	this->layout()->setSizeConstraint(QLayout::SetFixedSize);
+
 	adjustSize();
 
 	connect(interface_browse_button, SIGNAL(clicked()), SLOT(set_interface_data_file()));
 	connect(planar_browse_button, SIGNAL(clicked()), SLOT(set_planar_data_file()));
 	connect(tangent_browse_button, SIGNAL(clicked()), SLOT(set_tangent_data_file()));
 	connect(inequality_browse_button, SIGNAL(clicked()), SLOT(set_inequality_data_file()));
+	connect(ok_button, SIGNAL(clicked()), SLOT(accept()));
 }
 
 UI_Parameters InputImpl::GetDialogParameters()
 {
 
-	char *argv[] = { "Surfe Input Dialog", NULL };
+	char *argv[] = { "Surfe Input Dialog", nullptr };
 	int argc = (int)(sizeof(argv)/sizeof(argv[0])) - 1;
 	QApplication app(argc,argv);
+
+	QPalette dark_palette = QPalette();
+	dark_palette.setColor(QPalette::Window, QColor(53, 53, 53));
+	dark_palette.setColor(QPalette::WindowText, Qt::gray);
+	dark_palette.setColor(QPalette::Base, QColor(25, 25, 25));
+	dark_palette.setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+	dark_palette.setColor(QPalette::ToolTipBase, Qt::white);
+	dark_palette.setColor(QPalette::ToolTipText, Qt::white);
+	dark_palette.setColor(QPalette::Text, Qt::black);
+	dark_palette.setColor(QPalette::Button, QColor(53, 53, 53));
+	dark_palette.setColor(QPalette::ButtonText, Qt::black);
+	dark_palette.setColor(QPalette::BrightText, Qt::red);
+	dark_palette.setColor(QPalette::Link, QColor(42, 130, 218));
+	dark_palette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+	dark_palette.setColor(QPalette::HighlightedText, Qt::black);
+	// give style to dialog
+	app.setPalette(dark_palette);
 
 	InputImpl *dialog = new InputImpl;
 	dialog->show();
