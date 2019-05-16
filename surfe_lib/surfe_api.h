@@ -30,7 +30,9 @@ private:
 	// members
 	GRBF_Modelling_Methods *method_;
 	UI_Parameters params_;
-	vtkStructuredGrid *sgrid;
+	vtkSmartPointer<vtkStructuredGrid> sgrid;
+	vtkSmartPointer<vtkDataObjectCollection> model_collection_;
+	vtkSmartPointer<vtkPolyData> iso_surfaces_;
 
 	bool have_interpolant_;
 	bool evaluation_completed_;
@@ -44,44 +46,40 @@ private:
 	vtkDataObjectCollection *convert_constraints_to_vtk();
 	void build_constraints_from_csv_files();
 public:
-	Surfe_API() 
-	{
-		sgrid = nullptr;
-		have_interpolant_ = false;
-		have_method_ = false;
-		evaluation_completed_ = false;
-		parameters_changed_ = false;
-		constraint_files_changed_ = true;
-		constraints_changed_ = false;
-	}
-	Surfe_API(const UI_Parameters& params) : params_(params)
-	{
-		sgrid = nullptr;
-		have_interpolant_ = false;
-		have_method_ = true;
-		evaluation_completed_ = false;
-		parameters_changed_ = true;
-		constraint_files_changed_ = true;
-		constraints_changed_ = false;
-
-		method_ = get_method(params_);
-
-		try
-		{
-			build_constraints_from_csv_files();
-		}
-		catch (const std::exception&e)
-		{
-			throw;
-		}
-	}
+	Surfe_API();
+	Surfe_API(const UI_Parameters& params);
 	void GetUIParameters();
 	void AddInterfaceConstraint(const Interface& pt);
+	void AddInterfaceConstraint(
+		const double &x,const double &y,const double &z, 
+		const double &level
+	);
 	void AddPlanarConstraint(const Planar& planar_pt);
+	void AddPlanarConstraintwNormal(
+		const double &x,const double &y,const double &z,
+		const double &nx,const double &ny,const double &nz
+	);
+	void AddPlanarConstraintwStrikeDipPolarity(
+		const double &x,const double &y,const double &z,
+		const double &strike, const double &dip,const double &polarity
+	);
+	void AddPlanarConstraintwAzimuthDipPolarity(
+		const double &x, const double &y, const double &z,
+		const double &azimuth, const double &dip, const double &polarity
+	);
 	void AddTangentConstraint(const Tangent& tangent_pt);
+	void AddTangentConstraint(
+		const double &x, const double &y, const double &z,
+		const double &tx, const double &ty,	const double &tz
+	);
 	void AddInequalityConstraint(const Inequality& inequality_pt);
+	void AddInequalityConstraint(
+		const double &x, const double &y,const double &z,
+		const double &level
+	);
 	void ComputeInterpolant();
 	void SetRBFKernel(const Parameter_Types::RBF &rbf);
+	void SetRBFKernel(const char *rbf_name);
 	void SetRBFShapeParameter(const double &shape_param);
 	void SetPolynomialOrder(const int &poly_order);
 	void SetGlobalAnisotropy(const bool &g_anisotropy);
@@ -95,18 +93,15 @@ public:
 	void SetTangentDataCSVFile(const char *tangent_file);
 	void SetInequalityDataCSVFile(const char *inequality_file);
 	double EvaluateInterpolantAtPoint(
-		const double &x, 
-		const double &y, 
-		const double &z);
+		const double &x, const double &y, const double &z
+	);
 	double *EvaluateVectorInterpolantAtPoint(
-		const double &x,
-		const double &y, 
-		const double &z);
+		const double &x,const double &y, const double &z
+	);
 	void ConstructRegularGridOutput(
-		const double &zmin,
-		const double &zmax, 
-		const double &resolution,
-		const double &xy_percent_padding = 0);
+		const double &zmin,	const double &zmax, 
+		const double &resolution, const double &xy_percent_padding = 0
+	);
 	void ConstructRegularGridOutput(
 		const double &xmin, const double &xmax,
 		const double &ymin, const double &ymax,
@@ -115,6 +110,9 @@ public:
 	vtkStructuredGrid *GetEvaluatedvtkStructuredGrid();
 	vtkDataObjectCollection *GetConstraintsAndOutputAsVTKObjects();
 	vtkPolyData *GetIsoSurfacesAsvtkPolyData();
+	void WriteVTKConstraints(const char *filename);
+	void WriteVTKEvaluationGrid(const char *filename);
+	void WriteVTKIsoSurfaces(const char *filename);
 };
 
 #endif // SURFE_API

@@ -144,6 +144,19 @@ class missinginterpolant : public exception {
 	}
 };
 
+class unknownrbf : public exception {
+	const char* what() const throw() override {
+		return "Entered RBF kernel name is unknown";
+	}
+};
+
+class interpolantneedsupdate : public exception {
+	const char* what() const throw() override {
+		return "Constraints or Parameters have changed please recompute/update interpolant";
+	}
+};
+
+
 class SurfeExceptions : public exception {
 private:
 	std::string errors;
@@ -201,6 +214,8 @@ namespace GRBF_Exceptions {
 	const missinglevelinfoincsvfile missing_level_info_in_file;
 	const grbfmethodisnull grbf_method_is_null;
 	const missinginterpolant missing_interpolant;
+	const unknownrbf unknown_rbf;
+	const interpolantneedsupdate interpolant_needs_update;
 }
 
 
