@@ -156,6 +156,11 @@ bool Lajaunie_Approach::_get_increment_pairs() {
 
 Lajaunie_Approach::Lajaunie_Approach(const UI_Parameters& m_p)
 {
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
 	// set GUI parameters
 	ui_parameters = m_p;
 

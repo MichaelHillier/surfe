@@ -131,6 +131,11 @@ Single_Surface::Single_Surface(const UI_Parameters& mparams)
 	// set GUI parameters
 	ui_parameters = mparams;
 
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
 	_iteration = 0;
 }
 

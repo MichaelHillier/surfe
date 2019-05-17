@@ -126,6 +126,11 @@ bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matr
 
 Continuous_Property::Continuous_Property(const UI_Parameters& mparams)
 {
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
 	// set GUI parameters
 	ui_parameters = mparams;
 

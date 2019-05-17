@@ -103,10 +103,17 @@ UI_Parameters InputImpl::get_parameters()
 	params.smoothing_amount = smoothing_amount_lineedit->text().toDouble();
 	params.interface_uncertainty = interface_uncertainty_lineedit->text().toDouble();
 	params.angular_uncertainty = angular_uncertainty_lineedit->text().toDouble();
-	params.interface_file = interface_file_text->text().toStdString().c_str();
-	params.planar_file = planar_file_text->text().toStdString().c_str();
-	params.tangent_file = tangent_file_text->text().toStdString().c_str();
-	params.inequality_file = inequality_file_text->text().toStdString().c_str();
+	std::string interface_file_str = interface_file_text->text().toStdString();
+	std::string planar_file_str = planar_file_text->text().toStdString();
+	std::string tangent_file_str = tangent_file_text->text().toStdString();
+	std::string inequality_file_str = inequality_file_text->text().toStdString();
+	params.interface_file = interface_file_str.c_str();
+	params.planar_file = planar_file_str.c_str();
+	params.tangent_file = tangent_file_str.c_str();
+	params.inequality_file = inequality_file_str.c_str();
+	std::string temp_string = "Mike char/string test";
+	const char *t = temp_string.c_str();
+	params.test_chars = t;
 	return params;
 }
 

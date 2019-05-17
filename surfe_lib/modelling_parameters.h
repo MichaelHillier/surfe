@@ -126,6 +126,8 @@ struct SURFE_LIB_EXPORT UI_Parameters {
 	const char *tangent_file;
 	const char *inequality_file;
 
+	const char *test_chars;
+
 	// initialization ...
 	UI_Parameters():
 		model_type(Parameter_Types::Single_surface),

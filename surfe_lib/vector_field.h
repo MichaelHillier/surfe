@@ -47,6 +47,10 @@ public:
 	// Constructor/Destructor
 	Vector_Field(const UI_Parameters &m_params) 
 	{
+		solver = nullptr;
+		kernel = nullptr;
+		rbf_kernel = nullptr;
+
 		ui_parameters = m_params;
 
 		_iteration = 0;

@@ -265,6 +265,11 @@ bool Stratigraphic_Surfaces::_insert_polynomial_matrix_blocks_in_interpolation_m
 
 Stratigraphic_Surfaces::Stratigraphic_Surfaces(const UI_Parameters& m_params)
 {
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
 	// set GUI parameters
 	ui_parameters = m_params;
 
