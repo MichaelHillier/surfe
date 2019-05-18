@@ -17,6 +17,7 @@
 #include <vtkPointSet.h>
 #include <vtkPolyData.h>
 #include <vtkStructuredGrid.h>
+#include <vtkImageData.h>
 #include <vtkDoubleArray.h>
 #include <vtkPointData.h>
 #include <vtkCellArray.h>
@@ -30,7 +31,7 @@ private:
 	// members
 	GRBF_Modelling_Methods *method_;
 	UI_Parameters params_;
-	vtkSmartPointer<vtkStructuredGrid> sgrid;
+	vtkSmartPointer<vtkImageData> grid;
 	vtkSmartPointer<vtkDataObjectCollection> model_collection_;
 	vtkSmartPointer<vtkPolyData> iso_surfaces_;
 
@@ -43,7 +44,7 @@ private:
 
 	// methods
 	GRBF_Modelling_Methods* get_method(const UI_Parameters& params);
-	vtkDataObjectCollection *convert_constraints_to_vtk();
+	vtkSmartPointer<vtkDataObjectCollection> convert_constraints_to_vtk();
 	void build_constraints_from_csv_files();
 public:
 	Surfe_API();
@@ -107,7 +108,7 @@ public:
 		const double &ymin, const double &ymax,
 		const double &zmin, const double &zmax,
 		const double &resolution);
-	vtkStructuredGrid *GetEvaluatedvtkStructuredGrid();
+	vtkImageData *GetEvaluatedGrid();
 	vtkDataObjectCollection *GetConstraintsAndOutputAsVTKObjects();
 	vtkPolyData *GetIsoSurfacesAsvtkPolyData();
 	void WriteVTKConstraints(const char *filename);

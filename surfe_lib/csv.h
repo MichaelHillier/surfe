@@ -39,11 +39,6 @@
 #include <utility>
 #include <cstdio>
 #include <exception>
-#ifndef CSV_IO_NO_THREAD
-#include <mutex>
-#include <thread>
-#include <condition_variable>
-#endif
 #include <memory>
 #include <cassert>
 #include <cerrno>
@@ -201,97 +196,6 @@ namespace io {
 			long long remaining_byte_count;
 		};
 
-#ifndef CSV_IO_NO_THREAD
-		class AsynchronousReader {
-		public:
-			void init(std::unique_ptr<ByteSourceBase>arg_byte_source) {
-				std::unique_lock<std::mutex>guard(lock);
-				byte_source = std::move(arg_byte_source);
-				desired_byte_count = -1;
-				termination_requested = false;
-				worker = std::thread(
-					[&] {
-						std::unique_lock<std::mutex>guard(lock);
-						try {
-							for (;;) {
-								read_requested_condition.wait(
-									guard,
-									[&] {
-										return desired_byte_count != -1 || termination_requested;
-									}
-								);
-								if (termination_requested)
-									return;
-
-								read_byte_count = byte_source->read(buffer, desired_byte_count);
-								desired_byte_count = -1;
-								if (read_byte_count == 0)
-									break;
-								read_finished_condition.notify_one();
-							}
-						}
-						catch (...) {
-							read_error = std::current_exception();
-						}
-						read_finished_condition.notify_one();
-					}
-				);
-			}
-
-			bool is_valid()const {
-				return byte_source != nullptr;
-			}
-
-			void start_read(char*arg_buffer, int arg_desired_byte_count) {
-				std::unique_lock<std::mutex>guard(lock);
-				buffer = arg_buffer;
-				desired_byte_count = arg_desired_byte_count;
-				read_byte_count = -1;
-				read_requested_condition.notify_one();
-			}
-
-			int finish_read() {
-				std::unique_lock<std::mutex>guard(lock);
-				read_finished_condition.wait(
-					guard,
-					[&] {
-						return read_byte_count != -1 || read_error;
-					}
-				);
-				if (read_error)
-					std::rethrow_exception(read_error);
-				else
-					return read_byte_count;
-			}
-
-			~AsynchronousReader() {
-				if (byte_source != nullptr) {
-					{
-						std::unique_lock<std::mutex>guard(lock);
-						termination_requested = true;
-					}
-					read_requested_condition.notify_one();
-					worker.join();
-				}
-			}
-
-		private:
-			std::unique_ptr<ByteSourceBase>byte_source;
-
-			std::thread worker;
-
-			bool termination_requested;
-			std::exception_ptr read_error;
-			char*buffer;
-			int desired_byte_count;
-			int read_byte_count;
-
-			std::mutex lock;
-			std::condition_variable read_finished_condition;
-			std::condition_variable read_requested_condition;
-		};
-#endif
-
 		class SynchronousReader {
 		public:
 			void init(std::unique_ptr<ByteSourceBase>arg_byte_source) {
@@ -321,11 +225,7 @@ namespace io {
 	private:
 		static const int block_len = 1 << 24;
 		std::unique_ptr<char[]>buffer; // must be constructed before (and thus destructed after) the reader!
-#ifdef CSV_IO_NO_THREAD
 		detail::SynchronousReader reader;
-#else
-		detail::AsynchronousReader reader;
-#endif
 		int data_begin;
 		int data_end;
 
@@ -1181,8 +1081,8 @@ namespace io {
 
 			template<class ...ColNames>
 			void read_header(ignore_column ignore_policy, ColNames...cols) {
-				static_assert(sizeof...(ColNames) >= column_count, "not enough column names specified");
-				static_assert(sizeof...(ColNames) <= column_count, "too many column names specified");
+				// 				static_assert(sizeof...(ColNames) >= column_count, "not enough column names specified");
+				// 				static_assert(sizeof...(ColNames) <= column_count, "too many column names specified");
 				try {
 					set_column_names(std::forward<ColNames>(cols)...);
 
@@ -1270,10 +1170,10 @@ namespace io {
 		public:
 			template<class ...ColType>
 			bool read_row(ColType& ...cols) {
-				static_assert(sizeof...(ColType) >= column_count,
-					"not enough columns specified");
-				static_assert(sizeof...(ColType) <= column_count,
-					"too many columns specified");
+				// 				static_assert(sizeof...(ColType) >= column_count,
+				// 					"not enough columns specified");
+				// 				static_assert(sizeof...(ColType) <= column_count,
+				// 					"too many columns specified");
 				try {
 					try {
 

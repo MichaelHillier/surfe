@@ -107,13 +107,59 @@ UI_Parameters InputImpl::get_parameters()
 	std::string planar_file_str = planar_file_text->text().toStdString();
 	std::string tangent_file_str = tangent_file_text->text().toStdString();
 	std::string inequality_file_str = inequality_file_text->text().toStdString();
-	params.interface_file = interface_file_str.c_str();
-	params.planar_file = planar_file_str.c_str();
-	params.tangent_file = tangent_file_str.c_str();
-	params.inequality_file = inequality_file_str.c_str();
-	std::string temp_string = "Mike char/string test";
-	const char *t = temp_string.c_str();
-	params.test_chars = t;
+	// do some c string gymnastics 
+	if (!interface_file_str.empty())
+	{
+		auto interface_file_length = interface_file_str.size();
+		char *temp_interface_filename = new char[interface_file_length + 1];
+		strncpy_s(
+			temp_interface_filename,
+			interface_file_length + 1, 
+			interface_file_str.c_str(), 
+			interface_file_length
+		);
+		temp_interface_filename[interface_file_length] = '\0';
+		params.interface_file = temp_interface_filename;
+	}
+	if (!planar_file_str.empty())
+	{
+		auto planar_file_length = planar_file_str.size();
+		char *temp_planar_filename = new char[planar_file_length + 1];
+		strncpy_s(
+			temp_planar_filename,
+			planar_file_length + 1,
+			planar_file_str.c_str(),
+			planar_file_length
+		);
+		temp_planar_filename[planar_file_length] = '\0';
+		params.planar_file = temp_planar_filename;
+	}
+	if (!tangent_file_str.empty())
+	{
+		auto tangent_file_length = tangent_file_str.size();
+		char *temp_tangent_filename = new char[tangent_file_length + 1];
+		strncpy_s(
+			temp_tangent_filename,
+			tangent_file_length + 1,
+			tangent_file_str.c_str(),
+			tangent_file_length
+		);
+		temp_tangent_filename[tangent_file_length] = '\0';
+		params.tangent_file = temp_tangent_filename;
+	}
+	if (!inequality_file_str.empty())
+	{
+		auto inequality_file_length = inequality_file_str.size();
+		char *temp_inequality_filename = new char[inequality_file_length + 1];
+		strncpy_s(
+			temp_inequality_filename,
+			inequality_file_length + 1,
+			inequality_file_str.c_str(),
+			inequality_file_length
+		);
+		temp_inequality_filename[inequality_file_length] = '\0';
+		params.inequality_file = temp_inequality_filename;
+	}
 	return params;
 }
 

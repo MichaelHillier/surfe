@@ -7,7 +7,7 @@ std::vector<Interface> build_interface_constraints(const char *interface_file)
 	try
 	{
 		io::CSVReader<4> in(interface_file);
-		in.read_header(io::ignore_extra_column, "x", "y", "z", "level");
+		in.read_header(io::ignore_missing_column, "x", "y", "z", "level");
 		if (!in.has_column("x") || !in.has_column("y") || !in.has_column("z"))
 			std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
 		if (!in.has_column("level"))
@@ -38,7 +38,7 @@ std::vector<Planar> build_planar_constraints(const char *planar_file)
 		bool have_azimuth_dip_polarity = false;
 
 		io::CSVReader<10> in(planar_file);
-		in.read_header(io::ignore_extra_column, "x", "y", "z", "nx", "ny", "nz", "dip", "strike", "azimuth", "polarity");
+		in.read_header(io::ignore_missing_column, "x", "y", "z", "nx", "ny", "nz", "dip", "strike", "azimuth", "polarity");
 		if (!in.has_column("x") || !in.has_column("y") || !in.has_column("z"))
 			std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
 		if (in.has_column("nx") && in.has_column("ny") && in.has_column("nz"))
@@ -61,13 +61,12 @@ std::vector<Planar> build_planar_constraints(const char *planar_file)
 		double azimuth;
 		double strike;
 		int polarity;
-		while (in.read_row(x, y, z, nx, ny, nz, dip, azimuth, strike, polarity)) {
+		while (in.read_row(x, y, z, nx, ny, nz, dip, strike, azimuth, polarity)) {
 			if (have_normal)
 				planar_constraints.emplace_back(Planar(x, y, z, nx, ny, nz));
 			else if (have_strike_dip_polarity)
 				planar_constraints.emplace_back(Planar(x, y, z, dip, strike, polarity));
-			else {
-				// convert azimuth to strike
+			else if (have_azimuth_dip_polarity){
 				if (azimuth >= 90.0)
 					strike = azimuth - 90.0;
 				else
@@ -94,7 +93,7 @@ std::vector<Tangent> build_tangent_constraints(const char *tangent_file)
 		bool have_azimuth_dip_polarity = false;
 
 		io::CSVReader<6> in(tangent_file);
-		in.read_header(io::ignore_extra_column, "x", "y", "z", "tx", "ty", "tz");
+		in.read_header(io::ignore_missing_column, "x", "y", "z", "tx", "ty", "tz");
 		if (!in.has_column("x") || !in.has_column("y") || !in.has_column("z"))
 			std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
 		if (!in.has_column("tx") || !in.has_column("ty") || !in.has_column("tz"))
@@ -123,7 +122,7 @@ std::vector<Inequality> build_inequality_constraints(const char *inequality_file
 	try
 	{
 		io::CSVReader<4> in(inequality_file);
-		in.read_header(io::ignore_extra_column, "x", "y", "z", "level");
+		in.read_header(io::ignore_missing_column, "x", "y", "z", "level");
 		if (!in.has_column("x") || !in.has_column("y") || !in.has_column("z"))
 			std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
 		if (!in.has_column("level"))

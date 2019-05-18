@@ -59,7 +59,7 @@ PYBIND11_MODULE(surfe, m) {
 		(void (Surfe_API::*)(const double&, const double &, const double &, const double &, const double &, const double&, const double &))
 			&Surfe_API::ConstructRegularGridOutput, "Build SGrid from bounds and resolution")
 		.def("GetEvaluatedvtkStructuredGrid",
-			&Surfe_API::GetEvaluatedvtkStructuredGrid,
+			&Surfe_API::GetEvaluatedGrid,
 			py::return_value_policy::reference_internal)
 		.def("GetConstraintsAndOutputAsVTKObjects",
 			&Surfe_API::GetConstraintsAndOutputAsVTKObjects,

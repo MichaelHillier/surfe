@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 		cout << "Exception: " << e.what() << endl;
 	}
 
-	surfe.ConstructRegularGridOutput(-10, 10, 1);
+	surfe.ConstructRegularGridOutput(-35000, 35000, 1000);
 
 	vtkSmartPointer<vtkPolyData> iso_surfaces = vtkSmartPointer<vtkPolyData>::New();
 	try
@@ -41,6 +41,9 @@ int main(int argc, char* argv[]) {
 		cout << "Exception: " << e.what() << endl;
 	}
 
+	surfe.WriteVTKConstraints("D:/constraints.vtp");
+	surfe.WriteVTKEvaluationGrid("D:/evaluated_sgrid.vti");
+	surfe.WriteVTKIsoSurfaces("D:/iso_surface.vtp");
 
 	return 0;
 }

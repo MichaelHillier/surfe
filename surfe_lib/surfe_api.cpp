@@ -5,6 +5,7 @@
 #include <vtkNew.h>
 #include <vtkXMLPolyDataWriter.h>
 #include <vtkXMLStructuredGridWriter.h>
+#include <vtkXMLImageDataWriter.h>
 
 GRBF_Modelling_Methods* Surfe_API::get_method(const UI_Parameters& params)
 {
@@ -18,91 +19,114 @@ GRBF_Modelling_Methods* Surfe_API::get_method(const UI_Parameters& params)
 		return new Continuous_Property(params);
 }
 
-vtkDataObjectCollection * Surfe_API::convert_constraints_to_vtk()
+vtkSmartPointer<vtkDataObjectCollection> Surfe_API::convert_constraints_to_vtk()
 {
 	vtkSmartPointer<vtkDataObjectCollection> collection = vtkSmartPointer<vtkDataObjectCollection>::New();
 
-	// inequality
-	vtkSmartPointer<vtkPolyData> inequality_constraints = vtkSmartPointer<vtkPolyData>::New();
-	vtkSmartPointer<vtkPoints> inequality_points = vtkSmartPointer<vtkPoints>::New();
-	vtkSmartPointer<vtkDoubleArray> inequality_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
-	inequality_scalar_field->SetName("Scalar Field");
-	inequality_scalar_field->SetNumberOfComponents(1);
-	inequality_scalar_field->SetNumberOfTuples(sgrid->GetNumberOfPoints());
-	for (int j = 0; j < (int)method_->constraints.inequality.size(); j++ ){
-		Inequality *inequality_pt = &method_->constraints.inequality[j];
-		inequality_points->InsertNextPoint(inequality_pt->x(), inequality_pt->y(), inequality_pt->z());
-		inequality_scalar_field->SetTuple1(j, inequality_pt->scalar_field());
-		vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
-		vertex->GetPointIds()->SetId(0, j);
-		inequality_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+	if (!method_->constraints.inequality.empty())
+	{
+		// inequality
+		vtkSmartPointer<vtkPolyData> inequality_constraints = vtkSmartPointer<vtkPolyData>::New();
+		vtkSmartPointer<vtkPoints> inequality_points = vtkSmartPointer<vtkPoints>::New();
+		vtkSmartPointer<vtkDoubleArray> inequality_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
+		inequality_scalar_field->SetName("Scalar Field");
+		inequality_scalar_field->SetNumberOfComponents(1);
+		inequality_scalar_field->SetNumberOfTuples(grid->GetNumberOfPoints());
+		for (int j = 0; j < (int)method_->constraints.inequality.size(); j++) {
+			Inequality *inequality_pt = &method_->constraints.inequality[j];
+			inequality_points->InsertNextPoint(inequality_pt->x(), inequality_pt->y(), inequality_pt->z());
+			inequality_scalar_field->SetTuple1(j, inequality_pt->scalar_field());
+// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
+// 			vertex->GetPointIds()->SetId(0, j);
+// 			inequality_constraints->Allocate(1, 1);
+// 			inequality_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+		}
+		inequality_constraints->SetPoints(inequality_points);
+		inequality_constraints->GetPointData()->AddArray(inequality_scalar_field);
+		collection->AddItem(inequality_constraints);
 	}
-	inequality_constraints->SetPoints(inequality_points);
-	inequality_constraints->GetPointData()->AddArray(inequality_scalar_field);
-	collection->AddItem(inequality_constraints);
 	
-	// interface
-	vtkSmartPointer<vtkPolyData> interface_constraints = vtkSmartPointer<vtkPolyData>::New();
-	vtkSmartPointer<vtkPoints> interface_points = vtkSmartPointer<vtkPoints>::New();
-	vtkSmartPointer<vtkDoubleArray> interface_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
-	interface_scalar_field->SetName("Scalar Field");
-	interface_scalar_field->SetNumberOfComponents(1);
-	interface_scalar_field->SetNumberOfTuples(sgrid->GetNumberOfPoints());
-	for (int j = 0; j < (int)method_->constraints.itrface.size(); j++) {
-		Interface *interface_pt = &method_->constraints.itrface[j];
-		interface_points->InsertNextPoint(interface_pt->x(), interface_pt->y(), interface_pt->z());
-		interface_scalar_field->SetTuple1(j, interface_pt->scalar_field());
-		vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
-		vertex->GetPointIds()->SetId(0, j);
-		interface_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+	if (!method_->constraints.itrface.empty())
+	{
+		// interface
+		vtkSmartPointer<vtkPolyData> interface_constraints = vtkSmartPointer<vtkPolyData>::New();
+		vtkSmartPointer<vtkPoints> interface_points = vtkSmartPointer<vtkPoints>::New();
+		vtkSmartPointer<vtkDoubleArray> interface_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
+		interface_scalar_field->SetName("Scalar Field");
+		interface_scalar_field->SetNumberOfComponents(1);
+		interface_scalar_field->SetNumberOfTuples(grid->GetNumberOfPoints());
+		for (int j = 0; j < (int)method_->constraints.itrface.size(); j++) {
+			Interface *interface_pt = &method_->constraints.itrface[j];
+			interface_points->InsertNextPoint(interface_pt->x(), interface_pt->y(), interface_pt->z());
+			interface_scalar_field->SetTuple1(j, interface_pt->scalar_field());
+// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
+// 			vertex->GetPointIds()->SetId(0, j);
+// 			interface_constraints->Allocate(1, 1);
+// 			interface_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+		}
+		interface_constraints->SetPoints(interface_points);
+		interface_constraints->GetPointData()->AddArray(interface_scalar_field);
+		collection->AddItem(interface_constraints);
 	}
-	interface_constraints->SetPoints(inequality_points);
-	interface_constraints->GetPointData()->AddArray(interface_scalar_field);
-	collection->AddItem(interface_constraints);
 
-	// planar
-	vtkSmartPointer<vtkPolyData> planar_constraints = vtkSmartPointer<vtkPolyData>::New();
-	vtkSmartPointer<vtkPoints> planar_points = vtkSmartPointer<vtkPoints>::New();
-	vtkSmartPointer<vtkDoubleArray> planar_gradient_field = vtkSmartPointer<vtkDoubleArray>::New();
-	planar_gradient_field->SetName("Gradient Field");
-	planar_gradient_field->SetNumberOfComponents(3);
-	planar_gradient_field->SetComponentName(0, "Gx");
-	planar_gradient_field->SetComponentName(1, "Gy");
-	planar_gradient_field->SetComponentName(2, "Gz");
-	for (int j = 0; j < (int)method_->constraints.planar.size(); j++) {
-		Planar *planar_pt = &method_->constraints.planar[j];
-		planar_points->InsertNextPoint(planar_pt->x(), planar_pt->y(), planar_pt->z());
-		double gradient[3] = { planar_pt->nx(),planar_pt->ny(),planar_pt->nz() };
-		planar_gradient_field->SetTuple(j, gradient);
-		vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
-		vertex->GetPointIds()->SetId(0, j);
-		planar_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+	if (!method_->constraints.planar.empty())
+	{
+		// planar
+		vtkSmartPointer<vtkPolyData> planar_constraints = vtkSmartPointer<vtkPolyData>::New();
+		vtkSmartPointer<vtkPoints> planar_points = vtkSmartPointer<vtkPoints>::New();
+		vtkSmartPointer<vtkDoubleArray> planar_gradient_field = vtkSmartPointer<vtkDoubleArray>::New();
+		int n_tuples = (int)method_->constraints.planar.size();
+		planar_gradient_field->SetName("Gradient Field");
+		planar_gradient_field->SetNumberOfTuples(n_tuples);
+		planar_gradient_field->SetNumberOfComponents(3);
+		planar_gradient_field->SetComponentName(0, "Gx");
+		planar_gradient_field->SetComponentName(1, "Gy");
+		planar_gradient_field->SetComponentName(2, "Gz");
+		// initalization for vector data
+		for (int k = 0; k < n_tuples; k++) {
+			for (int l = 0; l < 3; l++)
+				planar_gradient_field->InsertComponent(k, l, 0.0);
+		}
+		for (int j = 0; j < (int)method_->constraints.planar.size(); j++) {
+			Planar *planar_pt = &method_->constraints.planar[j];
+			planar_points->InsertNextPoint(planar_pt->x(), planar_pt->y(), planar_pt->z());
+			double gradient[3] = { planar_pt->nx(),planar_pt->ny(),planar_pt->nz() };
+			planar_gradient_field->SetTuple(j, gradient);
+// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
+// 			vertex->GetPointIds()->SetId(0, j);
+// 			planar_constraints->Allocate(1, 1);
+// 			planar_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+		}
+		planar_constraints->SetPoints(planar_points);
+		planar_constraints->GetPointData()->AddArray(planar_gradient_field);
+		collection->AddItem(planar_constraints);
 	}
-	planar_constraints->SetPoints(planar_points);
-	planar_constraints->GetPointData()->AddArray(planar_gradient_field);
-	collection->AddItem(planar_constraints);
 
-	// planar
-	vtkSmartPointer<vtkPolyData> tangent_constraints = vtkSmartPointer<vtkPolyData>::New();
-	vtkSmartPointer<vtkPoints> tangent_points = vtkSmartPointer<vtkPoints>::New();
-	vtkSmartPointer<vtkDoubleArray> tangent_vector = vtkSmartPointer<vtkDoubleArray>::New();
-	tangent_vector->SetName("Tangent Vector");
-	tangent_vector->SetNumberOfComponents(3);
-	tangent_vector->SetComponentName(0, "Tx");
-	tangent_vector->SetComponentName(1, "Ty");
-	tangent_vector->SetComponentName(2, "Tz");
-	for (int j = 0; j < (int)method_->constraints.tangent.size(); j++) {
-		Tangent*tangent_pt = &method_->constraints.tangent[j];
-		tangent_points->InsertNextPoint(tangent_pt->x(), tangent_pt->y(), tangent_pt->z());
-		double tangent[3] = { tangent_pt->tx(),tangent_pt->ty(),tangent_pt->tz() };
-		tangent_vector->SetTuple(j, tangent);
-		vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
-		vertex->GetPointIds()->SetId(0, j);
-		tangent_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+	if (!method_->constraints.tangent.empty())
+	{
+		// tangent
+		vtkSmartPointer<vtkPolyData> tangent_constraints = vtkSmartPointer<vtkPolyData>::New();
+		vtkSmartPointer<vtkPoints> tangent_points = vtkSmartPointer<vtkPoints>::New();
+		vtkSmartPointer<vtkDoubleArray> tangent_vector = vtkSmartPointer<vtkDoubleArray>::New();
+		tangent_vector->SetName("Tangent Vector");
+		tangent_vector->SetNumberOfComponents(3);
+		tangent_vector->SetComponentName(0, "Tx");
+		tangent_vector->SetComponentName(1, "Ty");
+		tangent_vector->SetComponentName(2, "Tz");
+		for (int j = 0; j < (int)method_->constraints.tangent.size(); j++) {
+			Tangent*tangent_pt = &method_->constraints.tangent[j];
+			tangent_points->InsertNextPoint(tangent_pt->x(), tangent_pt->y(), tangent_pt->z());
+			double tangent[3] = { tangent_pt->tx(),tangent_pt->ty(),tangent_pt->tz() };
+			tangent_vector->SetTuple(j, tangent);
+// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
+// 			vertex->GetPointIds()->SetId(0, j);
+// 			tangent_constraints->Allocate(1, 1);
+// 			tangent_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
+		}
+		tangent_constraints->SetPoints(tangent_points);
+		tangent_constraints->GetPointData()->AddArray(tangent_vector);
+		collection->AddItem(tangent_constraints);
 	}
-	tangent_constraints->SetPoints(tangent_points);
-	tangent_constraints->GetPointData()->AddArray(tangent_vector);
-	collection->AddItem(tangent_constraints);
 
 	return collection;
 }
@@ -146,7 +170,7 @@ void Surfe_API::build_constraints_from_csv_files()
 
 Surfe_API::Surfe_API()
 {
-	sgrid = nullptr;
+	grid = nullptr;
 	have_interpolant_ = false;
 	have_method_ = false;
 	evaluation_completed_ = false;
@@ -160,7 +184,7 @@ Surfe_API::Surfe_API(const UI_Parameters& params)
 {
 	params_ = params;
 
-	sgrid = nullptr;
+	grid = nullptr;
 	have_interpolant_ = false;
 	have_method_ = true;
 	evaluation_completed_ = false;
@@ -505,25 +529,12 @@ void Surfe_API::ConstructRegularGridOutput(const double &zmin, const double &zma
 
 	double origin[3] = { bounds[0],bounds[2], zmin };
 
-	vtkSmartPointer<vtkStructuredGrid> s_grid = vtkSmartPointer<vtkStructuredGrid>::New();
-	vtkSmartPointer<vtkPoints> grid_points = vtkSmartPointer<vtkPoints>::New();
-	s_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
+	vtkSmartPointer<vtkImageData> constructed_grid = vtkSmartPointer<vtkImageData>::New();
+	constructed_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
+	constructed_grid->SetOrigin(origin);
+	constructed_grid->SetSpacing(resolution, resolution, resolution);
 
-	// create grid points
-	for (int j = 0; j < (nz + 1); j++) {
-		for (int k = 0; k < (ny + 1); k++) {
-			for (int l = 0; l < (nx + 1); l++) {
-				double grid_pt[3];
-				grid_pt[0] = origin[0] + l * resolution;
-				grid_pt[1] = origin[1] + k * resolution;
-				grid_pt[2] = origin[2] + j * resolution;
-				grid_points->InsertNextPoint(grid_pt);
-			}
-		}
-	}
-	s_grid->SetPoints(grid_points);
-
-	sgrid = s_grid;
+	grid = constructed_grid;
 }
 
 void Surfe_API::ConstructRegularGridOutput(
@@ -539,30 +550,17 @@ void Surfe_API::ConstructRegularGridOutput(
 
 	double origin[3] = { xmin, ymin, zmin };
 
-	vtkSmartPointer<vtkStructuredGrid> s_grid = vtkSmartPointer<vtkStructuredGrid>::New();
-	vtkSmartPointer<vtkPoints> grid_points = vtkSmartPointer<vtkPoints>::New();
-	s_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
+	vtkSmartPointer<vtkImageData> constructed_grid = vtkSmartPointer<vtkImageData>::New();
+	constructed_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
+	constructed_grid->SetOrigin(origin);
+	constructed_grid->SetSpacing(resolution,resolution,resolution);
 
-	// create grid points
-	for (int j = 0; j < (nz + 1); j++) {
-		for (int k = 0; k < (ny + 1); k++) {
-			for (int l = 0; l < (nx + 1); l++) {
-				double grid_pt[3];
-				grid_pt[0] = origin[0] + l * resolution;
-				grid_pt[1] = origin[1] + k * resolution;
-				grid_pt[2] = origin[2] + j * resolution;
-				grid_points->InsertNextPoint(grid_pt);
-			}
-		}
-	}
-	s_grid->SetPoints(grid_points);
-
-	sgrid = s_grid;
+	grid = constructed_grid;
 }
 
-vtkStructuredGrid * Surfe_API::GetEvaluatedvtkStructuredGrid()
+vtkImageData * Surfe_API::GetEvaluatedGrid()
 {
-	if (!sgrid)
+	if (!grid)
 		throw GRBF_Exceptions::no_sgrid_exists;
 
 	if (!have_interpolant_ || parameters_changed_ || constraints_changed_)
@@ -580,12 +578,12 @@ vtkStructuredGrid * Surfe_API::GetEvaluatedvtkStructuredGrid()
 	vtkSmartPointer<vtkDoubleArray> sfield = vtkSmartPointer<vtkDoubleArray>::New();
 	sfield->SetName("Scalar Field");
 	sfield->SetNumberOfComponents(1);
-	sfield->SetNumberOfTuples(sgrid->GetNumberOfPoints());
+	sfield->SetNumberOfTuples(grid->GetNumberOfPoints());
 	
 	#pragma omp parallel for schedule(dynamic)
-	for (int j = 0; j < sgrid->GetNumberOfPoints(); j++) {
+	for (int j = 0; j < grid->GetNumberOfPoints(); j++) {
 		double point[3];
-		sgrid->GetPoint(j, point);
+		grid->GetPoint(j, point);
 		Point pt(point[0], point[1], point[2]);
 		// evaluate scalar field at point
 		method_->eval_scalar_interpolant_at_point(pt);
@@ -593,22 +591,22 @@ vtkStructuredGrid * Surfe_API::GetEvaluatedvtkStructuredGrid()
 		sfield->SetTuple1(j, scalar_field);
 	}
 
-	sgrid->GetPointData()->AddArray(sfield);
+	grid->GetPointData()->SetScalars(sfield);
 
 	evaluation_completed_ = true;
 
-	return sgrid;
+	return grid;
 }
 
 vtkDataObjectCollection * Surfe_API::GetConstraintsAndOutputAsVTKObjects()
 {
-	if (!sgrid)
+	if (!grid)
 		throw GRBF_Exceptions::no_sgrid_exists;
 
 	// Get Evaluated structured grid using the interpolant
 	try
 	{
-		sgrid = GetEvaluatedvtkStructuredGrid();
+		grid = GetEvaluatedGrid();
 	}
 	catch (std::exception& e) 
 	{
@@ -622,7 +620,7 @@ vtkDataObjectCollection * Surfe_API::GetConstraintsAndOutputAsVTKObjects()
 	vtkSmartPointer<vtkPolyData> iso_surfaces = GetIsoSurfacesAsvtkPolyData();
 
 	collection->AddItem(iso_surfaces);
-	collection->AddItem(sgrid);
+	collection->AddItem(grid);
 
 	model_collection_ = collection;
 
@@ -631,13 +629,13 @@ vtkDataObjectCollection * Surfe_API::GetConstraintsAndOutputAsVTKObjects()
 
 vtkPolyData * Surfe_API::GetIsoSurfacesAsvtkPolyData()
 {
-	if (!sgrid)
+	if (!grid)
 		throw GRBF_Exceptions::no_sgrid_exists;
 
 	if (!evaluation_completed_ || parameters_changed_ || constraints_changed_) {
 		try
 		{
-			sgrid = GetEvaluatedvtkStructuredGrid();
+			grid = GetEvaluatedGrid();
 		}
 		catch (const std::exception&)
 		{
@@ -646,7 +644,8 @@ vtkPolyData * Surfe_API::GetIsoSurfacesAsvtkPolyData()
 	}
 
 	vtkNew<vtkMarchingCubes> mcube;
-	mcube->SetInputData(sgrid);
+	mcube->SetInputData(grid);
+	mcube->ComputeScalarsOn();
 	for (int j = 0; j < method_->interface_test_points.size(); j++) {
 		Interface interface_pt = method_->interface_test_points[j];
 		// evaluate interpolant at this point
@@ -680,9 +679,13 @@ void Surfe_API::WriteVTKConstraints(const char *filename)
 		int vtk_type = data_object->GetDataObjectType();
 		if (vtk_type == 0)
 		{
-			std::string num_str = std::to_string(j);
-			std::string filename_j = filename;
+			std::string num_str = std::to_string(j); 
+			std::string temp = filename;
+			std::string filename_j = temp.substr(0, temp.size() - 4); // strip off the extension and '.'
+			std::string extension = temp.substr(temp.size() - 4, temp.size());
+			filename_j.append("_");
 			filename_j.append(num_str);
+			filename_j.append(extension);
 			vtkNew<vtkXMLPolyDataWriter> writer;
 			writer->SetInputData(data_object);
 			writer->SetFileName(filename_j.c_str());
@@ -694,9 +697,9 @@ void Surfe_API::WriteVTKConstraints(const char *filename)
 
 void Surfe_API::WriteVTKEvaluationGrid(const char *filename)
 {
-	if (evaluation_completed_ && sgrid) {
-		vtkNew<vtkXMLStructuredGridWriter> writer;
-		writer->SetInputData(sgrid);
+	if (evaluation_completed_ && grid) {
+		vtkNew<vtkXMLImageDataWriter> writer;
+		writer->SetInputData(grid);
 		writer->SetFileName(filename);
 		writer->SetDataModeToBinary();
 		writer->Write();
