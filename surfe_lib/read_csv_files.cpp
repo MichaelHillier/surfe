@@ -3,7 +3,6 @@
 std::vector<Interface> build_interface_constraints(const char *interface_file)
 {
 	std::vector<Interface> interface_constraints;
-
 	try
 	{
 		io::CSVReader<4> in(interface_file);
@@ -30,7 +29,6 @@ std::vector<Interface> build_interface_constraints(const char *interface_file)
 std::vector<Planar> build_planar_constraints(const char *planar_file)
 {
 	std::vector<Planar> planar_constraints;
-
 	try
 	{
 		bool have_normal = false;

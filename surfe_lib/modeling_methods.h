@@ -62,7 +62,7 @@ private:
 	   // used. Also when unisolvent points are used this should be called.
 protected:
     // ATTRIBUTES
-    UI_Parameters ui_parameters;  // QT GUI parameters
+    //UI_Parameters ui_parameters;  // QT GUI parameters
     basic_parameters b_parameters;  // algorithm parameters
     int _iteration;                 // for greedy progress
 	// for interface data
@@ -112,6 +112,7 @@ public:
     virtual bool convert_modified_kernel_to_rbf_kernel() = 0;
     virtual GRBF_Modelling_Methods *clone() = 0;
     // Attributes
+	UI_Parameters ui_parameters;  // QT GUI parameters
     System_Solver *solver;
     Kernel *kernel;
     RBFKernel *rbf_kernel;

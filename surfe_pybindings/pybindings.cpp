@@ -14,12 +14,13 @@
 // ----------------
 
 namespace py = pybind11;
-PYBIND11_MODULE(surfe, m) {
+PYBIND11_MODULE(surfepy, m) {
 	// setup bindings for Surfe_API
 	py::class_<Surfe_API>(m, "Surfe_API")
 		.def(py::init<>())
 		.def(py::init<const UI_Parameters &>())
-		.def("GetUIParameters", &Surfe_API::GetUIParameters)
+		.def("GetUIParametersAndConstraints", &Surfe_API::GetUIParametersAndConstraints)
+		.def("LoadConstraintsFromFiles", &Surfe_API::LoadConstraintsFromFiles)
 		.def("AddInterfaceConstraint",
 		(void (Surfe_API::*)(const double&, const double&, const double&, const double&))
 			&Surfe_API::AddInterfaceConstraint, "Add an interface constraint")
@@ -58,16 +59,16 @@ PYBIND11_MODULE(surfe, m) {
 		.def("ConstructRegularGridOutput",
 		(void (Surfe_API::*)(const double&, const double &, const double &, const double &, const double &, const double&, const double &))
 			&Surfe_API::ConstructRegularGridOutput, "Build SGrid from bounds and resolution")
-		.def("GetEvaluatedvtkStructuredGrid",
-			&Surfe_API::GetEvaluatedGrid,
-			py::return_value_policy::reference_internal)
-		.def("GetConstraintsAndOutputAsVTKObjects",
-			&Surfe_API::GetConstraintsAndOutputAsVTKObjects,
-			py::return_value_policy::reference_internal)
-		.def("GetIsoSurfacesAsvtkPolyData",
-			&Surfe_API::GetIsoSurfacesAsvtkPolyData,
-			py::return_value_policy::reference_internal)
-		.def("WriteVTKConstraints", &Surfe_API::WriteVTKConstraints)
+		.def("GetEvaluatedVTKGridString",&Surfe_API::GetEvaluatedVTKGridString)
+		.def("GetVTKIsosurfacesString", &Surfe_API::GetVTKIsosurfacesString)
+		.def("GetVTKInterfaceConstraintsString", &Surfe_API::GetVTKInterfaceConstraintsString)
+		.def("GetVTKTangentConstraintsString", &Surfe_API::GetVTKTangentConstraintsString)
+		.def("GetVTKPlanarConstraintsString", &Surfe_API::GetVTKPlanarConstraintsString)
+		.def("GetVTKInequalityConstraintString", &Surfe_API::GetVTKInequalityConstraintString)
+		.def("WriteVTKInterfaceConstraints", &Surfe_API::WriteVTKInterfaceConstraints)
+		.def("WriteVTKPlanarConstraints", &Surfe_API::WriteVTKPlanarConstraints)
+		.def("WriteVTKTangentConstraints", &Surfe_API::WriteVTKTangentConstraints)
+		.def("WriteVTKInequalityConstraints", &Surfe_API::WriteVTKInequalityConstraints)
 		.def("WriteVTKEvaluationGrid", &Surfe_API::WriteVTKEvaluationGrid)
 		.def("WriteVTKIsoSurfaces", &Surfe_API::WriteVTKIsoSurfaces);
 }

@@ -152,7 +152,7 @@ struct SURFE_LIB_EXPORT UI_Parameters {
 	{}
 };
 
-struct SURFE_LIB_EXPORT basic_parameters {
+struct basic_parameters {
     // number of constraints, for each basic constraint type
     unsigned int n_interface;
     unsigned int n_planar;

@@ -50,7 +50,7 @@
 #include <string>
 #include <set>
 
-class SURFE_LIB_EXPORT Point {
+class Point {
 private:
     double _x;
     double _y;
@@ -105,7 +105,7 @@ inline bool collocated(const Point &pointa, const Point &pointb) {
 
 }
 
-class SURFE_LIB_EXPORT Interface : public Point {
+class Interface : public Point {
 private:
     double _level;
     double _residual;
@@ -133,7 +133,7 @@ public:
     }
 };
 
-class SURFE_LIB_EXPORT Inequality : public Point {
+class Inequality : public Point {
 private:
     double _inequality_level;
     bool _residual;
@@ -151,7 +151,7 @@ public:
     void setResidual(const bool &res) { _residual = res; }
 };
 
-class SURFE_LIB_EXPORT Planar : public Point {
+class Planar : public Point {
 private:
     double _dip;
     double _strike;
@@ -211,7 +211,7 @@ public:
     }
 };
 
-class SURFE_LIB_EXPORT Tangent : public Point {
+class Tangent : public Point {
 private:
     double _tangent[3];
     double _residual;

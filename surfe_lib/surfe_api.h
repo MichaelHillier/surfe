@@ -22,7 +22,6 @@
 #include <vtkPointData.h>
 #include <vtkCellArray.h>
 #include <vtkVertex.h>
-#include <vtkDataObjectCollection.h>
 #include <vtkMarchingCubes.h>
 #include <vtkNew.h>
 
@@ -31,9 +30,7 @@ private:
 	// members
 	GRBF_Modelling_Methods *method_;
 	UI_Parameters params_;
-	vtkSmartPointer<vtkImageData> grid;
-	vtkSmartPointer<vtkDataObjectCollection> model_collection_;
-	vtkSmartPointer<vtkPolyData> iso_surfaces_;
+	vtkSmartPointer<vtkImageData> grid_;
 
 	bool have_interpolant_;
 	bool evaluation_completed_;
@@ -42,20 +39,25 @@ private:
 	bool constraint_files_changed_;
 	bool constraints_changed_;
 
+	std::string vtk_grid_string_;
+	std::string vtk_interface_string_;
+	std::string vtk_planar_string_;
+	std::string vtk_tangent_string_;
+	std::string vtk_inequality_string_;
+	std::string vtk_isosurfaces_string_;
+
 	// methods
 	GRBF_Modelling_Methods* get_method(const UI_Parameters& params);
-	vtkSmartPointer<vtkDataObjectCollection> convert_constraints_to_vtk();
 	void build_constraints_from_csv_files();
 public:
 	Surfe_API();
 	Surfe_API(const UI_Parameters& params);
-	void GetUIParameters();
-	void AddInterfaceConstraint(const Interface& pt);
+	void GetUIParametersAndConstraints();
+	void LoadConstraintsFromFiles();
 	void AddInterfaceConstraint(
 		const double &x,const double &y,const double &z, 
 		const double &level
 	);
-	void AddPlanarConstraint(const Planar& planar_pt);
 	void AddPlanarConstraintwNormal(
 		const double &x,const double &y,const double &z,
 		const double &nx,const double &ny,const double &nz
@@ -68,12 +70,10 @@ public:
 		const double &x, const double &y, const double &z,
 		const double &azimuth, const double &dip, const double &polarity
 	);
-	void AddTangentConstraint(const Tangent& tangent_pt);
 	void AddTangentConstraint(
 		const double &x, const double &y, const double &z,
 		const double &tx, const double &ty,	const double &tz
 	);
-	void AddInequalityConstraint(const Inequality& inequality_pt);
 	void AddInequalityConstraint(
 		const double &x, const double &y,const double &z,
 		const double &level
@@ -109,9 +109,21 @@ public:
 		const double &zmin, const double &zmax,
 		const double &resolution);
 	vtkImageData *GetEvaluatedGrid();
-	vtkDataObjectCollection *GetConstraintsAndOutputAsVTKObjects();
-	vtkPolyData *GetIsoSurfacesAsvtkPolyData();
-	void WriteVTKConstraints(const char *filename);
+	vtkPolyData *GetIsoSurfaces();
+	vtkPolyData *GetInterfaceConstraints();
+	vtkPolyData	*GetPlanarConstraints();
+	vtkPolyData *GetTangentConstraints();
+	vtkPolyData *GetInequalityConstraints();
+	const char *GetEvaluatedVTKGridString();
+	const char *GetVTKIsosurfacesString();
+	const char *GetVTKInterfaceConstraintsString();
+	const char *GetVTKPlanarConstraintsString();
+	const char *GetVTKTangentConstraintsString();
+	const char *GetVTKInequalityConstraintString();
+	void WriteVTKInterfaceConstraints(const char *filename);
+	void WriteVTKPlanarConstraints(const char *filename);
+	void WriteVTKTangentConstraints(const char *filename);
+	void WriteVTKInequalityConstraints(const char *filename);
 	void WriteVTKEvaluationGrid(const char *filename);
 	void WriteVTKIsoSurfaces(const char *filename);
 };
