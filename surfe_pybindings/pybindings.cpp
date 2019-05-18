@@ -53,12 +53,12 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("EvaluateVectorInterpolantAtPoint",
 			&Surfe_API::EvaluateVectorInterpolantAtPoint,
 			py::return_value_policy::copy)
-		.def("ConstructRegularGridOutput",
+		.def("BuildRegularGrid",
 		(void (Surfe_API::*)(const double&, const double &, const double &, const double &))
-			&Surfe_API::ConstructRegularGridOutput, "Build SGrid from zmin/zmax and resolution")
-		.def("ConstructRegularGridOutput",
+			&Surfe_API::BuildRegularGrid, "Build vtkImageData grid from zmin/zmax and resolution")
+		.def("BuildRegularGrid",
 		(void (Surfe_API::*)(const double&, const double &, const double &, const double &, const double &, const double&, const double &))
-			&Surfe_API::ConstructRegularGridOutput, "Build SGrid from bounds and resolution")
+			&Surfe_API::BuildRegularGrid, "Build tkImageData grid from bounds and resolution")
 		.def("GetEvaluatedVTKGridString",&Surfe_API::GetEvaluatedVTKGridString)
 		.def("GetVTKIsosurfacesString", &Surfe_API::GetVTKIsosurfacesString)
 		.def("GetVTKInterfaceConstraintsString", &Surfe_API::GetVTKInterfaceConstraintsString)

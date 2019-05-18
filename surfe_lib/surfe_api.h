@@ -99,11 +99,11 @@ public:
 	double *EvaluateVectorInterpolantAtPoint(
 		const double &x,const double &y, const double &z
 	);
-	void ConstructRegularGridOutput(
+	void BuildRegularGrid(
 		const double &zmin,	const double &zmax, 
 		const double &resolution, const double &xy_percent_padding = 0
 	);
-	void ConstructRegularGridOutput(
+	void BuildRegularGrid(
 		const double &xmin, const double &xmax,
 		const double &ymin, const double &ymax,
 		const double &zmin, const double &zmax,

@@ -452,7 +452,7 @@ double *Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const doubl
 		throw GRBF_Exceptions::missing_interpolant;
 }
 
-void Surfe_API::ConstructRegularGridOutput(const double &zmin, const double &zmax, const double &resolution, const double &xy_percent_padding /*= 0*/)
+void Surfe_API::BuildRegularGrid(const double &zmin, const double &zmax, const double &resolution, const double &xy_percent_padding /*= 0*/)
 {
 	std::vector<Point> agg_pts = convert_constraints_to_points(method_->constraints);
 
@@ -477,7 +477,7 @@ void Surfe_API::ConstructRegularGridOutput(const double &zmin, const double &zma
 	grid_ = constructed_grid;
 }
 
-void Surfe_API::ConstructRegularGridOutput(
+void Surfe_API::BuildRegularGrid(
 	const double &xmin, const double &xmax, 
 	const double &ymin, const double &ymax, 
 	const double &zmin, const double &zmax,

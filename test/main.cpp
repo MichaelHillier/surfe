@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 		cout << "Exception: " << e.what() << endl;
 	}
 
-	surfe.ConstructRegularGridOutput(-35000, 35000, 1000);
+	surfe.BuildRegularGrid(-35000, 35000, 1000);
 
 	const char *geo_string = surfe.GetEvaluatedVTKGridString();
 
