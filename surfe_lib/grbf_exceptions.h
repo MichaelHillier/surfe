@@ -35,7 +35,6 @@ class failurecomputingglobalanisotropy : public exception {
 	}
 };
 
-
 class failurecreatinganisotropickernel : public exception {
 	const char* what() const throw() override {
 		return "Failure creating an anisotropic kernel";
@@ -48,7 +47,7 @@ class failuresettingupbasisfunctions : public exception {
 	}
 };
 
-class failurecreatingmodifiedkernel: public exception {
+class failurecreatingmodifiedkernel : public exception {
 	const char* what() const throw() override {
 		return "Failure creating modified kernel";
 	}
@@ -114,21 +113,15 @@ class nosgridexists : public exception {
 	}
 };
 
-class missingcoordsincsvfile : public exception {
+class missingcoordsinfile : public exception {
 	const char* what() const throw() override {
-		return "There are no x,y,z coordinates in the csv file";
+		return "There are no x,y,z coordinates in the file";
 	}
 };
 
-class missingorientationinfoincsvfile : public exception {
+class missingpropertyinfoinfile : public exception {
 	const char* what() const throw() override {
-		return "Orientation information missing in csv file";
-	}
-};
-
-class missinglevelinfoincsvfile : public exception {
-	const char* what() const throw() override {
-		return "Level information missing in csv file";
+		return "Property information missing in file";
 	}
 };
 
@@ -153,6 +146,18 @@ class unknownrbf : public exception {
 class interpolantneedsupdate : public exception {
 	const char* what() const throw() override {
 		return "Constraints or Parameters have changed please recompute/update interpolant";
+	}
+};
+
+class inputfileproblem : public exception {
+	const char* what() const throw() override {
+		return "Error loading input constraint file";
+	}
+};
+
+class unsupportedfile : public exception {
+	const char* what() const throw() override {
+		return "Input file format is unsupported";
 	}
 };
 
@@ -189,7 +194,6 @@ public:
 	}
 };
 
-
 namespace GRBF_Exceptions {
 	const nointerfacedata no_iterface_data;
 	const nointerfaceincrementpairs no_interface_increment_pairs;
@@ -209,14 +213,14 @@ namespace GRBF_Exceptions {
 	const errorupdatinginterfaceisovalues error_updating_interface_iso_values;
 	const errorcomputinginterpolant error_computing_interpolant;
 	const nosgridexists no_sgrid_exists;
-	const missingcoordsincsvfile missing_coords_in_file;
-	const missingorientationinfoincsvfile missing_orientation_in_file;
-	const missinglevelinfoincsvfile missing_level_info_in_file;
+	const missingcoordsinfile missing_coords_in_file;
+	const missingpropertyinfoinfile missing_property_info_in_file;
 	const grbfmethodisnull grbf_method_is_null;
 	const missinginterpolant missing_interpolant;
 	const unknownrbf unknown_rbf;
 	const interpolantneedsupdate interpolant_needs_update;
+	const inputfileproblem input_file_problem;
+	const unsupportedfile unsupported_file;
 }
 
-
-#endif // 
+#endif //

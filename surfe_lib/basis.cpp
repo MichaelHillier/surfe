@@ -43,33 +43,33 @@
 #include <algorithm>
 
 inline void RBFKernel::radius() {
-  // compute euclidean distance
-  // compute component differences
-  _x_delta = _p1->x() - _p2->x();
-  _y_delta = _p1->y() - _p2->y();
-  _z_delta = _p1->z() - _p2->z();
-  _c_delta = _p1->c() - _p2->c();
+	// compute euclidean distance
+	// compute component differences
+	_x_delta = _p1->x() - _p2->x();
+	_y_delta = _p1->y() - _p2->y();
+	_z_delta = _p1->z() - _p2->z();
+	_c_delta = _p1->c() - _p2->c();
 
-  _radius = sqrt(_x_delta * _x_delta + _y_delta * _y_delta +
-                 _z_delta * _z_delta + _c_delta * _c_delta);
+	_radius = sqrt(_x_delta * _x_delta + _y_delta * _y_delta +
+		_z_delta * _z_delta + _c_delta * _c_delta);
 }
 
 inline void RBFKernel::scaled_radius() {
-  // compute scaled euclidean distance
-  // compute component differences
-  double dx = _p1->x() - _p2->x();
-  double dy = _p1->y() - _p2->y();
-  double dz = _p1->z() - _p2->z();
-  // compute scaled component differences
-  _x_delta =
-      _Transform(0, 0) * dx + _Transform(0, 1) * dy + _Transform(0, 2) * dz;
-  _y_delta =
-      _Transform(1, 0) * dx + _Transform(1, 1) * dy + _Transform(1, 2) * dz;
-  _z_delta =
-      _Transform(2, 0) * dx + _Transform(2, 1) * dy + _Transform(2, 2) * dz;
+	// compute scaled euclidean distance
+	// compute component differences
+	double dx = _p1->x() - _p2->x();
+	double dy = _p1->y() - _p2->y();
+	double dz = _p1->z() - _p2->z();
+	// compute scaled component differences
+	_x_delta =
+		_Transform(0, 0) * dx + _Transform(0, 1) * dy + _Transform(0, 2) * dz;
+	_y_delta =
+		_Transform(1, 0) * dx + _Transform(1, 1) * dy + _Transform(1, 2) * dz;
+	_z_delta =
+		_Transform(2, 0) * dx + _Transform(2, 1) * dy + _Transform(2, 2) * dz;
 
-  _radius =
-      sqrt(_x_delta * _x_delta + _y_delta * _y_delta + _z_delta * _z_delta);
+	_radius =
+		sqrt(_x_delta * _x_delta + _y_delta * _y_delta + _z_delta * _z_delta);
 }
 
 bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
@@ -84,8 +84,8 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	double SumYZ = 0; // Sum(y_i *  z_i)
 	double SumZZ = 0; // Sum(z_i *  z_i)
 	Matrix3f covMat;
-	for (const auto &planar_pt : planar){
-		double VNormal[3] = { planar_pt.nx(), planar_pt.ny(), planar_pt.nz()};
+	for (const auto &planar_pt : planar) {
+		double VNormal[3] = { planar_pt.nx(), planar_pt.ny(), planar_pt.nz() };
 		// Normals...
 		SumXX += VNormal[0] * VNormal[0];
 		SumYY += VNormal[1] * VNormal[1];
@@ -164,13 +164,13 @@ double RBFKernel::basis_pt_tangent() {
 	// It is not worth the cost of dynamic_cast + if
 	Tangent *t = static_cast<Tangent *>(this->p2());
 	return this->dx_p2() * t->tx() + this->dy_p2() * t->ty() +
-			this->dz_p2() * t->tz();
+		this->dz_p2() * t->tz();
 }
 
 double RBFKernel::basis_tangent_pt() {
 	Tangent *t = static_cast<Tangent *>(this->p1());
 	return this->dx_p1() * t->tx() + this->dy_p1() * t->ty() +
-			this->dz_p1() * t->tz();
+		this->dz_p1() * t->tz();
 }
 
 double RBFKernel::basis_planar_planar(const Parameter_Types::SecondDerivatives &sd) {
@@ -362,7 +362,7 @@ double ACubic::dy_p1() {
 
 double ACubic::dy_p2() {
 	scaled_radius();
-	return -3.0 * _radius *(_Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta +	_Transform(2, 1) * _z_delta);
+	return -3.0 * _radius *(_Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta);
 }
 
 double ACubic::dz_p1() {
@@ -372,7 +372,7 @@ double ACubic::dz_p1() {
 
 double ACubic::dz_p2() {
 	scaled_radius();
-	return -3.0 * _radius *(_Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta +	_Transform(2, 2) * _z_delta);
+	return -3.0 * _radius *(_Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta + _Transform(2, 2) * _z_delta);
 }
 
 double ACubic::dxx() {
@@ -393,7 +393,7 @@ double ACubic::dxy() {
 	else {
 		double a = _Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta;
 		double b = _Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta;
-		double c = _Transform(0, 0) * _Transform(0, 1) + _Transform(1, 0) * _Transform(1, 1) +_Transform(2, 0) * _Transform(2, 1);
+		double c = _Transform(0, 0) * _Transform(0, 1) + _Transform(1, 0) * _Transform(1, 1) + _Transform(2, 0) * _Transform(2, 1);
 		return -3.0 * (((a * b) / _radius) + c * _radius);
 	}
 }
@@ -487,7 +487,7 @@ double Gaussian::dz_p2() {
 
 double Gaussian::dxx() {
 	radius();
-	return (2.0 * _shape_parameter * _shape_parameter -	4.0 * pow(_shape_parameter, 4) * _x_delta * _x_delta) *
+	return (2.0 * _shape_parameter * _shape_parameter - 4.0 * pow(_shape_parameter, 4) * _x_delta * _x_delta) *
 		exp(-(_shape_parameter * _shape_parameter * _radius * _radius));
 }
 
@@ -520,7 +520,7 @@ double Gaussian::dzy() { return dyz(); }
 
 double Gaussian::dzz() {
 	radius();
-	return (2.0 * _shape_parameter * _shape_parameter -	4.0 * pow(_shape_parameter, 4) * _z_delta * _z_delta) *
+	return (2.0 * _shape_parameter * _shape_parameter - 4.0 * pow(_shape_parameter, 4) * _z_delta * _z_delta) *
 		exp(-(_shape_parameter * _shape_parameter * _radius * _radius));
 }
 
@@ -836,7 +836,7 @@ double AMQ::basis() {
 
 double AMQ::dx_p1() {
 	scaled_radius();
-	return (_Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta +	_Transform(2, 0) * _z_delta) /
+	return (_Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta) /
 		pow(_shape_parameter + _radius * _radius, 0.5);
 }
 
@@ -873,7 +873,7 @@ double AMQ::dz_p2() {
 double AMQ::dxx() {
 	scaled_radius();
 	double a = (-2.0 * _Transform(0, 0) * _x_delta - 2.0 * _Transform(1, 0) * _y_delta - 2.0 * _Transform(2, 0) * _z_delta);
-	double b =(2.0 * _Transform(0, 0) * _x_delta + 2.0 * _Transform(1, 0) * _y_delta + 2.0 * _Transform(2, 0) * _z_delta);
+	double b = (2.0 * _Transform(0, 0) * _x_delta + 2.0 * _Transform(1, 0) * _y_delta + 2.0 * _Transform(2, 0) * _z_delta);
 	double c = 4.0 * pow(_shape_parameter + _radius * _radius, 1.5);
 	double d = -1.0 * (a * b) / c;
 	double f = (-_Transform(0, 0) * _Transform(0, 0) - _Transform(1, 0) * _Transform(1, 0) - _Transform(2, 0) * _Transform(2, 0)) /
@@ -883,7 +883,7 @@ double AMQ::dxx() {
 
 double AMQ::dxy() {
 	scaled_radius();
-	double a = (2.0 * _Transform(0, 0) * _x_delta + 2.0 * _Transform(1, 0) * _y_delta +	2.0 * _Transform(2, 0) * _z_delta);
+	double a = (2.0 * _Transform(0, 0) * _x_delta + 2.0 * _Transform(1, 0) * _y_delta + 2.0 * _Transform(2, 0) * _z_delta);
 	double b = (-2.0 * _Transform(0, 1) * _x_delta - 2.0 * _Transform(1, 1) * _y_delta - 2.0 * _Transform(2, 1) * _z_delta);
 	double c = 4.0 * pow(_shape_parameter + _radius * _radius, 1.5);
 	double d = -1.0 * (a * b) / c;
@@ -894,8 +894,8 @@ double AMQ::dxy() {
 
 double AMQ::dxz() {
 	scaled_radius();
-	double a =(2.0 * _Transform(0, 0) * _x_delta + 2.0 * _Transform(1, 0) * _y_delta + 2.0 * _Transform(2, 0) * _z_delta);
-	double b =(-2.0 * _Transform(0, 2) * _x_delta - 2.0 * _Transform(1, 2) * _y_delta -	2.0 * _Transform(2, 2) * _z_delta);
+	double a = (2.0 * _Transform(0, 0) * _x_delta + 2.0 * _Transform(1, 0) * _y_delta + 2.0 * _Transform(2, 0) * _z_delta);
+	double b = (-2.0 * _Transform(0, 2) * _x_delta - 2.0 * _Transform(1, 2) * _y_delta - 2.0 * _Transform(2, 2) * _z_delta);
 	double c = 4.0 * pow(_shape_parameter + _radius * _radius, 1.5);
 	double d = -1.0 * (a * b) / c;
 	double f = (-_Transform(0, 0) * _Transform(0, 2) - _Transform(1, 0) * _Transform(1, 2) - _Transform(2, 0) * _Transform(2, 2)) /
@@ -907,8 +907,8 @@ double AMQ::dyx() { return dxy(); }
 
 double AMQ::dyy() {
 	scaled_radius();
-	double a =(-2.0 * _Transform(0, 1) * _x_delta - 2.0 * _Transform(1, 1) * _y_delta -	2.0 * _Transform(2, 1) * _z_delta);
-	double b =(2.0 * _Transform(0, 1) * _x_delta + 2.0 * _Transform(1, 1) * _y_delta +	2.0 * _Transform(2, 1) * _z_delta);
+	double a = (-2.0 * _Transform(0, 1) * _x_delta - 2.0 * _Transform(1, 1) * _y_delta - 2.0 * _Transform(2, 1) * _z_delta);
+	double b = (2.0 * _Transform(0, 1) * _x_delta + 2.0 * _Transform(1, 1) * _y_delta + 2.0 * _Transform(2, 1) * _z_delta);
 	double c = 4.0 * pow(_shape_parameter + _radius * _radius, 1.5);
 	double d = -1.0 * (a * b) / c;
 	double f = (-_Transform(0, 1) * _Transform(0, 1) - _Transform(1, 1) * _Transform(1, 1) - _Transform(2, 1) * _Transform(2, 1)) /
@@ -918,8 +918,8 @@ double AMQ::dyy() {
 
 double AMQ::dyz() {
 	scaled_radius();
-	double a =(2.0 * _Transform(0, 1) * _x_delta + 2.0 * _Transform(1, 1) * _y_delta + 2.0 * _Transform(2, 1) * _z_delta);
-	double b =(-2.0 * _Transform(0, 2) * _x_delta - 2.0 * _Transform(1, 2) * _y_delta -	2.0 * _Transform(2, 2) * _z_delta);
+	double a = (2.0 * _Transform(0, 1) * _x_delta + 2.0 * _Transform(1, 1) * _y_delta + 2.0 * _Transform(2, 1) * _z_delta);
+	double b = (-2.0 * _Transform(0, 2) * _x_delta - 2.0 * _Transform(1, 2) * _y_delta - 2.0 * _Transform(2, 2) * _z_delta);
 	double c = 4.0 * pow(_shape_parameter + _radius * _radius, 1.5);
 	double d = -1.0 * (a * b) / c;
 	double f = (-_Transform(0, 1) * _Transform(0, 2) - _Transform(1, 1) * _Transform(1, 2) - _Transform(2, 1) * _Transform(2, 2)) /
@@ -1010,7 +1010,7 @@ double TPS::dxx() {
 double TPS::dxy() {
 	radius();
 	if (_radius != 0)
-		return -6.0 * _x_delta * _y_delta -	8.0 * _x_delta * _y_delta * log(_radius);
+		return -6.0 * _x_delta * _y_delta - 8.0 * _x_delta * _y_delta * log(_radius);
 	else
 		return 0;
 }
@@ -1018,7 +1018,7 @@ double TPS::dxy() {
 double TPS::dxz() {
 	radius();
 	if (_radius != 0)
-		return -6.0 * _x_delta * _z_delta -	8.0 * _x_delta * _z_delta * log(_radius);
+		return -6.0 * _x_delta * _z_delta - 8.0 * _x_delta * _z_delta * log(_radius);
 	else
 		return 0;
 }
@@ -1037,7 +1037,7 @@ double TPS::dyy() {
 double TPS::dyz() {
 	radius();
 	if (_radius != 0)
-		return -6.0 * _y_delta * _z_delta -	8.0 * _y_delta * _z_delta * log(_radius);
+		return -6.0 * _y_delta * _z_delta - 8.0 * _y_delta * _z_delta * log(_radius);
 	else
 		return 0;
 }
@@ -1066,7 +1066,7 @@ double ATPS::basis() {
 double ATPS::dx_p1() {
 	scaled_radius();
 	if (_radius != 0) {
-		double a = (_Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta +	_Transform(2, 0) * _z_delta) *
+		double a = (_Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta) *
 			_radius * _radius;
 		double b = 4.0 * a * log(_radius);
 		return a + b;
@@ -1090,7 +1090,7 @@ double ATPS::dx_p2() {
 double ATPS::dy_p1() {
 	scaled_radius();
 	if (_radius != 0) {
-		double a = (_Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta +	_Transform(2, 1) * _z_delta) *
+		double a = (_Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta) *
 			_radius * _radius;
 		double b = 4.0 * a * log(_radius);
 		return a + b;
@@ -1140,7 +1140,7 @@ double ATPS::dxx() {
 	if (_radius != 0) {
 		double a = _Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta;
 		double b = -6.0 * a * a;
-		double c = -1.0 *(_Transform(0, 0) * _Transform(0, 0) +	_Transform(1, 0) * _Transform(1, 0) + _Transform(2, 0) * _Transform(2, 0)) *
+		double c = -1.0 *(_Transform(0, 0) * _Transform(0, 0) + _Transform(1, 0) * _Transform(1, 0) + _Transform(2, 0) * _Transform(2, 0)) *
 			_radius * _radius;
 		double d = -8.0 * a * a * log(_radius);
 		double f = -4.0 *(_Transform(0, 0) * _Transform(0, 0) + _Transform(1, 0) * _Transform(1, 0) + _Transform(2, 0) * _Transform(2, 0)) *
@@ -1160,7 +1160,7 @@ double ATPS::dxy() {
 		double d = -1.0 *(_Transform(0, 0) * _Transform(0, 1) + _Transform(1, 0) * _Transform(1, 1) + _Transform(2, 0) * _Transform(2, 1)) *
 			_radius * _radius;
 		double f = -8.0 * a * b * log(_radius);
-		double g = -4.0 *(_Transform(0, 0) * _Transform(0, 1) +	_Transform(1, 0) * _Transform(1, 1) + _Transform(2, 0) * _Transform(2, 1)) *
+		double g = -4.0 *(_Transform(0, 0) * _Transform(0, 1) + _Transform(1, 0) * _Transform(1, 1) + _Transform(2, 0) * _Transform(2, 1)) *
 			_radius * _radius * log(_radius);
 		return c + d + f + g;
 	}
@@ -1174,10 +1174,10 @@ double ATPS::dxz() {
 		double a = _Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta;
 		double b = _Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta + _Transform(2, 2) * _z_delta;
 		double c = -6.0 * a * b;
-		double d = -1.0 *(_Transform(0, 0) * _Transform(0, 2) +	_Transform(1, 0) * _Transform(1, 2) + _Transform(2, 0) * _Transform(2, 2)) *
+		double d = -1.0 *(_Transform(0, 0) * _Transform(0, 2) + _Transform(1, 0) * _Transform(1, 2) + _Transform(2, 0) * _Transform(2, 2)) *
 			_radius * _radius;
 		double f = -8.0 * a * b * log(_radius);
-		double g = -4.0 *(_Transform(0, 0) * _Transform(0, 2) +	_Transform(1, 0) * _Transform(1, 2) + _Transform(2, 0) * _Transform(2, 2)) *
+		double g = -4.0 *(_Transform(0, 0) * _Transform(0, 2) + _Transform(1, 0) * _Transform(1, 2) + _Transform(2, 0) * _Transform(2, 2)) *
 			_radius * _radius * log(_radius);
 		return c + d + f + g;
 	}
@@ -1192,10 +1192,10 @@ double ATPS::dyy() {
 	if (_radius != 0) {
 		double a = _Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta;
 		double b = -6.0 * a * a;
-		double c = -1.0 *(_Transform(0, 1) * _Transform(0, 1) +	_Transform(1, 1) * _Transform(1, 1) + _Transform(2, 1) * _Transform(2, 1)) *
+		double c = -1.0 *(_Transform(0, 1) * _Transform(0, 1) + _Transform(1, 1) * _Transform(1, 1) + _Transform(2, 1) * _Transform(2, 1)) *
 			_radius * _radius;
 		double d = -8.0 * a * a * log(_radius);
-		double f = -4.0 *(_Transform(0, 1) * _Transform(0, 1) +	_Transform(1, 1) * _Transform(1, 1) + _Transform(2, 1) * _Transform(2, 1)) *
+		double f = -4.0 *(_Transform(0, 1) * _Transform(0, 1) + _Transform(1, 1) * _Transform(1, 1) + _Transform(2, 1) * _Transform(2, 1)) *
 			_radius * _radius * log(_radius);
 		return b + c + d + f;
 	}
@@ -1212,7 +1212,7 @@ double ATPS::dyz() {
 		double d = -1.0 *(_Transform(0, 1) * _Transform(0, 2) + _Transform(1, 1) * _Transform(1, 2) + _Transform(2, 1) * _Transform(2, 2)) *
 			_radius * _radius;
 		double f = -8.0 * a * b * log(_radius);
-		double g = -4.0 *(_Transform(0, 1) * _Transform(0, 2) +	_Transform(1, 1) * _Transform(1, 2) + _Transform(2, 1) * _Transform(2, 2)) *
+		double g = -4.0 *(_Transform(0, 1) * _Transform(0, 2) + _Transform(1, 1) * _Transform(1, 2) + _Transform(2, 1) * _Transform(2, 2)) *
 			_radius * _radius * log(_radius);
 		return c + d + f + g;
 	}
@@ -1229,10 +1229,10 @@ double ATPS::dzz() {
 	if (_radius != 0) {
 		double a = _Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta + _Transform(2, 2) * _z_delta;
 		double b = -6.0 * a * a;
-		double c = -1.0 *(_Transform(0, 2) * _Transform(0, 2) +	_Transform(1, 2) * _Transform(1, 2) + _Transform(2, 2) * _Transform(2, 2)) *
+		double c = -1.0 *(_Transform(0, 2) * _Transform(0, 2) + _Transform(1, 2) * _Transform(1, 2) + _Transform(2, 2) * _Transform(2, 2)) *
 			_radius * _radius;
 		double d = -8.0 * a * a * log(_radius);
-		double f = -4.0 *(_Transform(0, 2) * _Transform(0, 2) +	_Transform(1, 2) * _Transform(1, 2) + _Transform(2, 2) * _Transform(2, 2)) *
+		double f = -4.0 *(_Transform(0, 2) * _Transform(0, 2) + _Transform(1, 2) * _Transform(1, 2) + _Transform(2, 2) * _Transform(2, 2)) *
 			_radius * _radius * log(_radius);
 		return b + c + d + f;
 	}
@@ -1283,12 +1283,12 @@ double IMQ::dxx() {
 
 double IMQ::dxy() {
 	radius();
-	return -3.0 * _x_delta * _y_delta /	pow(_shape_parameter + _radius * _radius, 2.5);
+	return -3.0 * _x_delta * _y_delta / pow(_shape_parameter + _radius * _radius, 2.5);
 }
 
 double IMQ::dxz() {
 	radius();
-	return -3.0 * _x_delta * _z_delta /	pow(_shape_parameter + _radius * _radius, 2.5);
+	return -3.0 * _x_delta * _z_delta / pow(_shape_parameter + _radius * _radius, 2.5);
 }
 
 double IMQ::dyx() { return dxy(); }
@@ -1301,7 +1301,7 @@ double IMQ::dyy() {
 
 double IMQ::dyz() {
 	radius();
-	return -3.0 * _y_delta * _z_delta /	pow(_shape_parameter + _radius * _radius, 2.5);
+	return -3.0 * _y_delta * _z_delta / pow(_shape_parameter + _radius * _radius, 2.5);
 }
 
 double IMQ::dzx() { return dxz(); }
@@ -1310,7 +1310,7 @@ double IMQ::dzy() { return dyz(); }
 
 double IMQ::dzz() {
 	radius();
-	return (-3.0 * _z_delta * _z_delta /pow(_shape_parameter + _radius * _radius, 2.5)) +
+	return (-3.0 * _z_delta * _z_delta / pow(_shape_parameter + _radius * _radius, 2.5)) +
 		1.0 / pow(_shape_parameter + _radius * _radius, 1.5);
 }
 
@@ -1327,7 +1327,7 @@ double AIMQ::dx_p1() {
 
 double AIMQ::dx_p2() {
 	scaled_radius();
-	return (_Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta +	_Transform(2, 0) * _z_delta) /
+	return (_Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 }
 
@@ -1339,7 +1339,7 @@ double AIMQ::dy_p1() {
 
 double AIMQ::dy_p2() {
 	scaled_radius();
-	return (_Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta +	_Transform(2, 1) * _z_delta) /
+	return (_Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 }
 
@@ -1350,7 +1350,7 @@ double AIMQ::dz_p1() {
 }
 double AIMQ::dz_p2() {
 	scaled_radius();
-	return (_Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta +	_Transform(2, 2) * _z_delta) /
+	return (_Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta + _Transform(2, 2) * _z_delta) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 }
 
@@ -1358,7 +1358,7 @@ double AIMQ::dxx() {
 	scaled_radius();
 	double a = _Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta;
 	double b = -3.0 * a * a / pow(_shape_parameter + _radius * _radius, 2.5);
-	double c = -1.0 *(_Transform(0, 0) * _Transform(0, 0) +	_Transform(1, 0) * _Transform(1, 0) + _Transform(2, 0) * _Transform(2, 0)) /
+	double c = -1.0 *(_Transform(0, 0) * _Transform(0, 0) + _Transform(1, 0) * _Transform(1, 0) + _Transform(2, 0) * _Transform(2, 0)) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 	return b - c;
 }
@@ -1368,17 +1368,17 @@ double AIMQ::dxy() {
 	double a = _Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta;
 	double b = _Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta;
 	double c = -3.0 * a * b / pow(_shape_parameter + _radius * _radius, 2.5);
-	double d = -1.0 *(_Transform(0, 0) * _Transform(0, 1) +	_Transform(1, 0) * _Transform(1, 1) + _Transform(2, 0) * _Transform(2, 1)) /
+	double d = -1.0 *(_Transform(0, 0) * _Transform(0, 1) + _Transform(1, 0) * _Transform(1, 1) + _Transform(2, 0) * _Transform(2, 1)) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 	return c - d;
 }
 
 double AIMQ::dxz() {
 	scaled_radius();
-	double a = _Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta +	_Transform(2, 0) * _z_delta;
-	double b = _Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta +	_Transform(2, 2) * _z_delta;
+	double a = _Transform(0, 0) * _x_delta + _Transform(1, 0) * _y_delta + _Transform(2, 0) * _z_delta;
+	double b = _Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta + _Transform(2, 2) * _z_delta;
 	double c = -3.0 * a * b / pow(_shape_parameter + _radius * _radius, 2.5);
-	double d = -1.0 *(_Transform(0, 0) * _Transform(0, 2) +	_Transform(1, 0) * _Transform(1, 2) + _Transform(2, 0) * _Transform(2, 2)) /
+	double d = -1.0 *(_Transform(0, 0) * _Transform(0, 2) + _Transform(1, 0) * _Transform(1, 2) + _Transform(2, 0) * _Transform(2, 2)) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 	return c - d;
 }
@@ -1387,19 +1387,19 @@ double AIMQ::dyx() { return dxy(); }
 
 double AIMQ::dyy() {
 	scaled_radius();
-	double a = _Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta +	_Transform(2, 1) * _z_delta;
+	double a = _Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta;
 	double b = -3.0 * a * a / pow(_shape_parameter + _radius * _radius, 2.5);
-	double c = -1.0 *(_Transform(0, 1) * _Transform(0, 1) +	_Transform(1, 1) * _Transform(1, 1) + _Transform(2, 1) * _Transform(2, 1)) /
+	double c = -1.0 *(_Transform(0, 1) * _Transform(0, 1) + _Transform(1, 1) * _Transform(1, 1) + _Transform(2, 1) * _Transform(2, 1)) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 	return b - c;
 }
 
 double AIMQ::dyz() {
 	scaled_radius();
-	double a = _Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta +	_Transform(2, 1) * _z_delta;
-	double b = _Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta +	_Transform(2, 2) * _z_delta;
+	double a = _Transform(0, 1) * _x_delta + _Transform(1, 1) * _y_delta + _Transform(2, 1) * _z_delta;
+	double b = _Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta + _Transform(2, 2) * _z_delta;
 	double c = -3.0 * a * b / pow(_shape_parameter + _radius * _radius, 2.5);
-	double d = -1.0 *(_Transform(0, 1) * _Transform(0, 2) +	_Transform(1, 1) * _Transform(1, 2) + _Transform(2, 1) * _Transform(2, 2)) /
+	double d = -1.0 *(_Transform(0, 1) * _Transform(0, 2) + _Transform(1, 1) * _Transform(1, 2) + _Transform(2, 1) * _Transform(2, 2)) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 	return c - d;
 }
@@ -1412,7 +1412,7 @@ double AIMQ::dzz() {
 	scaled_radius();
 	double a = _Transform(0, 2) * _x_delta + _Transform(1, 2) * _y_delta + _Transform(2, 2) * _z_delta;
 	double b = -3.0 * a * a / pow(_shape_parameter + _radius * _radius, 2.5);
-	double c = -1.0 *(_Transform(0, 2) * _Transform(0, 2) + _Transform(1, 2) * _Transform(1, 2) +_Transform(2, 2) * _Transform(2, 2)) /
+	double c = -1.0 *(_Transform(0, 2) * _Transform(0, 2) + _Transform(1, 2) * _Transform(1, 2) + _Transform(2, 2) * _Transform(2, 2)) /
 		pow(_shape_parameter + _radius * _radius, 1.5);
 	return b - c;
 }
@@ -1699,7 +1699,7 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector<std::
 		}
 	}
 
-	if (dz >= dx && dz >= dy) 
+	if (dz >= dx && dz >= dy)
 	{
 		unisolvent_subset_points.push_back(interface_point_lists[index][Index_Zcoord_array[0]]);
 		unisolvent_subset_points.push_back(interface_point_lists[index][Index_Zcoord_array[n - 1]]);
@@ -1744,67 +1744,67 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector<std::
 	int add_z = 0;
 	int Q = (int)unisolvent_subset_points.size();
 	for (int j = 1; j < Q; j++) {
-	// compare each coord of [0] with the same coord of the other pts []
-	// if coord is same as all other pts, pts lie on a plane
-	if (unisolvent_subset_points[j].x() == unisolvent_subset_points[0].x())
-		add_x++;
-	if (unisolvent_subset_points[j].y() == unisolvent_subset_points[0].y())
-		add_y++;
-	if (unisolvent_subset_points[j].z() == unisolvent_subset_points[0].z())
-		add_z++;
+		// compare each coord of [0] with the same coord of the other pts []
+		// if coord is same as all other pts, pts lie on a plane
+		if (unisolvent_subset_points[j].x() == unisolvent_subset_points[0].x())
+			add_x++;
+		if (unisolvent_subset_points[j].y() == unisolvent_subset_points[0].y())
+			add_y++;
+		if (unisolvent_subset_points[j].z() == unisolvent_subset_points[0].z())
+			add_z++;
 	}
 
 	if (add_x == (Q - 1) || add_y == (Q - 1) || add_z == (Q - 1))
-	exists_on_plane = true;
+		exists_on_plane = true;
 	if (exists_on_plane) {
-	bool found_unique_point = false;
-	if (add_x == (Q - 1)) // search for a pt in pointset with a different x
-	{
-		for (int j = 0; j < (int)interface_point_lists[index].size(); j++) {
-		if (interface_point_lists[index][j].x() !=
-			unisolvent_subset_points[0].x()) {
-			unisolvent_subset_points.pop_back();
-			unisolvent_subset_points.push_back(interface_point_lists[index][j]);
-			found_unique_point = true;
-			break;
+		bool found_unique_point = false;
+		if (add_x == (Q - 1)) // search for a pt in pointset with a different x
+		{
+			for (int j = 0; j < (int)interface_point_lists[index].size(); j++) {
+				if (interface_point_lists[index][j].x() !=
+					unisolvent_subset_points[0].x()) {
+					unisolvent_subset_points.pop_back();
+					unisolvent_subset_points.push_back(interface_point_lists[index][j]);
+					found_unique_point = true;
+					break;
+				}
+			}
 		}
+		if (add_y == (Q - 1)) // search for a pt in pointset with a different y
+		{
+			for (int j = 0; j < (int)interface_point_lists[index].size(); j++) {
+				if (interface_point_lists[index][j].y() !=
+					unisolvent_subset_points[0].y()) {
+					unisolvent_subset_points.pop_back();
+					unisolvent_subset_points.push_back(interface_point_lists[index][j]);
+					found_unique_point = true;
+					break;
+				}
+			}
 		}
-	}
-	if (add_y == (Q - 1)) // search for a pt in pointset with a different y
-	{
-		for (int j = 0; j < (int)interface_point_lists[index].size(); j++) {
-		if (interface_point_lists[index][j].y() !=
-			unisolvent_subset_points[0].y()) {
-			unisolvent_subset_points.pop_back();
-			unisolvent_subset_points.push_back(interface_point_lists[index][j]);
-			found_unique_point = true;
-			break;
+		if (add_z == (Q - 1)) // search for a pt in pointset with a different z
+		{
+			for (int j = 0; j < (int)interface_point_lists[index].size(); j++) {
+				if (interface_point_lists[index][j].z() !=
+					unisolvent_subset_points[0].z()) {
+					unisolvent_subset_points.pop_back();
+					unisolvent_subset_points.push_back(interface_point_lists[index][j]);
+					found_unique_point = true;
+					break;
+				}
+			}
 		}
+		if (!found_unique_point) {
+			if (add_x == (Q - 1))
+				unisolvent_subset_points[0].set_x(unisolvent_subset_points[0].x() +
+					Epilson);
+			if (add_y == (Q - 1))
+				unisolvent_subset_points[0].set_y(unisolvent_subset_points[0].y() +
+					Epilson);
+			if (add_z == (Q - 1))
+				unisolvent_subset_points[0].set_z(unisolvent_subset_points[0].z() +
+					Epilson);
 		}
-	}
-	if (add_z == (Q - 1)) // search for a pt in pointset with a different z
-	{
-		for (int j = 0; j < (int)interface_point_lists[index].size(); j++) {
-		if (interface_point_lists[index][j].z() !=
-			unisolvent_subset_points[0].z()) {
-			unisolvent_subset_points.pop_back();
-			unisolvent_subset_points.push_back(interface_point_lists[index][j]);
-			found_unique_point = true;
-			break;
-		}
-		}
-	}
-	if (!found_unique_point) {
-		if (add_x == (Q - 1))
-		unisolvent_subset_points[0].set_x(unisolvent_subset_points[0].x() +
-											Epilson);
-		if (add_y == (Q - 1))
-		unisolvent_subset_points[0].set_y(unisolvent_subset_points[0].y() +
-											Epilson);
-		if (add_z == (Q - 1))
-		unisolvent_subset_points[0].set_z(unisolvent_subset_points[0].z() +
-											Epilson);
-	}
 	}
 
 	if ((int)unisolvent_subset_points.size() == 4)
@@ -1832,49 +1832,49 @@ void Lagrangian_Polynomial_Basis::_initialize_basis() {
 
 	mpf_class d =
 		(x1 * (y4 * z2 - y3 * z2 + y2 * z3 - y4 * z3 - y2 * z4 + y3 * z4) +
-		x2 * (y3 * z1 - y4 * z1 - y1 * z3 + y4 * z3 + y1 * z4 - y3 * z4) +
-		x3 * (y4 * z1 + y1 * z2 - y4 * z2 - y1 * z4 - y2 * z1 + y2 * z4) +
-		x4 * (y2 * z1 - y3 * z1 - y1 * z2 + y3 * z2 + y1 * z3 - y2 * z3));
+			x2 * (y3 * z1 - y4 * z1 - y1 * z3 + y4 * z3 + y1 * z4 - y3 * z4) +
+			x3 * (y4 * z1 + y1 * z2 - y4 * z2 - y1 * z4 - y2 * z1 + y2 * z4) +
+			x4 * (y2 * z1 - y3 * z1 - y1 * z2 + y3 * z2 + y1 * z3 - y2 * z3));
 
 	_polynomial_constants.resize(16);
 
 	// Coefficents for lagrange polynomial basis 1
-	_polynomial_constants(0) = ((x4 * y3 * z2 - x3 * y4 * z2 - x4 * y2 * z3 + x2 * y4 * z3 + x3 * y2 * z4 - x2 * y3 * z4) /d); // constant coef
-	_polynomial_constants(1) = ((-(y3 * z2) + y4 * z2 + y2 * z3 - y4 * z3 - y2 * z4 + y3 * z4) /d); // x coef
-	_polynomial_constants(2) = ((x3 * z2 - x4 * z2 - x2 * z3 + x4 * z3 + x2 * z4 - x3 * z4) /d); // y coef
-	_polynomial_constants(3) = ((-(x3 * y2) + x4 * y2 + x2 * y3 - x4 * y3 - x2 * y4 + x3 * y4) /d); // z coef
+	_polynomial_constants(0) = ((x4 * y3 * z2 - x3 * y4 * z2 - x4 * y2 * z3 + x2 * y4 * z3 + x3 * y2 * z4 - x2 * y3 * z4) / d); // constant coef
+	_polynomial_constants(1) = ((-(y3 * z2) + y4 * z2 + y2 * z3 - y4 * z3 - y2 * z4 + y3 * z4) / d); // x coef
+	_polynomial_constants(2) = ((x3 * z2 - x4 * z2 - x2 * z3 + x4 * z3 + x2 * z4 - x3 * z4) / d); // y coef
+	_polynomial_constants(3) = ((-(x3 * y2) + x4 * y2 + x2 * y3 - x4 * y3 - x2 * y4 + x3 * y4) / d); // z coef
 
 	// Coefficents for lagrange polynomial basis 2
 	_polynomial_constants(4) = ((-(x4 * y3 * z1) + x3 * y4 * z1 + x4 * y1 * z3 -
-								x1 * y4 * z3 - x3 * y1 * z4 + x1 * y3 * z4) /d); // constant coef
-	_polynomial_constants(5) = ((y3 * z1 - y4 * z1 - y1 * z3 + y4 * z3 + y1 * z4 - y3 * z4) /d); // x coef
-	_polynomial_constants(6) = ((-(x3 * z1) + x4 * z1 + x1 * z3 - x4 * z3 - x1 * z4 + x3 * z4) /d); // y coef
-	_polynomial_constants(7) = ((x3 * y1 - x4 * y1 - x1 * y3 + x4 * y3 + x1 * y4 - x3 * y4) /d); // z coef
+		x1 * y4 * z3 - x3 * y1 * z4 + x1 * y3 * z4) / d); // constant coef
+	_polynomial_constants(5) = ((y3 * z1 - y4 * z1 - y1 * z3 + y4 * z3 + y1 * z4 - y3 * z4) / d); // x coef
+	_polynomial_constants(6) = ((-(x3 * z1) + x4 * z1 + x1 * z3 - x4 * z3 - x1 * z4 + x3 * z4) / d); // y coef
+	_polynomial_constants(7) = ((x3 * y1 - x4 * y1 - x1 * y3 + x4 * y3 + x1 * y4 - x3 * y4) / d); // z coef
 
 	// Coefficents for lagrange polynomial basis 3
 	_polynomial_constants(8) = ((x4 * y2 * z1 - x2 * y4 * z1 - x4 * y1 * z2 +
-								x1 * y4 * z2 + x2 * y1 * z4 - x1 * y2 * z4) /d); // constant coef
-	_polynomial_constants(9) = ((-(y2 * z1) + y4 * z1 + y1 * z2 - y4 * z2 - y1 * z4 + y2 * z4) /d); // x coef
-	_polynomial_constants(10) =	((x2 * z1 - x4 * z1 - x1 * z2 + x4 * z2 + x1 * z4 - x2 * z4) /d); // y coef
-	_polynomial_constants(11) =	((-(x2 * y1) + x4 * y1 + x1 * y2 - x4 * y2 - x1 * y4 + x2 * y4) /d); // z coef
+		x1 * y4 * z2 + x2 * y1 * z4 - x1 * y2 * z4) / d); // constant coef
+	_polynomial_constants(9) = ((-(y2 * z1) + y4 * z1 + y1 * z2 - y4 * z2 - y1 * z4 + y2 * z4) / d); // x coef
+	_polynomial_constants(10) = ((x2 * z1 - x4 * z1 - x1 * z2 + x4 * z2 + x1 * z4 - x2 * z4) / d); // y coef
+	_polynomial_constants(11) = ((-(x2 * y1) + x4 * y1 + x1 * y2 - x4 * y2 - x1 * y4 + x2 * y4) / d); // z coef
 
 	// Coefficents for lagrange polynomial basis 4
 	_polynomial_constants(12) = ((-(x3 * y2 * z1) + x2 * y3 * z1 + x3 * y1 * z2 -
-								x1 * y3 * z2 - x2 * y1 * z3 + x1 * y2 * z3) /
-								d); // constant coef
+		x1 * y3 * z2 - x2 * y1 * z3 + x1 * y2 * z3) /
+		d); // constant coef
 	_polynomial_constants(13) =
 		((y2 * z1 - y3 * z1 - y1 * z2 + y3 * z2 + y1 * z3 - y2 * z3) /
-		d); // x coef
+			d); // x coef
 	_polynomial_constants(14) =
 		((-(x2 * z1) + x3 * z1 + x1 * z2 - x3 * z2 - x1 * z3 + x2 * z3) /
-		d); // y coef
+			d); // y coef
 	_polynomial_constants(15) =
 		((x2 * y1 - x3 * y1 - x1 * y2 + x3 * y2 + x1 * y3 - x2 * y3) /
-		d); // z coef
+			d); // z coef
 
-	// 	std::vector<double> poly_const_double;
-	// 	for (int j = 0; j< 16;j++)
-	// poly_const_double.push_back(_polynomial_constants[j].get_d());
+		// 	std::vector<double> poly_const_double;
+		// 	for (int j = 0; j< 16;j++)
+		// poly_const_double.push_back(_polynomial_constants[j].get_d());
 
 	_derivative_polynomial_constants.resize(3, 4);
 
@@ -1957,17 +1957,17 @@ double Modified_Kernel::basis_pt_pt() {
 	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1(this->_aRBFKernel->basis());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2(this->_aRBFKernel->basis());
 		t1 += p1(j) * b1;
 		t2 += p2(j) * b2;
 		t3 += p1(j) * p2(j);
 		for (int k = 0; k < 4; k++) {
-			if (k != j) 
+			if (k != j)
 			{
-				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],this->_aLPB->unisolvent_subset_points[k]);
+				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4 += p1(j) * p2(k) * b3;
 			}
@@ -1985,17 +1985,17 @@ double Modified_Kernel::basis_pt_planar_x() {
 	Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1x(this->_aRBFKernel->dx_p2());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2(this->_aRBFKernel->basis());
 		t1x += p1(j) * b1x;
 		t2x += p2x(j) * b2;
 		t3x += p1(j) * p2x(j);
 		for (int k = 0; k < 4; k++) {
-			if (k != j) 
+			if (k != j)
 			{
-				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],	this->_aLPB->unisolvent_subset_points[k]);
+				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4x += p1(j) * p2x(k) * b3;
 			}
@@ -2014,16 +2014,16 @@ double Modified_Kernel::basis_planar_x_pt() {
 	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1(this->_aRBFKernel->basis());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2x(this->_aRBFKernel->dx_p1());
 		t1x += p1x(j) * b1;
 		t2x += p2(j) * b2x;
 		t3x += p1x(j) * p2(j);
 		for (int k = 0; k < 4; k++) {
 			if (k != j) {
-				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],this->_aLPB->unisolvent_subset_points[k]);
+				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4x += p1x(j) * p2(k) * b3;
 			}
@@ -2070,17 +2070,17 @@ double Modified_Kernel::basis_planar_y_pt() {
 	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1(this->_aRBFKernel->basis());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2y(this->_aRBFKernel->dy_p1());
 		t1y += p1y(j) * b1;
 		t2y += p2(j) * b2y;
 		t3y += p1y(j) * p2(j);
 		for (int k = 0; k < 4; k++) {
-			if (k != j) 
+			if (k != j)
 			{
-				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],this->_aLPB->unisolvent_subset_points[k]);
+				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4y += p1y(j) * p2(k) * b3;
 			}
@@ -2099,17 +2099,17 @@ double Modified_Kernel::basis_pt_planar_z() {
 	Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1z(this->_aRBFKernel->dz_p2());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2(this->_aRBFKernel->basis());
 		t1z += p1(j) * b1z;
 		t2z += p2z(j) * b2;
 		t3z += p1(j) * p2z(j);
 		for (int k = 0; k < 4; k++) {
-			if (k != j) 
+			if (k != j)
 			{
-				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],this->_aLPB->unisolvent_subset_points[k]);
+				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4z += p1(j) * p2z(k) * b3;
 			}
@@ -2128,9 +2128,9 @@ double Modified_Kernel::basis_planar_z_pt() {
 	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1(this->_aRBFKernel->basis());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2z(this->_aRBFKernel->dz_p1());
 		t1z += p1z(j) * b1;
 		t2z += p2(j) * b2z;
@@ -2138,7 +2138,7 @@ double Modified_Kernel::basis_planar_z_pt() {
 		for (int k = 0; k < 4; k++) {
 			if (k != j)
 			{
-				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],this->_aLPB->unisolvent_subset_points[k]);
+				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4z += p1z(j) * p2(k) * b3;
 			}
@@ -2160,11 +2160,11 @@ double Modified_Kernel::basis_pt_tangent() {
 	Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1x(this->_aRBFKernel->dx_p2());
 		mpf_class b1y(this->_aRBFKernel->dy_p2());
 		mpf_class b1z(this->_aRBFKernel->dz_p2());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2(this->_aRBFKernel->basis());
 		// for dx component
 		t1x += p1(j) * b1x;
@@ -2218,7 +2218,7 @@ double Modified_Kernel::basis_pt_tangent() {
 	return sum.get_d();
 }
 
-double Modified_Kernel::basis_tangent_pt() 
+double Modified_Kernel::basis_tangent_pt()
 {
 	mpf_class t1x, t2x, t3x, t4x, t1y, t2y, t3y, t4y, t1z, t2z, t3z, t4z;
 
@@ -2229,9 +2229,9 @@ double Modified_Kernel::basis_tangent_pt()
 	Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1(this->_aRBFKernel->basis());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2x(this->_aRBFKernel->dx_p1());
 		mpf_class b2y(this->_aRBFKernel->dy_p1());
 		mpf_class b2z(this->_aRBFKernel->dz_p1());
@@ -2248,10 +2248,10 @@ double Modified_Kernel::basis_tangent_pt()
 		t2z += p2(j) * b2z;
 		t3z += p1z(j) * p2(j);
 		for (int k = 0; k < 4; k++) {
-			if (k != j) 
+			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-												this->_aLPB->unisolvent_subset_points[k]);
+					this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4x += p1x(j) * p2(k) * b3;
 				t4y += p1y(j) * p2(k) * b3;
@@ -2286,7 +2286,7 @@ double Modified_Kernel::basis_planar_planar(const Parameter_Types::SecondDerivat
 	Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1x(this->_aRBFKernel->dx_p2());
 		mpf_class b1y(this->_aRBFKernel->dy_p2());
 		mpf_class b1z(this->_aRBFKernel->dz_p2());
@@ -2341,7 +2341,7 @@ double Modified_Kernel::basis_planar_planar(const Parameter_Types::SecondDerivat
 			t3 += p1z(j) * p2y(j);
 		}
 		for (int k = 0; k < 4; k++) {
-			if (k != j) 
+			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 					this->_aLPB->unisolvent_subset_points[k]);
@@ -2371,29 +2371,29 @@ double Modified_Kernel::basis_planar_planar(const Parameter_Types::SecondDerivat
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
 	mpf_class base;
 	if (sd == Parameter_Types::DXDX)
-	base = this->_aRBFKernel->dxx();
+		base = this->_aRBFKernel->dxx();
 	if (sd == Parameter_Types::DYDY)
-	base = this->_aRBFKernel->dyy();
+		base = this->_aRBFKernel->dyy();
 	if (sd == Parameter_Types::DZDZ)
-	base = this->_aRBFKernel->dzz();
+		base = this->_aRBFKernel->dzz();
 	if (sd == Parameter_Types::DXDY)
-	base = this->_aRBFKernel->dxy();
+		base = this->_aRBFKernel->dxy();
 	if (sd == Parameter_Types::DXDZ)
-	base = this->_aRBFKernel->dxz();
+		base = this->_aRBFKernel->dxz();
 	if (sd == Parameter_Types::DYDZ)
-	base = this->_aRBFKernel->dyz();
+		base = this->_aRBFKernel->dyz();
 	if (sd == Parameter_Types::DYDX)
-	base = this->_aRBFKernel->dyx();
+		base = this->_aRBFKernel->dyx();
 	if (sd == Parameter_Types::DZDX)
-	base = this->_aRBFKernel->dzx();
+		base = this->_aRBFKernel->dzx();
 	if (sd == Parameter_Types::DZDY)
-	base = this->_aRBFKernel->dzy();
+		base = this->_aRBFKernel->dzy();
 
 	mpf_class sum = base - t1 - t2 + t3 + t4;
 	return sum.get_d();
 }
 
-double Modified_Kernel::basis_tangent_tangent() 
+double Modified_Kernel::basis_tangent_tangent()
 {
 	Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
 	Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
@@ -2414,11 +2414,11 @@ double Modified_Kernel::basis_tangent_tangent()
 	mpf_class t1zy, t2zy, t3zy, t4zy;
 
 	for (int j = 0; j < 4; j++) {
-		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],*this->p2());
+		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
 		mpf_class b1x(this->_aRBFKernel->dx_p2());
 		mpf_class b1y(this->_aRBFKernel->dy_p2());
 		mpf_class b1z(this->_aRBFKernel->dz_p2());
-		this->_aRBFKernel->set_points(*this->p1(),this->_aLPB->unisolvent_subset_points[j]);
+		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
 		mpf_class b2x(this->_aRBFKernel->dx_p1());
 		mpf_class b2y(this->_aRBFKernel->dy_p1());
 		mpf_class b2z(this->_aRBFKernel->dz_p1());
@@ -2459,10 +2459,10 @@ double Modified_Kernel::basis_tangent_tangent()
 		t2zy += p2y(j) * b2z;
 		t3zy += p1z(j) * p2y(j);
 		for (int k = 0; k < 4; k++) {
-			if (k != j) 
+			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-												this->_aLPB->unisolvent_subset_points[k]);
+					this->_aLPB->unisolvent_subset_points[k]);
 				mpf_class b3(this->_aRBFKernel->basis());
 				t4xx += p2x(k) * b3 * p1x(j);
 				t4yy += p2y(k) * b3 * p1y(j);
@@ -2492,15 +2492,15 @@ double Modified_Kernel::basis_tangent_tangent()
 	Tangent *t2 = static_cast<Tangent *>(this->p2());
 
 	mpf_class value = t1->tx() * t2->tx() * xx + t1->tx() * t2->ty() * xy +
-					t1->tx() * t2->tz() * xz + t1->ty() * t2->tx() * yx +
-					t1->ty() * t2->ty() * yy + t1->ty() * t2->tz() * yz +
-					t1->tz() * t2->tx() * zx + t1->tz() * t2->ty() * zy +
-					t1->tz() * t2->tz() * zz;
+		t1->tx() * t2->tz() * xz + t1->ty() * t2->tx() * yx +
+		t1->ty() * t2->ty() * yy + t1->ty() * t2->tz() * yz +
+		t1->tz() * t2->tx() * zx + t1->tz() * t2->ty() * zy +
+		t1->tz() * t2->tz() * zz;
 
 	return value.get_d();
 }
 
-double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivatives &fd) 
+double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivatives &fd)
 {
 	if (fd == Parameter_Types::DX)
 	{
@@ -2515,12 +2515,12 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-										*this->p2());
+				*this->p2());
 			mpf_class b1x(this->_aRBFKernel->dx_p2());
 			mpf_class b1y(this->_aRBFKernel->dy_p2());
 			mpf_class b1z(this->_aRBFKernel->dz_p2());
 			this->_aRBFKernel->set_points(*this->p1(),
-										this->_aLPB->unisolvent_subset_points[j]);
+				this->_aLPB->unisolvent_subset_points[j]);
 			mpf_class b2x(this->_aRBFKernel->dx_p1());
 			// dxx
 			t1xx += p1x(j) * b1x;
@@ -2557,7 +2557,7 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 		mpf_class value = t->tx() * xx + t->ty() * xy + t->tz() * xz;
 
 		return value.get_d();
-	} 
+	}
 	else if (fd == Parameter_Types::DY) {
 		Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
 		Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
@@ -2570,12 +2570,12 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-										*this->p2());
+				*this->p2());
 			mpf_class b1x(this->_aRBFKernel->dx_p2());
 			mpf_class b1y(this->_aRBFKernel->dy_p2());
 			mpf_class b1z(this->_aRBFKernel->dz_p2());
 			this->_aRBFKernel->set_points(*this->p1(),
-										this->_aLPB->unisolvent_subset_points[j]);
+				this->_aLPB->unisolvent_subset_points[j]);
 			mpf_class b2y(this->_aRBFKernel->dy_p1());
 			// dyy
 			t1yy += p1y(j) * b1y;
@@ -2612,7 +2612,7 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 		mpf_class value = t->tx() * yx + t->ty() * yy + t->tz() * yz;
 
 		return value.get_d();
-	} 
+	}
 	else // fd == DZ
 	{
 		Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
@@ -2626,12 +2626,12 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-										*this->p2());
+				*this->p2());
 			mpf_class b1x(this->_aRBFKernel->dx_p2());
 			mpf_class b1y(this->_aRBFKernel->dy_p2());
 			mpf_class b1z(this->_aRBFKernel->dz_p2());
 			this->_aRBFKernel->set_points(*this->p1(),
-										this->_aLPB->unisolvent_subset_points[j]);
+				this->_aLPB->unisolvent_subset_points[j]);
 			mpf_class b2z(this->_aRBFKernel->dz_p1());
 			// dzz
 			t1zz += p1z(j) * b1z;
@@ -2672,7 +2672,7 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 }
 
 double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivatives &fd) {
-	if (fd == Parameter_Types::DX) 
+	if (fd == Parameter_Types::DX)
 	{
 		Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
 		Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
@@ -2685,10 +2685,10 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-										*this->p2());
+				*this->p2());
 			mpf_class b1x(this->_aRBFKernel->dx_p2());
 			this->_aRBFKernel->set_points(*this->p1(),
-										this->_aLPB->unisolvent_subset_points[j]);
+				this->_aLPB->unisolvent_subset_points[j]);
 			mpf_class b2x(this->_aRBFKernel->dx_p1());
 			mpf_class b2y(this->_aRBFKernel->dy_p1());
 			mpf_class b2z(this->_aRBFKernel->dz_p1());
@@ -2727,7 +2727,7 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 		mpf_class value = t->tx() * xx + t->ty() * yx + t->tz() * zx;
 
 		return value.get_d();
-	} 
+	}
 	else if (fd == Parameter_Types::DY)
 	{
 		Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
@@ -2741,10 +2741,10 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-										*this->p2());
+				*this->p2());
 			mpf_class b1y(this->_aRBFKernel->dy_p2());
 			this->_aRBFKernel->set_points(*this->p1(),
-										this->_aLPB->unisolvent_subset_points[j]);
+				this->_aLPB->unisolvent_subset_points[j]);
 			mpf_class b2x(this->_aRBFKernel->dx_p1());
 			mpf_class b2y(this->_aRBFKernel->dy_p1());
 			mpf_class b2z(this->_aRBFKernel->dz_p1());
@@ -2783,7 +2783,7 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 		mpf_class value = t->tx() * xy + t->ty() * yy + t->tz() * zy;
 
 		return value.get_d();
-	} 
+	}
 	else // fd == DZ
 	{
 		Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
@@ -2797,10 +2797,10 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
-										*this->p2());
+				*this->p2());
 			mpf_class b1z(this->_aRBFKernel->dz_p2());
 			this->_aRBFKernel->set_points(*this->p1(),
-										this->_aLPB->unisolvent_subset_points[j]);
+				this->_aLPB->unisolvent_subset_points[j]);
 			mpf_class b2x(this->_aRBFKernel->dx_p1());
 			mpf_class b2y(this->_aRBFKernel->dy_p1());
 			mpf_class b2z(this->_aRBFKernel->dz_p1());

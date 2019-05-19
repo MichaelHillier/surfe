@@ -6,22 +6,20 @@
 
 using namespace std;
 
-
 int main(int argc, char* argv[]) {
-
 	Surfe_API surfe;
 
-	surfe.SetInterfaceDataCSVFile("D:/Development/surfe_lib/data/contact_data.csv");
-	surfe.SetPlanarDataCSVFile("D:/Development/surfe_lib/data/planar_data.csv");
+	surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/contact_data.csv");
+	surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/planar_data.csv");
 	surfe.LoadConstraintsFromFiles();
-// 	try
-// 	{
-// 		surfe.GetUIParametersAndConstraints();
-// 	}
-// 	catch (const std::exception&e)
-// 	{
-// 		cout << "Exception: " << e.what() << endl;
-// 	}
+	// 	try
+	// 	{
+	// 		surfe.GetUIParametersAndConstraints();
+	// 	}
+	// 	catch (const std::exception&e)
+	// 	{
+	// 		cout << "Exception: " << e.what() << endl;
+	// 	}
 
 	try
 	{

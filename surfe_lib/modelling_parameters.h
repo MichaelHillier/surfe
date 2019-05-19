@@ -40,86 +40,84 @@
 #ifndef modelling_parameters_h
 #define modelling_parameters_h
 
-#include <surfe_lib_module.h>
-
 #define D2R 0.01745329251994329576923690768489  // degrees to radians conversion factor
 #define R2D 57.295779513082320876798154814105  // radians to degrees conversion factor
 #define Epilson 1E-3 // for comparing double/float variables e.g. position accuracy
 
-struct SURFE_LIB_EXPORT Parameter_Types {
-    enum DWRT {
-        PT1,
-        PT2
-    };
-    enum SecondDerivatives {
-        DXDX,
-        DXDY,
-        DXDZ,
-        DYDX,
-        DYDY,
-        DYDZ,
-        DZDX,
-        DZDY,
-        DZDZ
-    };
-    enum FirstDerivatives {
-        DX,
-        DY,
-        DZ
-    };
-    enum RBF {
-        Cubic,
-        Gaussian,
-        MQ,
-        IMQ,
-        TPS,
-        R,
+struct Parameter_Types {
+	enum DWRT {
+		PT1,
+		PT2
+	};
+	enum SecondDerivatives {
+		DXDX,
+		DXDY,
+		DXDZ,
+		DYDX,
+		DYDY,
+		DYDZ,
+		DZDX,
+		DZDY,
+		DZDZ
+	};
+	enum FirstDerivatives {
+		DX,
+		DY,
+		DZ
+	};
+	enum RBF {
+		Cubic,
+		Gaussian,
+		MQ,
+		IMQ,
+		TPS,
+		R,
 		WendlandC2
-    };
-    enum SolverType {
-        Linear,
-        Quadratic
-    };
-    enum ModelType {
-        Single_surface,
-        Lajaunie_approach,
-        Stratigraphic_horizons,
-        Continuous_property,
-        Vector_field
-    };
-    enum AXIS {
-        Xaxis,
-        Yaxis,
-        Zaxis
-    };
+	};
+	enum SolverType {
+		Linear,
+		Quadratic
+	};
+	enum ModelType {
+		Single_surface,
+		Lajaunie_approach,
+		Stratigraphic_horizons,
+		Continuous_property,
+		Vector_field
+	};
+	enum AXIS {
+		Xaxis,
+		Yaxis,
+		Zaxis
+	};
 };
 
-struct SURFE_LIB_EXPORT UI_Parameters {
-    ////////////////////////////////
-    //        UI parameters       //
-    ////////////////////////////////
+struct UI_Parameters {
+	////////////////////////////////
+	//        UI parameters       //
+	////////////////////////////////
 
-    // model type
-    Parameter_Types::ModelType model_type;
-    double min_stratigraphic_thickness;
-    // interface input
-    bool use_interface;
-    bool use_planar;
-    bool use_tangent;
-    bool use_inequality;
-    // basis parameters
-    Parameter_Types::RBF basis_type;
-    double shape_parameter;
-    int polynomial_order;
+	// model type
+	Parameter_Types::ModelType model_type;
+	double min_stratigraphic_thickness;
+	// interface input
+	bool use_interface;
+	bool use_planar;
+	bool use_tangent;
+	bool use_inequality;
+	// basis parameters
+	Parameter_Types::RBF basis_type;
+	double shape_parameter;
+	int polynomial_order;
 
-    bool advanced_parameters;
-    bool model_global_anisotropy;
-    bool use_greedy;
-    bool use_restricted_range;
+	bool advanced_parameters;
+	bool model_global_anisotropy;
+	bool use_greedy;
+	bool use_restricted_range;
 	double smoothing_amount;
 	bool use_regression_smoothing;
-    double interface_uncertainty;
-    double angular_uncertainty;
+	double interface_uncertainty;
+	double angular_uncertainty;
 
 	const char *interface_file;
 	const char *planar_file;
@@ -127,7 +125,7 @@ struct SURFE_LIB_EXPORT UI_Parameters {
 	const char *inequality_file;
 
 	// initialization ...
-	UI_Parameters():
+	UI_Parameters() :
 		model_type(Parameter_Types::Single_surface),
 		min_stratigraphic_thickness(0),
 		use_interface(true),
@@ -153,35 +151,35 @@ struct SURFE_LIB_EXPORT UI_Parameters {
 };
 
 struct basic_parameters {
-    // number of constraints, for each basic constraint type
-    unsigned int n_interface;
-    unsigned int n_planar;
-    unsigned int n_inequality;
-    unsigned int n_tangent;
-    unsigned int n_constraints;
-    unsigned int n_equality;
-    // basis function parameters
-    bool modified_basis;
-    // polynomial parameters
-    bool poly_term;
-    unsigned int n_poly_terms;
-    // type of problem
-    Parameter_Types::SolverType problem_type;
-    // bool greedy; // greedy algorithm
-    bool restricted_range;  // restricted range constraints - bounded
-                            // inequalities
-    // initialization
-    basic_parameters()
-        : n_interface(0),
-          n_planar(0),
-          n_inequality(0),
-          n_tangent(0),
-          n_constraints(0),
-          n_equality(0),
-          modified_basis(false),
-          poly_term(true),
-          n_poly_terms(4),
-          problem_type(Parameter_Types::Linear),
-          restricted_range(false) {}
+	// number of constraints, for each basic constraint type
+	unsigned int n_interface;
+	unsigned int n_planar;
+	unsigned int n_inequality;
+	unsigned int n_tangent;
+	unsigned int n_constraints;
+	unsigned int n_equality;
+	// basis function parameters
+	bool modified_basis;
+	// polynomial parameters
+	bool poly_term;
+	unsigned int n_poly_terms;
+	// type of problem
+	Parameter_Types::SolverType problem_type;
+	// bool greedy; // greedy algorithm
+	bool restricted_range;  // restricted range constraints - bounded
+							// inequalities
+	// initialization
+	basic_parameters()
+		: n_interface(0),
+		n_planar(0),
+		n_inequality(0),
+		n_tangent(0),
+		n_constraints(0),
+		n_equality(0),
+		modified_basis(false),
+		poly_term(true),
+		n_poly_terms(4),
+		problem_type(Parameter_Types::Linear),
+		restricted_range(false) {}
 };
 #endif

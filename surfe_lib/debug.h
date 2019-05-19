@@ -64,53 +64,53 @@ template <class T>
 void outc(const T &s, const std::string &description);
 template <class T>
 void outc(const std::vector<std::vector<T> > &m,
-          const std::string &description);
+	const std::string &description);
 
 template <class T>
 void outc(const std::vector<T> &v, const std::string &description) {
 #ifdef _WIN32
-    if (GetConsoleWindow() == NULL) open_console_window();
+	if (GetConsoleWindow() == NULL) open_console_window();
 #endif
-    std::cout << description << std::endl;
-    typedef T type;
-    for (int j = 0; j < (int)v.size(); j++) {
-        if (typeid(type) == typeid(mpfc))
-            std::cout << "v[" << j << "] = " << v[j].get_d() << std::endl;
-        else
-            std::cout << "v[" << j << "] = " << v[j] << std::endl;
-    }
+	std::cout << description << std::endl;
+	typedef T type;
+	for (int j = 0; j < (int)v.size(); j++) {
+		if (typeid(type) == typeid(mpfc))
+			std::cout << "v[" << j << "] = " << v[j].get_d() << std::endl;
+		else
+			std::cout << "v[" << j << "] = " << v[j] << std::endl;
+	}
 }
 
 template <class T>
 void outc(const T &s, const std::string &description) {
 #ifdef _WIN32
-    if (GetConsoleWindow() == NULL) open_console_window();
+	if (GetConsoleWindow() == NULL) open_console_window();
 #endif
-    std::cout << description;
-    typedef T type;
-    if (typeid(type) == typeid(mpfc))
-        std::cout << " = " << s.get_d() << std::endl;
-    else
-        std::cout << " = " << s << std::endl;
+	std::cout << description;
+	typedef T type;
+	if (typeid(type) == typeid(mpfc))
+		std::cout << " = " << s.get_d() << std::endl;
+	else
+		std::cout << " = " << s << std::endl;
 }
 
 template <class T>
 void outc(const std::vector<std::vector<T> > &m,
-          const std::string &description) {
+	const std::string &description) {
 #ifdef _WIN32
-    if (GetConsoleWindow() == NULL) open_console_window();
+	if (GetConsoleWindow() == NULL) open_console_window();
 #endif
-    std::cout << description << std::endl;
-    typedef T type;
-    for (int j = 0; j < (int)m.size(); j++) {
-        for (int k = 0; k < (int)m[j].size(); k++) {
-            if (typeid(type) == typeid(mpfc))
-                std::cout << setw(15) << m[j].get_d();
-            else
-                std::cout << setw(15) << m[j];
-        }
-        std::cout << std::endl;
-    }
+	std::cout << description << std::endl;
+	typedef T type;
+	for (int j = 0; j < (int)m.size(); j++) {
+		for (int k = 0; k < (int)m[j].size(); k++) {
+			if (typeid(type) == typeid(mpfc))
+				std::cout << setw(15) << m[j].get_d();
+			else
+				std::cout << setw(15) << m[j];
+		}
+		std::cout << std::endl;
+	}
 }
 
 #endif

@@ -44,29 +44,29 @@
 
 class Continuous_Property : public GRBF_Modelling_Methods {
 private:
-    bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
-    bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
+	bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
+	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
 
 public:
-    // Constructor/Destructor
-    Continuous_Property(const UI_Parameters &mparams);
-    ~Continuous_Property();
-    // Methods
-    Polynomial_Basis *create_polynomial_basis(const int &poly_order);
-    bool get_interpolation_matrix(MatrixXd &interpolation_matrix) override;
-    bool get_equality_values(VectorXd &equality_values) override;
-    void eval_scalar_interpolant_at_point(Point &p) override;
-    void eval_vector_interpolant_at_point(Point &p) override;
-    void get_method_parameters() override;
-    void process_input_data() override;
+	// Constructor/Destructor
+	Continuous_Property(const UI_Parameters &mparams);
+	~Continuous_Property();
+	// Methods
+	Polynomial_Basis *create_polynomial_basis(const int &poly_order);
+	bool get_interpolation_matrix(MatrixXd &interpolation_matrix) override;
+	bool get_equality_values(VectorXd &equality_values) override;
+	void eval_scalar_interpolant_at_point(Point &p) override;
+	void eval_vector_interpolant_at_point(Point &p) override;
+	void get_method_parameters() override;
+	void process_input_data() override;
 	void setup_system_solver() override;
-    bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override { return true; }
-    bool measure_residuals(Constraints &input) override;
-    bool append_greedy_input(Constraints &input) override;
-    bool convert_modified_kernel_to_rbf_kernel() override { return true; }  // To IMPLEMENT
-    GRBF_Modelling_Methods *clone() override { return new Continuous_Property(*this); }
-    // Attributes
-    Polynomial_Basis *p_basis;
+	bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override { return true; }
+	bool measure_residuals(Constraints &input) override;
+	bool append_greedy_input(Constraints &input) override;
+	bool convert_modified_kernel_to_rbf_kernel() override { return true; }  // To IMPLEMENT
+	GRBF_Modelling_Methods *clone() override { return new Continuous_Property(*this); }
+	// Attributes
+	Polynomial_Basis *p_basis;
 };
 
 #endif

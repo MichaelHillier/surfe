@@ -140,7 +140,6 @@ namespace io {
 	};
 
 	namespace detail {
-
 		class OwningStdIOByteSourceBase : public ByteSourceBase {
 		public:
 			explicit OwningStdIOByteSourceBase(FILE*file) :file(file) {
@@ -397,7 +396,6 @@ namespace io {
 		}
 	};
 
-
 	////////////////////////////////////////////////////////////////////////////
 	//                                 CSV                                    //
 	////////////////////////////////////////////////////////////////////////////
@@ -422,7 +420,6 @@ namespace io {
 			char column_name[max_column_name_length + 1];
 		};
 
-
 		const int max_column_content_length = 63;
 
 		struct with_column_content {
@@ -442,7 +439,6 @@ namespace io {
 
 			char column_content[max_column_content_length + 1];
 		};
-
 
 		struct extra_column_in_header :
 			base,
@@ -613,7 +609,6 @@ namespace io {
 		}
 	};
 
-
 	struct no_comment {
 		static bool is_comment(const char*) {
 			return false;
@@ -668,7 +663,6 @@ namespace io {
 		}
 
 		static void unescape(char*&, char*&) {
-
 		}
 	};
 
@@ -709,7 +703,6 @@ namespace io {
 					*col_end = '\0';
 				}
 			}
-
 		}
 	};
 
@@ -744,7 +737,6 @@ namespace io {
 			x = std::numeric_limits<T>::min();
 		}
 	};
-
 
 	namespace detail {
 		template<class quote_policy>
@@ -1033,7 +1025,6 @@ namespace io {
 			static_assert(sizeof(T) != sizeof(T),
 				"Can not parse this type. Only buildin integrals, floats, char, char*, const char* and std::string are supported");
 		}
-
 	}
 
 	template<unsigned column_count,
@@ -1058,7 +1049,6 @@ namespace io {
 			}
 
 			void set_column_names() {}
-
 
 		public:
 			CSVReader() = delete;
@@ -1166,7 +1156,6 @@ namespace io {
 				parse_helper(r + 1, cols...);
 			}
 
-
 		public:
 			template<class ...ColType>
 			bool read_row(ColType& ...cols) {
@@ -1176,7 +1165,6 @@ namespace io {
 				// 					"too many columns specified");
 				try {
 					try {
-
 						char*line;
 						do {
 							line = in.next_line();

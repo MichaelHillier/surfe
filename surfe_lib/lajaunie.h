@@ -44,33 +44,33 @@
 
 class Lajaunie_Approach : public GRBF_Modelling_Methods {
 private:
-    int _n_increment_pair;
-    bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
-    bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
-    std::vector<std::vector<Interface> > _increment_pairs;
-    bool _get_increment_pairs();
+	int _n_increment_pair;
+	bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
+	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
+	std::vector<std::vector<Interface> > _increment_pairs;
+	bool _get_increment_pairs();
 
 public:
-    // Constructor/Destructor
-    Lajaunie_Approach(const UI_Parameters &m_p);
-    ~Lajaunie_Approach() {};
-    // Methods
-    Polynomial_Basis *create_polynomial_basis(const int &poly_order);
-    bool get_interpolation_matrix(MatrixXd &interpolation_matrix) override;
-    bool get_equality_values(VectorXd &equality_values) override;
-    bool get_inequality_values(VectorXd &b, VectorXd &r);
-    void eval_scalar_interpolant_at_point(Point &p) override;
-    void eval_vector_interpolant_at_point(Point &p) override;
-    void get_method_parameters() override;
-    void process_input_data() override;
-    void setup_system_solver() override;
-    bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override;
-    bool measure_residuals(Constraints &input) override;
-    bool append_greedy_input(Constraints &input) override;
-    bool convert_modified_kernel_to_rbf_kernel() override;
-    GRBF_Modelling_Methods *clone() override { return new Lajaunie_Approach(*this); }
-    // Attributes
-    Polynomial_Basis *p_basis;
+	// Constructor/Destructor
+	Lajaunie_Approach(const UI_Parameters &m_p);
+	~Lajaunie_Approach() {};
+	// Methods
+	Polynomial_Basis *create_polynomial_basis(const int &poly_order);
+	bool get_interpolation_matrix(MatrixXd &interpolation_matrix) override;
+	bool get_equality_values(VectorXd &equality_values) override;
+	bool get_inequality_values(VectorXd &b, VectorXd &r);
+	void eval_scalar_interpolant_at_point(Point &p) override;
+	void eval_vector_interpolant_at_point(Point &p) override;
+	void get_method_parameters() override;
+	void process_input_data() override;
+	void setup_system_solver() override;
+	bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override;
+	bool measure_residuals(Constraints &input) override;
+	bool append_greedy_input(Constraints &input) override;
+	bool convert_modified_kernel_to_rbf_kernel() override;
+	GRBF_Modelling_Methods *clone() override { return new Lajaunie_Approach(*this); }
+	// Attributes
+	Polynomial_Basis *p_basis;
 };
 
 #endif

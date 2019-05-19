@@ -52,29 +52,29 @@
 
 class Point {
 private:
-    double _x;
-    double _y;
-    double _z;
-    double _c;
-    double _scalar_field;
-    double _field_normal[3];
+	double _x;
+	double _y;
+	double _z;
+	double _c;
+	double _scalar_field;
+	double _field_normal[3];
 
 public:
 	Point() {}
-    Point(const double &x_coord, const double &y_coord, const double &z_coord,
-          const double &c_coord = 0)
-        : _x(x_coord), _y(y_coord), _z(z_coord), _c(c_coord) {
-        _scalar_field = 0;
-        for (int j = 0; j < 3; j++) _field_normal[j] = 0;
-    }
+	Point(const double &x_coord, const double &y_coord, const double &z_coord,
+		const double &c_coord = 0)
+		: _x(x_coord), _y(y_coord), _z(z_coord), _c(c_coord) {
+		_scalar_field = 0;
+		for (int j = 0; j < 3; j++) _field_normal[j] = 0;
+	}
 	// Setters
-    void set_x(const double &x_coord) { _x = x_coord; }
-    void set_y(const double &y_coord) { _y = y_coord; }
-    void set_z(const double &z_coord) { _z = z_coord; }
-    void set_c(const double &c_coord) { _c = c_coord; }
-    double scalar_field() const { return _scalar_field; }
-    void set_scalar_field(const double &scalar_field_value) { _scalar_field = scalar_field_value; }
-	void set_vector_field(const double &nx, const double &ny, const double &nz) { 
+	void set_x(const double &x_coord) { _x = x_coord; }
+	void set_y(const double &y_coord) { _y = y_coord; }
+	void set_z(const double &z_coord) { _z = z_coord; }
+	void set_c(const double &c_coord) { _c = c_coord; }
+	double scalar_field() const { return _scalar_field; }
+	void set_scalar_field(const double &scalar_field_value) { _scalar_field = scalar_field_value; }
+	void set_vector_field(const double &nx, const double &ny, const double &nz) {
 		_field_normal[0] = nx;
 		_field_normal[1] = ny;
 		_field_normal[2] = nz;
@@ -92,181 +92,181 @@ public:
 	double y() const { return _y; }
 	double z() const { return _z; }
 	double c() const { return _c; }
-    double nx_interp() const { return _field_normal[0]; }
-    double ny_interp() const { return _field_normal[1]; }
-    double nz_interp() const { return _field_normal[2]; }
+	double nx_interp() const { return _field_normal[0]; }
+	double ny_interp() const { return _field_normal[1]; }
+	double nz_interp() const { return _field_normal[2]; }
 };
 
 inline bool collocated(const Point &pointa, const Point &pointb) {
 	return
 		(fabs(pointa.x() - pointb.x()) < Epilson &&
-		fabs(pointa.y() - pointb.y()) < Epilson &&
-		fabs(pointa.z() - pointb.z()) < Epilson);
-
+			fabs(pointa.y() - pointb.y()) < Epilson &&
+			fabs(pointa.z() - pointb.z()) < Epilson);
 }
 
 class Interface : public Point {
 private:
-    double _level;
-    double _residual;
-    double _level_bound[2];
+	double _level;
+	double _residual;
+	double _level_bound[2];
 
 public:
 	Interface() {}
-    Interface(const double &x_coord, const double &y_coord,
-              const double &z_coord, const double &lvl,
-              const double &c_coord = 0)
-        : Point(x_coord, y_coord, z_coord, c_coord), _level(lvl) {
-        _residual = 0.0;
-        _level_bound[0] = 0.0;
-        _level_bound[1] = 0.0;
-    }
-    double level() const { return _level; }
-    double residual() const { return _residual; }
-    double level_lower_bound() const { return _level_bound[0]; }
-    double level_upper_bound() const { return _level_bound[1]; }
-    void setResidual(const double &res) { _residual = res; }
-    void setLevel(const double &v) { _level = v; }
-    void setLevelBounds(const double &level_uncertainty) {
-        _level_bound[0] = -1.0 * level_uncertainty;
-        _level_bound[1] = level_uncertainty;
-    }
+	Interface(const double &x_coord, const double &y_coord,
+		const double &z_coord, const double &lvl,
+		const double &c_coord = 0)
+		: Point(x_coord, y_coord, z_coord, c_coord), _level(lvl) {
+		_residual = 0.0;
+		_level_bound[0] = 0.0;
+		_level_bound[1] = 0.0;
+	}
+	double level() const { return _level; }
+	double residual() const { return _residual; }
+	double level_lower_bound() const { return _level_bound[0]; }
+	double level_upper_bound() const { return _level_bound[1]; }
+	void setResidual(const double &res) { _residual = res; }
+	void setLevel(const double &v) { _level = v; }
+	void setLevelBounds(const double &level_uncertainty) {
+		_level_bound[0] = -1.0 * level_uncertainty;
+		_level_bound[1] = level_uncertainty;
+	}
 };
 
 class Inequality : public Point {
 private:
-    double _inequality_level;
-    bool _residual;
+	double _inequality_level;
+	bool _residual;
 
 public:
 	Inequality() {}
-    Inequality(const double &x_coord, const double &y_coord,
-               const double &z_coord, const double &lvl,
-               const double &c_coord = 0)
-        : Point(x_coord, y_coord, z_coord, c_coord), _inequality_level(lvl) {
-        _residual = true;
-    }
-    double level() const { return _inequality_level; }
-    bool residual() const { return _residual; }
-    void setResidual(const bool &res) { _residual = res; }
+	Inequality(const double &x_coord, const double &y_coord,
+		const double &z_coord, const double &lvl,
+		const double &c_coord = 0)
+		: Point(x_coord, y_coord, z_coord, c_coord), _inequality_level(lvl) {
+		_residual = true;
+	}
+	double level() const { return _inequality_level; }
+	bool residual() const { return _residual; }
+	void setResidual(const bool &res) { _residual = res; }
 };
 
 class Planar : public Point {
 private:
-    double _dip;
-    double _strike;
-    int _polarity;
-    double _normal[3];
-    double _residual;
-    double _normal_bound[3][2];
-    bool _compute_strike_dip_polarity_from_normal();
-    bool _compute_normal_from_strike_dip_polarity();
+	double _dip;
+	double _strike;
+	int _polarity;
+	double _normal[3];
+	double _residual;
+	double _normal_bound[3][2];
+	bool _compute_strike_dip_polarity_from_normal();
+	bool _compute_normal_from_strike_dip_polarity();
 
 public:
 	Planar() {}
-    Planar(const double &x_coord, const double &y_coord, const double &z_coord,
-           const double &nx, const double &ny, const double &nz,
-           const double &c_coord = 0)
-        : Point(x_coord, y_coord, z_coord, c_coord) {
-        _normal[0] = nx;
-        _normal[1] = ny;
-        _normal[2] = nz;
-        _residual = 0.0;
-        // compute strike, dip, and polarity
-        _compute_strike_dip_polarity_from_normal();
-    }
-    Planar(const double &x_coord, const double &y_coord, const double &z_coord,
-           const double &dip, const double &strike, const int &polarity,
-           const double &c_coord = 0)
-        : Point(x_coord, y_coord, z_coord, c_coord),
-          _dip(dip),
-          _strike(strike),
-          _polarity(polarity) {
-        // compute normal
-        _compute_normal_from_strike_dip_polarity();
-        // residual default
-        _residual = 0.0;
-    }
-    bool getDipVector(double (&vector)[3]);
-    bool getStrikeVector(double (&vector)[3]);
-    double dip() const { return _dip; }
-    double strike() const { return _strike; }
-    int polarity() const { return _polarity; }
-    double nx() const { return _normal[0]; }
-    double ny() const { return _normal[1]; }
-    double nz() const { return _normal[2]; }
-    double nx_lower_bound() const { return _normal_bound[0][0]; }
-    double nx_upper_bound() const { return _normal_bound[0][1]; }
-    double ny_lower_bound() const { return _normal_bound[1][0]; }
-    double ny_upper_bound() const { return _normal_bound[1][1]; }
-    double nz_lower_bound() const { return _normal_bound[2][0]; }
-    double nz_upper_bound() const { return _normal_bound[2][1]; }
-    void setNormalBounds(const double &delta_strike, const double &delta_dip);
-    double residual() const { return _residual; }
-    void setResidual(const double &res) { _residual = res; }
-    void setNormal(const double &nx, const double &ny, const double &nz) {
-        _normal[0] = nx;
-        _normal[1] = ny;
-        _normal[2] = nz;
-    }
+	Planar(const double &x_coord, const double &y_coord, const double &z_coord,
+		const double &nx, const double &ny, const double &nz,
+		const double &c_coord = 0)
+		: Point(x_coord, y_coord, z_coord, c_coord) {
+		_normal[0] = nx;
+		_normal[1] = ny;
+		_normal[2] = nz;
+		_residual = 0.0;
+		// compute strike, dip, and polarity
+		_compute_strike_dip_polarity_from_normal();
+	}
+	Planar(const double &x_coord, const double &y_coord, const double &z_coord,
+		const double &dip, const double &strike, const int &polarity,
+		const double &c_coord = 0)
+		: Point(x_coord, y_coord, z_coord, c_coord),
+		_dip(dip),
+		_strike(strike),
+		_polarity(polarity) {
+		// compute normal
+		_compute_normal_from_strike_dip_polarity();
+		// residual default
+		_residual = 0.0;
+	}
+	bool getDipVector(double(&vector)[3]);
+	bool getStrikeVector(double(&vector)[3]);
+	double dip() const { return _dip; }
+	double strike() const { return _strike; }
+	int polarity() const { return _polarity; }
+	double nx() const { return _normal[0]; }
+	double ny() const { return _normal[1]; }
+	double nz() const { return _normal[2]; }
+	double nx_lower_bound() const { return _normal_bound[0][0]; }
+	double nx_upper_bound() const { return _normal_bound[0][1]; }
+	double ny_lower_bound() const { return _normal_bound[1][0]; }
+	double ny_upper_bound() const { return _normal_bound[1][1]; }
+	double nz_lower_bound() const { return _normal_bound[2][0]; }
+	double nz_upper_bound() const { return _normal_bound[2][1]; }
+	void setNormalBounds(const double &delta_strike, const double &delta_dip);
+	double residual() const { return _residual; }
+	void setResidual(const double &res) { _residual = res; }
+	void setNormal(const double &nx, const double &ny, const double &nz) {
+		_normal[0] = nx;
+		_normal[1] = ny;
+		_normal[2] = nz;
+	}
 };
 
 class Tangent : public Point {
 private:
-    double _tangent[3];
-    double _residual;
-    double _angle_bound[2];
-    double _inner_product_constraint;
+	double _tangent[3];
+	double _residual;
+	double _angle_bound[2];
+	double _inner_product_constraint;
 
 public:
 	Tangent() {}
-    Tangent(const double &x_coord, const double &y_coord, const double &z_coord,
-            const double &tx, const double &ty, const double &tz,
-            const double &c_coord = 0)
-        : Point(x_coord, y_coord, z_coord, c_coord) {
-        _tangent[0] = tx;
-        _tangent[1] = ty;
-        _tangent[2] = tz;
-        _residual = 0.0;
-        _inner_product_constraint = 0.0;  // default value 0.0 means that the
-                                          // angle b/t the gradient of the
-        // scalar field and tangent vector is 90 degrees.
-    }
-    double tx() const { return _tangent[0]; }
-    double ty() const { return _tangent[1]; }
-    double tz() const { return _tangent[2]; }
-    double residual() const { return _residual; }
-    double angle_lower_bound() const { return _angle_bound[0]; }
-    double angle_upper_bound() const { return _angle_bound[1]; }
-    double inner_product_constraint() const {
-        return _inner_product_constraint;
-    }
-    void setResidual(const double &res) { _residual = res; }
-    void setAngleBounds(const double &angle) {
-        // t . del s = Cos(ϴ)*||t||*||del s||
-        // ||t|| = 1
-        // 0 <= ||del s|| <= + inf (but in reality ~ 2)
-        double a = cos((90.0 - angle) * D2R) * 2.0;
-        if (a < 0) {
-            _angle_bound[0] = a;
-            _angle_bound[1] = 0;
-        } else {
-            _angle_bound[0] = 0;
-            _angle_bound[1] = a;
-        }
-    }
-    void setInnerProductConstraint(const double &ip_constraint) {
-        _inner_product_constraint = ip_constraint;
-    }
+	Tangent(const double &x_coord, const double &y_coord, const double &z_coord,
+		const double &tx, const double &ty, const double &tz,
+		const double &c_coord = 0)
+		: Point(x_coord, y_coord, z_coord, c_coord) {
+		_tangent[0] = tx;
+		_tangent[1] = ty;
+		_tangent[2] = tz;
+		_residual = 0.0;
+		_inner_product_constraint = 0.0;  // default value 0.0 means that the
+										  // angle b/t the gradient of the
+		// scalar field and tangent vector is 90 degrees.
+	}
+	double tx() const { return _tangent[0]; }
+	double ty() const { return _tangent[1]; }
+	double tz() const { return _tangent[2]; }
+	double residual() const { return _residual; }
+	double angle_lower_bound() const { return _angle_bound[0]; }
+	double angle_upper_bound() const { return _angle_bound[1]; }
+	double inner_product_constraint() const {
+		return _inner_product_constraint;
+	}
+	void setResidual(const double &res) { _residual = res; }
+	void setAngleBounds(const double &angle) {
+		// t . del s = Cos(ϴ)*||t||*||del s||
+		// ||t|| = 1
+		// 0 <= ||del s|| <= + inf (but in reality ~ 2)
+		double a = cos((90.0 - angle) * D2R) * 2.0;
+		if (a < 0) {
+			_angle_bound[0] = a;
+			_angle_bound[1] = 0;
+		}
+		else {
+			_angle_bound[0] = 0;
+			_angle_bound[1] = a;
+		}
+	}
+	void setInnerProductConstraint(const double &ip_constraint) {
+		_inner_product_constraint = ip_constraint;
+	}
 };
 
 class Constraints {
 private:
-    // Attributes
-    double _avg_nn_dist_ie;
-    double _avg_nn_dist_itr;
-    double _avg_nn_dist_p;
-    double _avg_nn_dist_t;
+	// Attributes
+	double _avg_nn_dist_ie;
+	double _avg_nn_dist_itr;
+	double _avg_nn_dist_p;
+	double _avg_nn_dist_t;
 public:
 	Constraints() {
 		_avg_nn_dist_ie = -99999.0;   // no data value
@@ -287,16 +287,16 @@ public:
 	// Methods //
 	/////////////
 
-    // spatial analysis
-    double compute_inequality_avg_nn_distance();
-    double compute_interface_avg_nn_distance();
-    double compute_planar_avg_nn_distance();
-    double compute_tangent_avg_nn_distance();
-    void compute_avg_nn_distances();
-    double GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
-    double GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }
-    double GetPlanarAvgNNDist() const { return _avg_nn_dist_p; }
-    double GetTangentAvgNNDist() const { return _avg_nn_dist_t; }
+	// spatial analysis
+	double compute_inequality_avg_nn_distance();
+	double compute_interface_avg_nn_distance();
+	double compute_planar_avg_nn_distance();
+	double compute_tangent_avg_nn_distance();
+	void compute_avg_nn_distances();
+	double GetInequalityAvgNNDist() const { return _avg_nn_dist_ie; }
+	double GetInterfaceAvgNNDist() const { return _avg_nn_dist_itr; }
+	double GetPlanarAvgNNDist() const { return _avg_nn_dist_p; }
+	double GetTangentAvgNNDist() const { return _avg_nn_dist_t; }
 	void SetInequalityAvgNNDist(const double &dist) { _avg_nn_dist_ie = dist; }
 	void SetInterfaceAvgNNDist(const double &dist) { _avg_nn_dist_itr = dist; }
 	void SetPlanarAvgNNDist(const double &dist) { _avg_nn_dist_p = dist; }
@@ -310,9 +310,9 @@ std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p,
 int furtherest_neighbour_index(const Point &p, const std::vector<Point> &pts);
 int furtherest_neighbour_index(const std::vector<Point> &pts1, const std::vector<Point> &pts2);
 double avg_nn_distance(const std::vector<Point> &pts);
-bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts, int (&TwoIndexes)[2]);
+bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts, int(&TwoIndexes)[2]);
 int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &p, const std::vector<Point> &pts, const double &dist);
-void calculate_bounds(const std::vector<Point> &pts, double (&bounds)[6]);
+void calculate_bounds(const std::vector<Point> &pts, double(&bounds)[6]);
 std::vector<int> get_extremal_point_data_indices_from_points(const std::vector<Point> &pts);
 bool is_index_in_list(const int &index, const std::vector<int> &list);
 double get_largest_distance_between_points(const std::vector<Point> &pts);
@@ -323,9 +323,9 @@ double get_largest_distance_between_points(const std::vector<Point> &pts);
 //                 - Considers the distance to other large residual points
 //                 - Considers the variability with close large residual points
 std::vector<int> Get_Inequality_STL_Vector_Indices_With_Large_Residuals(const std::vector<Inequality> &inequality, const double &avg_nn_distance);
-std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std::vector<Interface> &itrface, const double &itrface_uncertainty,const double &avg_nn_distance);
-std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::vector<Planar> &planar, const double &angular_uncertainty,const double &avg_nn_distance);
-std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::vector<Tangent> &tangent, const double &angular_uncertainty,const double &avg_nn_distance);
-bool get_maximal_axial_variability_order(const double (&bounds)[6], Parameter_Types::AXIS (&axis_order)[3]);
+std::vector<int> Get_Interface_STL_Vector_Indices_With_Large_Residuals(const std::vector<Interface> &itrface, const double &itrface_uncertainty, const double &avg_nn_distance);
+std::vector<int> Get_Planar_STL_Vector_Indices_With_Large_Residuals(const std::vector<Planar> &planar, const double &angular_uncertainty, const double &avg_nn_distance);
+std::vector<int> Get_Tangent_STL_Vector_Indices_With_Large_Residuals(const std::vector<Tangent> &tangent, const double &angular_uncertainty, const double &avg_nn_distance);
+bool get_maximal_axial_variability_order(const double(&bounds)[6], Parameter_Types::AXIS(&axis_order)[3]);
 
 #endif

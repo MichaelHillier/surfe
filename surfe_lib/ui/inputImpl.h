@@ -21,7 +21,6 @@ public slots:
 	void set_inequality_data_file();
 private:
 	UI_Parameters get_parameters();
-
 };
 
 #endif

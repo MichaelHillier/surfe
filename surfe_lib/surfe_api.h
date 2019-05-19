@@ -48,23 +48,23 @@ private:
 
 	// methods
 	GRBF_Modelling_Methods* get_method(const UI_Parameters& params);
-	void build_constraints_from_csv_files();
+	void build_constraints_from_input_files();
 public:
 	Surfe_API();
 	Surfe_API(const UI_Parameters& params);
 	void GetUIParametersAndConstraints();
 	void LoadConstraintsFromFiles();
 	void AddInterfaceConstraint(
-		const double &x,const double &y,const double &z, 
+		const double &x, const double &y, const double &z,
 		const double &level
 	);
 	void AddPlanarConstraintwNormal(
-		const double &x,const double &y,const double &z,
-		const double &nx,const double &ny,const double &nz
+		const double &x, const double &y, const double &z,
+		const double &nx, const double &ny, const double &nz
 	);
 	void AddPlanarConstraintwStrikeDipPolarity(
-		const double &x,const double &y,const double &z,
-		const double &strike, const double &dip,const double &polarity
+		const double &x, const double &y, const double &z,
+		const double &strike, const double &dip, const double &polarity
 	);
 	void AddPlanarConstraintwAzimuthDipPolarity(
 		const double &x, const double &y, const double &z,
@@ -72,10 +72,10 @@ public:
 	);
 	void AddTangentConstraint(
 		const double &x, const double &y, const double &z,
-		const double &tx, const double &ty,	const double &tz
+		const double &tx, const double &ty, const double &tz
 	);
 	void AddInequalityConstraint(
-		const double &x, const double &y,const double &z,
+		const double &x, const double &y, const double &z,
 		const double &level
 	);
 	void ComputeInterpolant();
@@ -89,18 +89,18 @@ public:
 	void SetRegressionSmoothing(const bool &rs);
 	void SetInterfaceUncertainty(const double &interface_uncertainty);
 	void SetAngularUncertainty(const double &angular_uncertainty);
-	void SetInterfaceDataCSVFile(const char *interface_file);
-	void SetPlanarDataCSVFile(const char *planar_file);
-	void SetTangentDataCSVFile(const char *tangent_file);
-	void SetInequalityDataCSVFile(const char *inequality_file);
+	void SetInterfaceDataFile(const char *interface_file);
+	void SetPlanarDataFile(const char *planar_file);
+	void SetTangentDataFile(const char *tangent_file);
+	void SetInequalityDataFile(const char *inequality_file);
 	double EvaluateInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	);
 	double *EvaluateVectorInterpolantAtPoint(
-		const double &x,const double &y, const double &z
-	);
+		const double &x, const double &y, const double &z
+	); // client responsible for deleting dynamically allocated array vector[3]
 	void BuildRegularGrid(
-		const double &zmin,	const double &zmax, 
+		const double &zmin, const double &zmax,
 		const double &resolution, const double &xy_percent_padding = 0
 	);
 	void BuildRegularGrid(
@@ -108,12 +108,12 @@ public:
 		const double &ymin, const double &ymax,
 		const double &zmin, const double &zmax,
 		const double &resolution);
-	vtkImageData *GetEvaluatedGrid();
-	vtkPolyData *GetIsoSurfaces();
-	vtkPolyData *GetInterfaceConstraints();
-	vtkPolyData	*GetPlanarConstraints();
-	vtkPolyData *GetTangentConstraints();
-	vtkPolyData *GetInequalityConstraints();
+	vtkSmartPointer<vtkImageData> GetEvaluatedGrid();
+	vtkSmartPointer<vtkPolyData> GetIsoSurfaces();
+	vtkSmartPointer<vtkPolyData> GetInterfaceConstraints();
+	vtkSmartPointer<vtkPolyData> GetPlanarConstraints();
+	vtkSmartPointer<vtkPolyData> GetTangentConstraints();
+	vtkSmartPointer<vtkPolyData> GetInequalityConstraints();
 	const char *GetEvaluatedVTKGridString();
 	const char *GetVTKIsosurfacesString();
 	const char *GetVTKInterfaceConstraintsString();

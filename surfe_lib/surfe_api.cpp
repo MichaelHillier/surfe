@@ -1,6 +1,6 @@
 #include <surfe_api.h>
 
-#include <read_csv_files.h>
+#include <read_input_files.h>
 
 #include <vtkNew.h>
 #include <vtkXMLPolyDataWriter.h>
@@ -19,7 +19,7 @@ GRBF_Modelling_Methods* Surfe_API::get_method(const UI_Parameters& params)
 		return new Continuous_Property(params);
 }
 
-void Surfe_API::build_constraints_from_csv_files()
+void Surfe_API::build_constraints_from_input_files()
 {
 	if (!method_)
 		throw GRBF_Exceptions::grbf_method_is_null;
@@ -87,10 +87,11 @@ Surfe_API::Surfe_API(const UI_Parameters& params)
 
 	try
 	{
-		build_constraints_from_csv_files();
+		build_constraints_from_input_files();
 	}
 	catch (const std::exception&e)
 	{
+		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 		throw;
 	}
 	evaluation_completed_ = false;
@@ -104,10 +105,11 @@ void Surfe_API::GetUIParametersAndConstraints()
 	method_ = get_method(params_);
 	try
 	{
-		build_constraints_from_csv_files();
+		build_constraints_from_input_files();
 	}
 	catch (const std::exception&e)
 	{
+		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 		throw;
 	}
 }
@@ -117,10 +119,11 @@ void Surfe_API::LoadConstraintsFromFiles()
 	method_ = get_method(params_);
 	try
 	{
-		build_constraints_from_csv_files();
+		build_constraints_from_input_files();
 	}
 	catch (const std::exception&e)
 	{
+		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 		throw;
 	}
 }
@@ -185,10 +188,11 @@ void Surfe_API::ComputeInterpolant()
 	{
 		try
 		{
-			build_constraints_from_csv_files();
+			build_constraints_from_input_files();
 		}
 		catch (const std::exception&e)
 		{
+			std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 			throw;
 		}
 	}
@@ -202,6 +206,7 @@ void Surfe_API::ComputeInterpolant()
 	catch (std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
+		std::cout << "Exceptions: " << exceptions.what() << " occurred. " << std::endl;
 		throw exceptions.what();
 	}
 
@@ -214,6 +219,7 @@ void Surfe_API::ComputeInterpolant()
 	catch (std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
+		std::cout << "Exceptions: " << exceptions.what() << " occurred. " << std::endl;
 		throw exceptions.what();
 	}
 
@@ -224,9 +230,10 @@ void Surfe_API::ComputeInterpolant()
 	catch (std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
+		std::cout << "Exceptions: " << exceptions.what() << " occurred. " << std::endl;
 		throw exceptions.what();
 	}
-
+	std::cout << "Interpolant has been computed" << std::endl;
 	have_interpolant_ = true;
 	constraints_changed_ = false;
 	parameters_changed_ = false;
@@ -318,7 +325,7 @@ void Surfe_API::SetAngularUncertainty(const double &angular_uncertainty)
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetInterfaceDataCSVFile(const char *interface_file)
+void Surfe_API::SetInterfaceDataFile(const char *interface_file)
 {
 	auto params_interface_file_length = strlen(params_.interface_file);
 	if (params_interface_file_length > 0) {
@@ -342,7 +349,7 @@ void Surfe_API::SetInterfaceDataCSVFile(const char *interface_file)
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetPlanarDataCSVFile(const char *planar_file)
+void Surfe_API::SetPlanarDataFile(const char *planar_file)
 {
 	auto params_planar_file_length = strlen(params_.planar_file);
 	if (params_planar_file_length > 0) {
@@ -366,7 +373,7 @@ void Surfe_API::SetPlanarDataCSVFile(const char *planar_file)
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetTangentDataCSVFile(const char *tangent_file)
+void Surfe_API::SetTangentDataFile(const char *tangent_file)
 {
 	auto params_tangent_file_length = strlen(params_.tangent_file);
 	if (params_tangent_file_length > 0) {
@@ -390,7 +397,7 @@ void Surfe_API::SetTangentDataCSVFile(const char *tangent_file)
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetInequalityDataCSVFile(const char *inequality_file)
+void Surfe_API::SetInequalityDataFile(const char *inequality_file)
 {
 	auto params_inequality_file_length = strlen(params_.inequality_file);
 	if (params_inequality_file_length > 0) {
@@ -438,7 +445,7 @@ double *Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const doubl
 		if (constraints_changed_ || parameters_changed_)
 			throw GRBF_Exceptions::interpolant_needs_update;
 
-		double gradient[3] = { 0,0,0 };
+		double *gradient = new double[3];
 		// convert x,y,z to Point
 		Point pt(x, y, z);
 		// evaluate vector field at point
@@ -457,7 +464,7 @@ void Surfe_API::BuildRegularGrid(const double &zmin, const double &zmax, const d
 	std::vector<Point> agg_pts = convert_constraints_to_points(method_->constraints);
 
 	vtkSmartPointer<vtkPoints> pts = vtkSmartPointer<vtkPoints>::New();
-	for (const auto &point : agg_pts) 
+	for (const auto &point : agg_pts)
 		pts->InsertNextPoint(point.x(), point.y(), point.z());
 
 	double bounds[6];
@@ -478,8 +485,8 @@ void Surfe_API::BuildRegularGrid(const double &zmin, const double &zmax, const d
 }
 
 void Surfe_API::BuildRegularGrid(
-	const double &xmin, const double &xmax, 
-	const double &ymin, const double &ymax, 
+	const double &xmin, const double &xmax,
+	const double &ymin, const double &ymax,
 	const double &zmin, const double &zmax,
 	const double &resolution
 )
@@ -493,12 +500,12 @@ void Surfe_API::BuildRegularGrid(
 	vtkSmartPointer<vtkImageData> constructed_grid = vtkSmartPointer<vtkImageData>::New();
 	constructed_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
 	constructed_grid->SetOrigin(origin);
-	constructed_grid->SetSpacing(resolution,resolution,resolution);
+	constructed_grid->SetSpacing(resolution, resolution, resolution);
 
 	grid_ = constructed_grid;
 }
 
-vtkImageData * Surfe_API::GetEvaluatedGrid()
+vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 {
 	if (!grid_)
 		throw GRBF_Exceptions::no_sgrid_exists;
@@ -511,6 +518,7 @@ vtkImageData * Surfe_API::GetEvaluatedGrid()
 		}
 		catch (std::exception& e)
 		{
+			std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 			throw;
 		}
 	}
@@ -519,8 +527,8 @@ vtkImageData * Surfe_API::GetEvaluatedGrid()
 	sfield->SetName("Scalar Field");
 	sfield->SetNumberOfComponents(1);
 	sfield->SetNumberOfTuples(grid_->GetNumberOfPoints());
-	
-	#pragma omp parallel for schedule(dynamic)
+
+#pragma omp parallel for schedule(dynamic)
 	for (int j = 0; j < grid_->GetNumberOfPoints(); j++) {
 		double point[3];
 		grid_->GetPoint(j, point);
@@ -539,7 +547,7 @@ vtkImageData * Surfe_API::GetEvaluatedGrid()
 	return grid_;
 }
 
-vtkPolyData * Surfe_API::GetIsoSurfaces()
+vtkSmartPointer<vtkPolyData> Surfe_API::GetIsoSurfaces()
 {
 	if (!grid_)
 		throw GRBF_Exceptions::no_sgrid_exists;
@@ -571,10 +579,12 @@ vtkPolyData * Surfe_API::GetIsoSurfaces()
 	vtkSmartPointer<vtkPolyData> iso_surfaces = vtkSmartPointer<vtkPolyData>::New();
 	iso_surfaces = mcube->GetOutput();
 
+	cout << "Finished marching cubes" << endl;
+
 	return iso_surfaces;
 }
 
-vtkPolyData * Surfe_API::GetInterfaceConstraints()
+vtkSmartPointer<vtkPolyData> Surfe_API::GetInterfaceConstraints()
 {
 	if (!method_->constraints.itrface.empty())
 	{
@@ -582,7 +592,7 @@ vtkPolyData * Surfe_API::GetInterfaceConstraints()
 		vtkSmartPointer<vtkPolyData> interface_constraints = vtkSmartPointer<vtkPolyData>::New();
 		vtkSmartPointer<vtkPoints> interface_points = vtkSmartPointer<vtkPoints>::New();
 		vtkSmartPointer<vtkDoubleArray> interface_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
-		interface_scalar_field->SetName("Scalar Field");
+		interface_scalar_field->SetName("level");
 		interface_scalar_field->SetNumberOfComponents(1);
 		interface_scalar_field->SetNumberOfTuples(grid_->GetNumberOfPoints());
 		for (int j = 0; j < (int)method_->constraints.itrface.size(); j++) {
@@ -602,7 +612,7 @@ vtkPolyData * Surfe_API::GetInterfaceConstraints()
 		return nullptr;
 }
 
-vtkPolyData	* Surfe_API::GetPlanarConstraints()
+vtkSmartPointer<vtkPolyData> Surfe_API::GetPlanarConstraints()
 {
 	if (!method_->constraints.planar.empty())
 	{
@@ -611,12 +621,12 @@ vtkPolyData	* Surfe_API::GetPlanarConstraints()
 		vtkSmartPointer<vtkPoints> planar_points = vtkSmartPointer<vtkPoints>::New();
 		vtkSmartPointer<vtkDoubleArray> planar_gradient_field = vtkSmartPointer<vtkDoubleArray>::New();
 		int n_tuples = (int)method_->constraints.planar.size();
-		planar_gradient_field->SetName("Gradient Field");
+		planar_gradient_field->SetName("normal");
 		planar_gradient_field->SetNumberOfTuples(n_tuples);
 		planar_gradient_field->SetNumberOfComponents(3);
-		planar_gradient_field->SetComponentName(0, "Gx");
-		planar_gradient_field->SetComponentName(1, "Gy");
-		planar_gradient_field->SetComponentName(2, "Gz");
+		planar_gradient_field->SetComponentName(0, "nx");
+		planar_gradient_field->SetComponentName(1, "ny");
+		planar_gradient_field->SetComponentName(2, "nz");
 		// initalization for vector data
 		for (int k = 0; k < n_tuples; k++) {
 			for (int l = 0; l < 3; l++)
@@ -640,7 +650,7 @@ vtkPolyData	* Surfe_API::GetPlanarConstraints()
 		return nullptr;
 }
 
-vtkPolyData * Surfe_API::GetTangentConstraints()
+vtkSmartPointer<vtkPolyData> Surfe_API::GetTangentConstraints()
 {
 	if (!method_->constraints.tangent.empty())
 	{
@@ -648,11 +658,11 @@ vtkPolyData * Surfe_API::GetTangentConstraints()
 		vtkSmartPointer<vtkPolyData> tangent_constraints = vtkSmartPointer<vtkPolyData>::New();
 		vtkSmartPointer<vtkPoints> tangent_points = vtkSmartPointer<vtkPoints>::New();
 		vtkSmartPointer<vtkDoubleArray> tangent_vector = vtkSmartPointer<vtkDoubleArray>::New();
-		tangent_vector->SetName("Tangent Vector");
+		tangent_vector->SetName("tangent");
 		tangent_vector->SetNumberOfComponents(3);
-		tangent_vector->SetComponentName(0, "Tx");
-		tangent_vector->SetComponentName(1, "Ty");
-		tangent_vector->SetComponentName(2, "Tz");
+		tangent_vector->SetComponentName(0, "tx");
+		tangent_vector->SetComponentName(1, "ty");
+		tangent_vector->SetComponentName(2, "tz");
 		for (int j = 0; j < (int)method_->constraints.tangent.size(); j++) {
 			Tangent*tangent_pt = &method_->constraints.tangent[j];
 			tangent_points->InsertNextPoint(tangent_pt->x(), tangent_pt->y(), tangent_pt->z());
@@ -671,7 +681,7 @@ vtkPolyData * Surfe_API::GetTangentConstraints()
 		return nullptr;
 }
 
-vtkPolyData * Surfe_API::GetInequalityConstraints()
+vtkSmartPointer<vtkPolyData> Surfe_API::GetInequalityConstraints()
 {
 	if (!method_->constraints.inequality.empty())
 	{
@@ -679,7 +689,7 @@ vtkPolyData * Surfe_API::GetInequalityConstraints()
 		vtkSmartPointer<vtkPolyData> inequality_constraints = vtkSmartPointer<vtkPolyData>::New();
 		vtkSmartPointer<vtkPoints> inequality_points = vtkSmartPointer<vtkPoints>::New();
 		vtkSmartPointer<vtkDoubleArray> inequality_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
-		inequality_scalar_field->SetName("Scalar Field");
+		inequality_scalar_field->SetName("level");
 		inequality_scalar_field->SetNumberOfComponents(1);
 		inequality_scalar_field->SetNumberOfTuples(grid_->GetNumberOfPoints());
 		for (int j = 0; j < (int)method_->constraints.inequality.size(); j++) {
@@ -721,7 +731,7 @@ const char *Surfe_API::GetEvaluatedVTKGridString()
 	writer->Write();
 
 	vtk_grid_string_ = writer->GetOutputString();
-	
+
 	return vtk_grid_string_.c_str();
 }
 
@@ -729,24 +739,29 @@ const char * Surfe_API::GetVTKIsosurfacesString()
 {
 	try
 	{
-		vtkPolyData *isosurfaces = GetIsoSurfaces();
-		vtkNew<vtkXMLPolyDataWriter> writer;
-		writer->SetInputData(isosurfaces);
-		writer->WriteToOutputStringOn();
-		writer->Write();
+		vtkSmartPointer<vtkPolyData> isosurfaces = GetIsoSurfaces();
 
-		vtk_isosurfaces_string_ = writer->GetOutputString();
-		return vtk_isosurfaces_string_.c_str();
+		if (isosurfaces)
+		{
+			vtkNew<vtkXMLPolyDataWriter> writer;
+			writer->SetInputData(isosurfaces);
+			writer->WriteToOutputStringOn();
+			writer->Write();
+
+			vtk_isosurfaces_string_ = writer->GetOutputString();
+			return vtk_isosurfaces_string_.c_str();
+		}
 	}
 	catch (std::exception& e)
 	{
+		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 		throw;
 	}
 }
 
 const char * Surfe_API::GetVTKInterfaceConstraintsString()
 {
-	vtkPolyData *poly = GetInterfaceConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetInterfaceConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -762,7 +777,7 @@ const char * Surfe_API::GetVTKInterfaceConstraintsString()
 
 const char * Surfe_API::GetVTKPlanarConstraintsString()
 {
-	vtkPolyData *poly = GetPlanarConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetPlanarConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -778,7 +793,7 @@ const char * Surfe_API::GetVTKPlanarConstraintsString()
 
 const char * Surfe_API::GetVTKTangentConstraintsString()
 {
-	vtkPolyData *poly = GetTangentConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetTangentConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -794,7 +809,7 @@ const char * Surfe_API::GetVTKTangentConstraintsString()
 
 const char * Surfe_API::GetVTKInequalityConstraintString()
 {
-	vtkPolyData *poly = GetInequalityConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetInequalityConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -810,7 +825,7 @@ const char * Surfe_API::GetVTKInequalityConstraintString()
 
 void Surfe_API::WriteVTKInterfaceConstraints(const char *filename)
 {
-	vtkPolyData *poly = GetInterfaceConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetInterfaceConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -821,7 +836,7 @@ void Surfe_API::WriteVTKInterfaceConstraints(const char *filename)
 
 void Surfe_API::WriteVTKPlanarConstraints(const char *filename)
 {
-	vtkPolyData *poly = GetPlanarConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetPlanarConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -832,7 +847,7 @@ void Surfe_API::WriteVTKPlanarConstraints(const char *filename)
 
 void Surfe_API::WriteVTKTangentConstraints(const char *filename)
 {
-	vtkPolyData *poly = GetTangentConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetTangentConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -843,7 +858,7 @@ void Surfe_API::WriteVTKTangentConstraints(const char *filename)
 
 void Surfe_API::WriteVTKInequalityConstraints(const char *filename)
 {
-	vtkPolyData *poly = GetInequalityConstraints();
+	vtkSmartPointer<vtkPolyData> poly = GetInequalityConstraints();
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);

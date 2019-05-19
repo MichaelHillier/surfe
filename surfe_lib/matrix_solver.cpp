@@ -45,130 +45,129 @@
 #include <iostream>
 
 bool Linear_LU_decomposition::solve() {
-
-    if (_constraint_values.rows() != _interpolation_matrix.rows()) return false;
-    weights = _interpolation_matrix.partialPivLu().solve(_constraint_values);
-    if (!weights.allFinite()) return false;
-    return true;
+	if (_constraint_values.rows() != _interpolation_matrix.rows()) return false;
+	weights = _interpolation_matrix.partialPivLu().solve(_constraint_values);
+	if (!weights.allFinite()) return false;
+	return true;
 }
 
 bool Linear_LU_decomposition::validate_matrix_systems() {
-    // check if there are any NaN or INF values
-    if (_interpolation_matrix.allFinite())
-        return true;
-    else
-        return false;
+	// check if there are any NaN or INF values
+	if (_interpolation_matrix.allFinite())
+		return true;
+	else
+		return false;
 
-    // the other potential problem could be the input has un-initialized values in it.
+	// the other potential problem could be the input has un-initialized values in it.
 }
 
 bool Linear_LU_decomposition::check_solution()
 {
-    double relative_error =
-        (_interpolation_matrix * weights - _constraint_values).norm() / _constraint_values.norm();  // norm() is L2 norm
-    std::cout << "The relative error is:\n" << relative_error << std::endl;
-    return true;
+	double relative_error =
+		(_interpolation_matrix * weights - _constraint_values).norm() / _constraint_values.norm();  // norm() is L2 norm
+	std::cout << "The relative error is:\n" << relative_error << std::endl;
+	return true;
 }
 
 Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_convert_double_matrix_2_mpf(
-	const MatrixXd &matrix) 
+	const MatrixXd &matrix)
 {
-    int nrows = (int)matrix.rows();
-    int ncols = (int)matrix.cols();
+	int nrows = (int)matrix.rows();
+	int ncols = (int)matrix.cols();
 
-    Matrix<mpf_class, Dynamic, Dynamic> mpf_matrix(nrows, ncols);
+	Matrix<mpf_class, Dynamic, Dynamic> mpf_matrix(nrows, ncols);
 
-    for (int j = 0; j < nrows; j++) {
-        for (int k = 0; k < ncols; k++) {
-            mpf_matrix(j, k) = matrix(j, k);
-        }
-    }
+	for (int j = 0; j < nrows; j++) {
+		for (int k = 0; k < ncols; k++) {
+			mpf_matrix(j, k) = matrix(j, k);
+		}
+	}
 
-    return mpf_matrix;
+	return mpf_matrix;
 }
 
 Matrix<mpf_class, Dynamic, 1> Quadratic_Predictor_Corrector::_convert_double_vector_2_mpf(
-    const VectorXd &vector) 
+	const VectorXd &vector)
 {
-    int nrows = (int)vector.rows();
-    Matrix<mpf_class, Dynamic, 1> mpf_vector(nrows);
+	int nrows = (int)vector.rows();
+	Matrix<mpf_class, Dynamic, 1> mpf_vector(nrows);
 
-    for (int j = 0; j < nrows; j++) mpf_vector(j) = vector(j);
-    return mpf_vector;
+	for (int j = 0; j < nrows; j++) mpf_vector(j) = vector(j);
+	return mpf_vector;
 }
 
 VectorXd Quadratic_Predictor_Corrector::_convert_mpf_vector_2_double(
-    const Matrix<mpf_class, Dynamic, 1> &vector)
+	const Matrix<mpf_class, Dynamic, 1> &vector)
 {
-    int nrows = (int)vector.rows();
-    VectorXd v(nrows);
+	int nrows = (int)vector.rows();
+	VectorXd v(nrows);
 
-    for (int j = 0; j < nrows; j++) v(j) = vector(j).get_d();
-    return v;
+	for (int j = 0; j < nrows; j++) v(j) = vector(j).get_d();
+	return v;
 }
 
 Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_get_hessian_matrix(
-    const Matrix<mpf_class, Dynamic, Dynamic> &matrix)
+	const Matrix<mpf_class, Dynamic, Dynamic> &matrix)
 {
-    int nrows = (int)matrix.rows();
-    int ncols = (int)matrix.cols();
-    Matrix<mpf_class, Dynamic, Dynamic> hessian(nrows, ncols);
+	int nrows = (int)matrix.rows();
+	int ncols = (int)matrix.cols();
+	Matrix<mpf_class, Dynamic, Dynamic> hessian(nrows, ncols);
 
-    hessian = 2.0 * matrix;
+	hessian = 2.0 * matrix;
 
-    return hessian;
+	return hessian;
 }
 
 bool Quadratic_Predictor_Corrector::solve()
 {
-    int n = (int)_hessian_matrixD.rows();
+	int n = (int)_hessian_matrixD.rows();
 
-    // Matrix <mpf_class, Dynamic, 1> fvalues(n);
-    Matrix<double, Dynamic, 1> fvalues(n);
+	// Matrix <mpf_class, Dynamic, 1> fvalues(n);
+	Matrix<double, Dynamic, 1> fvalues(n);
 
-    // if (!validate_matrix_systems()) return false;
+	// if (!validate_matrix_systems()) return false;
 
-    // if
-    // (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues))
-    // return false;
+	// if
+	// (!Math_methods::quadratic_solver(_hessian_matrix,_equality_matrix,_inequality_matrix,_equality_vector,_inequality_vector,fvalues))
+	// return false;
 
-    if (!Math_methods::quadratic_solver(_hessian_matrixD, _equality_matrixD,
-                                        _inequality_matrixD, _equality_vectorD,
-                                        _inequality_vectorD, fvalues))
-        return false;
+	if (!Math_methods::quadratic_solver(_hessian_matrixD, _equality_matrixD,
+		_inequality_matrixD, _equality_vectorD,
+		_inequality_vectorD, fvalues))
+		return false;
 
-    // weights = _convert_mpf_vector_2_double(fvalues);
+	// weights = _convert_mpf_vector_2_double(fvalues);
 
-    weights = fvalues;
+	weights = fvalues;
 
-    return true;
+	return true;
 }
 
 bool Quadratic_Predictor_Corrector::validate_matrix_systems() {
-    if (!_interpolation_matrixD.allFinite()) return false;
+	if (!_interpolation_matrixD.allFinite()) return false;
 
-    LLT<MatrixXd> lltofMatrix(_interpolation_matrixD);
-    if (lltofMatrix.info() == NumericalIssue) return false;
+	LLT<MatrixXd> lltofMatrix(_interpolation_matrixD);
+	if (lltofMatrix.info() == NumericalIssue) return false;
 
-    return true;
+	return true;
 }
 
 bool Quadratic_Predictor_Corrector_LOQO::solve() {
-    int n = (int)_H.rows();
+	int n = (int)_H.rows();
 
-    VectorXd w(n);
-    if (!Math_methods::quadratic_solver_loqo(_H, _A, _b, _r, w)) return false;
+	VectorXd w(n);
+	if (!Math_methods::quadratic_solver_loqo(_H, _A, _b, _r, w)) return false;
 
-    weights = w;
+	weights = w;
 
-    return true;
+	return true;
 }
 
 bool Quadratic_Predictor_Corrector_LOQO::validate_matrix_systems() {
-    if (!_H.allFinite()) return false;
+	if (!_H.allFinite()) return false;
 
-    LLT<MatrixXd> lltofMatrix(_H);
-    if (lltofMatrix.info() == NumericalIssue) return false;
+	LLT<MatrixXd> lltofMatrix(_H);
+	if (lltofMatrix.info() == NumericalIssue) return false;
 
-    return true;
+	return true;
 }

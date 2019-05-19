@@ -12,7 +12,6 @@ InputImpl::InputImpl(QWidget *parent /*= 0*/)
 	inequality_frame->setVisible(false);
 	uncertainty_frame->setVisible(false);
 
-
 	QDoubleValidator *doubleValues = new QDoubleValidator(this);
 	doubleValues->setBottom(0.0);
 	doubleValues->setDecimals(2);
@@ -34,10 +33,9 @@ InputImpl::InputImpl(QWidget *parent /*= 0*/)
 
 UI_Parameters InputImpl::GetDialogParameters()
 {
-
 	char *argv[] = { "Surfe Input Dialog", nullptr };
-	int argc = (int)(sizeof(argv)/sizeof(argv[0])) - 1;
-	QApplication app(argc,argv);
+	int argc = (int)(sizeof(argv) / sizeof(argv[0])) - 1;
+	QApplication app(argc, argv);
 
 	QPalette dark_palette = QPalette();
 	dark_palette.setColor(QPalette::Window, QColor(53, 53, 53));
@@ -107,15 +105,15 @@ UI_Parameters InputImpl::get_parameters()
 	std::string planar_file_str = planar_file_text->text().toStdString();
 	std::string tangent_file_str = tangent_file_text->text().toStdString();
 	std::string inequality_file_str = inequality_file_text->text().toStdString();
-	// do some c string gymnastics 
+	// do some c string gymnastics
 	if (!interface_file_str.empty())
 	{
 		auto interface_file_length = interface_file_str.size();
 		char *temp_interface_filename = new char[interface_file_length + 1];
 		strncpy_s(
 			temp_interface_filename,
-			interface_file_length + 1, 
-			interface_file_str.c_str(), 
+			interface_file_length + 1,
+			interface_file_str.c_str(),
 			interface_file_length
 		);
 		temp_interface_filename[interface_file_length] = '\0';
@@ -166,7 +164,7 @@ UI_Parameters InputImpl::get_parameters()
 void InputImpl::set_interface_data_file()
 {
 	QString filename = QFileDialog::getOpenFileName(
-		this, tr("Select Interface Data file"), "", tr("CSV Files (*.csv)"));
+		this, tr("Select Interface Data file"), "", tr("Surfe Files (*.csv *.vtk *.vtp)"));
 	QFileInfo file_info(filename);
 	if (file_info.exists())
 		interface_file_text->setText(filename);
@@ -175,7 +173,7 @@ void InputImpl::set_interface_data_file()
 void InputImpl::set_planar_data_file()
 {
 	QString filename = QFileDialog::getOpenFileName(
-		this, tr("Select Planar Data file"), "", tr("CSV Files (*.csv)"));
+		this, tr("Select Planar Data file"), "", tr("Surfe Files (*.csv *.vtk *.vtp)"));
 	QFileInfo file_info(filename);
 	if (file_info.exists())
 		planar_file_text->setText(filename);
@@ -184,7 +182,7 @@ void InputImpl::set_planar_data_file()
 void InputImpl::set_tangent_data_file()
 {
 	QString filename = QFileDialog::getOpenFileName(
-		this, tr("Select Tangent Data file"), "", tr("CSV Files (*.csv)"));
+		this, tr("Select Tangent Data file"), "", tr("Surfe Files (*.csv *.vtk *.vtp)"));
 	QFileInfo file_info(filename);
 	if (file_info.exists())
 		tangent_file_text->setText(filename);
@@ -193,9 +191,8 @@ void InputImpl::set_tangent_data_file()
 void InputImpl::set_inequality_data_file()
 {
 	QString filename = QFileDialog::getOpenFileName(
-		this, tr("Select Inequality Data file"), "", tr("CSV Files (*.csv)"));
+		this, tr("Select Inequality Data file"), "", tr("Surfe Files (*.csv *.vtk *.vtp)"));
 	QFileInfo file_info(filename);
 	if (file_info.exists())
 		inequality_file_text->setText(filename);
 }
-

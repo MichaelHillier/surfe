@@ -12,6 +12,7 @@ find_package(VTK COMPONENTS REQUIRED
 	vtkCommonSystem
 	vtkCommonColor
 	vtkIOXML
+	vtkIOLegacy
 	vtkIOXMLParser
 	vtkFiltersCore
 	vtkFiltersGeneral

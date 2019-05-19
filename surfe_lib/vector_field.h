@@ -45,7 +45,7 @@
 class Vector_Field : public GRBF_Modelling_Methods {
 public:
 	// Constructor/Destructor
-	Vector_Field(const UI_Parameters &m_params) 
+	Vector_Field(const UI_Parameters &m_params)
 	{
 		solver = nullptr;
 		kernel = nullptr;
@@ -67,7 +67,7 @@ public:
 	bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) override { return true; }  // TO implement
 	bool measure_residuals(Constraints &input) override { return true; }  // TO implement
 	bool append_greedy_input(Constraints &input) override { return true; }  // TO implement
-	bool convert_modified_kernel_to_rbf_kernel() override { return true;	}  // TO IMPLEMENT
+	bool convert_modified_kernel_to_rbf_kernel() override { return true; }  // TO IMPLEMENT
 	GRBF_Modelling_Methods *clone() override { return new Vector_Field(*this); }
 };
 

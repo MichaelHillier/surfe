@@ -75,32 +75,32 @@ private:
 		const VectorXd &dd, const VectorXd &d);
 
 public:
-  template <class T>
-  static bool sort_vector_w_index(std::vector<T> &arr, std::vector<int> &brr);
-  template <class T> static T max_element_wrt_zero(const T &a, const T &b);
-  template <class T> static void SWAP(T &a, T &b) {
-    T x = a;
-    a = b;
-    b = x;
-  }
-  template <class T>
-  static bool angle_btw_2_vectors(
-	  const std::vector<T> &v1, const std::vector<T> &v2, T &angle);
-  static double RandomDouble(const double &min, const double &max);
-  template <class T>
-  static bool quadratic_solver(
-	  const Matrix<T, Dynamic, Dynamic> &H,
-      const Matrix<T, Dynamic, Dynamic> &A,
-      const Matrix<T, Dynamic, Dynamic> &C,
-      const Matrix<T, Dynamic, 1> &b,
-      const Matrix<T, Dynamic, 1> &d,
-      Matrix<T, Dynamic, 1> &fvalues);
-  static bool quadratic_solver_loqo(
-	  const MatrixXd &H,
-      const MatrixXd &A,
-      const VectorXd &b,
-      const VectorXd &r,
-      VectorXd &fvalues);
+	template <class T>
+	static bool sort_vector_w_index(std::vector<T> &arr, std::vector<int> &brr);
+	template <class T> static T max_element_wrt_zero(const T &a, const T &b);
+	template <class T> static void SWAP(T &a, T &b) {
+		T x = a;
+		a = b;
+		b = x;
+	}
+	template <class T>
+	static bool angle_btw_2_vectors(
+		const std::vector<T> &v1, const std::vector<T> &v2, T &angle);
+	static double RandomDouble(const double &min, const double &max);
+	template <class T>
+	static bool quadratic_solver(
+		const Matrix<T, Dynamic, Dynamic> &H,
+		const Matrix<T, Dynamic, Dynamic> &A,
+		const Matrix<T, Dynamic, Dynamic> &C,
+		const Matrix<T, Dynamic, 1> &b,
+		const Matrix<T, Dynamic, 1> &d,
+		Matrix<T, Dynamic, 1> &fvalues);
+	static bool quadratic_solver_loqo(
+		const MatrixXd &H,
+		const MatrixXd &A,
+		const VectorXd &b,
+		const VectorXd &r,
+		VectorXd &fvalues);
 };
 
 template <class T>
@@ -157,42 +157,42 @@ T Math_methods::_find_step_length(
 	Matrix<T, Dynamic, 1> alpha_a(n);
 	Matrix<T, Dynamic, 1> alpha_b(n);
 	for (int j = 0; j < n; j++) {
-	// cout<<" z["<<j<<"]= "<<mpf_get_d(z[j])<<endl;
-	// cout<<" s["<<j<<"]= "<<mpf_get_d(s[j])<<endl;
-	// cout<<" ["<<j<<"] dz_aff = "<<mpf_get_d(dz_aff[j])<<" ds_aff=
-	// "<<mpf_get_d(ds_aff[j])<<endl;
-	// do alpha_b first ...
-	if (b(j) > 0.0)
-		alpha_b(j) = b(j) / db(j);
-	else
-		alpha_b(j) = -1.0 * b(j) / db(j);
-	// alpha_a
-	if (a(j) > 0.0)
-		alpha_a(j) = a(j) / da(j);
-	else
-		alpha_a(j) = -1.0 * a(j) / da(j);
+		// cout<<" z["<<j<<"]= "<<mpf_get_d(z[j])<<endl;
+		// cout<<" s["<<j<<"]= "<<mpf_get_d(s[j])<<endl;
+		// cout<<" ["<<j<<"] dz_aff = "<<mpf_get_d(dz_aff[j])<<" ds_aff=
+		// "<<mpf_get_d(ds_aff[j])<<endl;
+		// do alpha_b first ...
+		if (b(j) > 0.0)
+			alpha_b(j) = b(j) / db(j);
+		else
+			alpha_b(j) = -1.0 * b(j) / db(j);
+		// alpha_a
+		if (a(j) > 0.0)
+			alpha_a(j) = a(j) / da(j);
+		else
+			alpha_a(j) = -1.0 * a(j) / da(j);
 
-	if (alpha_b(j) < min_alpha_b && alpha_b(j) > 0.00000000000001)
-		min_alpha_b = alpha_b(j);
-	if (alpha_a(j) < min_alpha_a && alpha_a(j) > 0.00000000000001)
-		min_alpha_a = alpha_a(j);
-	// cout<<" alpha_s["<<j<<"]= "<<mpf_get_d(alpha_s[j])<<endl;
-	// cout<<" alpha_z["<<j<<"]= "<<mpf_get_d(alpha_z[j])<<endl;
-	// cout<<" max_alpha_s = "<<mpf_get_d(max_alpha_s)<<endl;
-	// cout<<" max_alpha_z = "<<mpf_get_d(max_alpha_z)<<endl;
-	// cout<<" min_alpha_s = "<<mpf_get_d(min_alpha_s)<<endl;
-	// cout<<" min_alpha_z = "<<mpf_get_d(min_alpha_z)<<endl;
+		if (alpha_b(j) < min_alpha_b && alpha_b(j) > 0.00000000000001)
+			min_alpha_b = alpha_b(j);
+		if (alpha_a(j) < min_alpha_a && alpha_a(j) > 0.00000000000001)
+			min_alpha_a = alpha_a(j);
+		// cout<<" alpha_s["<<j<<"]= "<<mpf_get_d(alpha_s[j])<<endl;
+		// cout<<" alpha_z["<<j<<"]= "<<mpf_get_d(alpha_z[j])<<endl;
+		// cout<<" max_alpha_s = "<<mpf_get_d(max_alpha_s)<<endl;
+		// cout<<" max_alpha_z = "<<mpf_get_d(max_alpha_z)<<endl;
+		// cout<<" min_alpha_s = "<<mpf_get_d(min_alpha_s)<<endl;
+		// cout<<" min_alpha_z = "<<mpf_get_d(min_alpha_z)<<endl;
 	}
 
 	if (min_alpha_b < min_alpha_a)
-	alpha = min_alpha_b;
+		alpha = min_alpha_b;
 	else
-	alpha = min_alpha_a;
+		alpha = min_alpha_a;
 
 	if (alpha > 1.0 || alpha == 0)
-	alpha = 1.0;
+		alpha = 1.0;
 	return alpha;
-	}
+}
 
 template <class T>
 bool Math_methods::quadratic_solver(
@@ -380,9 +380,9 @@ bool Math_methods::quadratic_solver(
 		// [3][4] Block
 		for (int k = 0; k < nc; k++) {
 			if (j == k)
-			KKT(n + na + j, n + na + nc + k) = -1.0;
+				KKT(n + na + j, n + na + nc + k) = -1.0;
 			else
-			KKT(n + na + j, n + na + nc + k) = 0.0;
+				KKT(n + na + j, n + na + nc + k) = 0.0;
 		}
 	}
 	// Build KKT matrix blocks [4][1], [4][2]
@@ -400,16 +400,16 @@ bool Math_methods::quadratic_solver(
 		// [4][3] Block
 		for (int k = 0; k < nc; k++) {
 			if (j == k)
-			KKT(n + na + nc + j, n + na + k) = s(j);
+				KKT(n + na + nc + j, n + na + k) = s(j);
 			else
-			KKT(n + na + nc + j, n + na + k) = 0.0;
+				KKT(n + na + nc + j, n + na + k) = 0.0;
 		}
 		// [4][4] Block
 		for (int k = 0; k < nc; k++) {
 			if (j == k)
-			KKT(n + na + nc + j, n + na + nc + k) = z(j);
+				KKT(n + na + nc + j, n + na + nc + k) = z(j);
 			else
-			KKT(n + na + nc + j, n + na + nc + k) = 0.0;
+				KKT(n + na + nc + j, n + na + nc + k) = 0.0;
 		}
 	}
 
@@ -565,7 +565,7 @@ bool Math_methods::quadratic_solver(
 		//solution_vector(j);
 		for (int j = 0; j < n + na + 2 * nc; j++) {
 			for (int k = 0; k < n + na + 2 * nc; k++)
-			KKT_predictor(j, k) = KKT(j, k);
+				KKT_predictor(j, k) = KKT(j, k);
 		}
 		dvector = KKT_predictor.partialPivLu().solve(solution_vector);
 
@@ -633,7 +633,7 @@ bool Math_methods::quadratic_solver(
 
 template <class T>
 bool Math_methods::sort_vector_w_index(std::vector<T> &arr,
-                                       std::vector<int> &brr) {
+	std::vector<int> &brr) {
 	if (arr.size() != brr.size())
 		return false;
 

@@ -45,10 +45,10 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("SetRegressionSmoothin", &Surfe_API::SetRegressionSmoothing)
 		.def("SetInterfaceUncertainty", &Surfe_API::SetInterfaceUncertainty)
 		.def("SetAngularUncertainty", &Surfe_API::SetAngularUncertainty)
-		.def("SetInterfaceDataCSVFile", &Surfe_API::SetInterfaceDataCSVFile)
-		.def("SetPlanarDataCSVFile", &Surfe_API::SetPlanarDataCSVFile)
-		.def("SetTangentDataCSVFile", &Surfe_API::SetTangentDataCSVFile)
-		.def("SetInequalityDataCSVFile", &Surfe_API::SetInequalityDataCSVFile)
+		.def("SetInterfaceDataFile", &Surfe_API::SetInterfaceDataFile)
+		.def("SetPlanarDataFile", &Surfe_API::SetPlanarDataFile)
+		.def("SetTangentDataFile", &Surfe_API::SetTangentDataFile)
+		.def("SetInequalityDataFile", &Surfe_API::SetInequalityDataFile)
 		.def("EvaluateInterpolantAtPoint", &Surfe_API::EvaluateInterpolantAtPoint)
 		.def("EvaluateVectorInterpolantAtPoint",
 			&Surfe_API::EvaluateVectorInterpolantAtPoint,
@@ -59,7 +59,7 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("BuildRegularGrid",
 		(void (Surfe_API::*)(const double&, const double &, const double &, const double &, const double &, const double&, const double &))
 			&Surfe_API::BuildRegularGrid, "Build tkImageData grid from bounds and resolution")
-		.def("GetEvaluatedVTKGridString",&Surfe_API::GetEvaluatedVTKGridString)
+		.def("GetEvaluatedVTKGridString", &Surfe_API::GetEvaluatedVTKGridString)
 		.def("GetVTKIsosurfacesString", &Surfe_API::GetVTKIsosurfacesString)
 		.def("GetVTKInterfaceConstraintsString", &Surfe_API::GetVTKInterfaceConstraintsString)
 		.def("GetVTKTangentConstraintsString", &Surfe_API::GetVTKTangentConstraintsString)
