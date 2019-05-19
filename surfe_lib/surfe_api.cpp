@@ -542,7 +542,7 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 
 	evaluation_completed_ = true;
 
-	cout << " Finished evaluating interpolant in grid" << endl;
+	cout << "Finished evaluating interpolant in grid" << endl;
 
 	return grid_;
 }
