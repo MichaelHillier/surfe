@@ -890,3 +890,94 @@ void Surfe_API::WriteVTKIsoSurfaces(const char *filename)
 		writer->Write();
 	}
 }
+
+void Surfe_API::VisualizeVTKData()
+{
+	// get grid
+	vtkImageData *grid = GetEvaluatedGrid();
+
+	// get constraints
+	vtkSmartPointer<vtkPolyData> interface = GetInterfaceConstraints();
+	vtkSmartPointer<vtkPolyData> planar = GetPlanarConstraints();
+	vtkSmartPointer<vtkPolyData> tangent = GetTangentConstraints();
+	vtkSmartPointer<vtkPolyData> inequality = GetInequalityConstraints();
+
+	// get iso surfaces
+	vtkSmartPointer<vtkPolyData> isosurfaces = GetIsoSurfaces();
+
+	vtkNew<vtkRenderer> ren;
+	ren->SetBackground(0.1, 0.15, 0.3);
+	vtkNew<vtkRenderWindow> renWin;
+	renWin->SetSize(1000, 1000);
+	renWin->AddRenderer(ren);
+
+	vtkNew<vtkRenderWindowInteractor> iren;
+	iren->SetRenderWindow(renWin);
+
+	vtkNew<vtkLookupTable> lut;
+
+	// grid mapper
+	vtkNew<vtkDataSetMapper> grid_mapper;
+	grid_mapper->SetInputData(grid);
+	grid_mapper->SetLookupTable(lut);
+	grid_mapper->SetScalarRange(grid->GetScalarRange());
+	grid_mapper->SetScalarModeToUsePointData();
+	// grid actor
+	vtkNew<vtkActor> grid_actor;
+	grid_actor->SetMapper(grid_mapper);
+	grid_actor->GetProperty()->SetOpacity(0.5);
+	ren->AddActor(grid_actor);
+
+	// isosurface mapper
+	vtkNew<vtkPolyDataMapper> isosurface_mapper;
+	isosurface_mapper->SetInputData(isosurfaces);
+	// isosurface actor
+	vtkNew<vtkActor> isosurface_actor;
+	isosurface_actor->SetMapper(isosurface_mapper);
+	ren->AddActor(isosurface_actor);
+
+	if (interface)
+	{
+		// interface mapper
+		vtkNew<vtkPointGaussianMapper> interface_mapper;
+		interface_mapper->SetInputData(interface);
+		interface_mapper->SetScaleFactor(0.0);
+		// interface actor
+		vtkNew<vtkActor> interface_actor;
+		interface_actor->SetMapper(interface_mapper);
+		interface_actor->GetProperty()->SetColor(57, 152, 0);
+		interface_actor->GetProperty()->SetPointSize(5);
+		ren->AddActor(interface_actor);
+	}
+	if (planar)
+	{
+		vtkNew<vtkArrowSource> arrow;
+
+		vtkNew<vtkAssignAttribute> vector;
+		vector->SetInputData(planar);
+		vector->Assign("normal", vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+		vector->Update();
+
+		vtkNew<vtkGlyph3D> glyph;
+		glyph->SetInputConnection(0, vector->GetOutputPort());
+		glyph->SetInputConnection(1, arrow->GetOutputPort());
+		glyph->SetVectorModeToUseVector();
+		glyph->SetScaleFactor(7448);
+		glyph->OrientOn();
+		glyph->Update();
+	
+
+		vtkNew<vtkPolyDataMapper> planar_mapper;
+		planar_mapper->SetInputConnection(glyph->GetOutputPort());
+		planar_mapper->ScalarVisibilityOff();
+
+		vtkNew<vtkActor> planar_actor;
+		planar_actor->SetMapper(planar_mapper);
+		planar_actor->GetProperty()->SetColor(0.6902, 0.7686, 0.8706);
+		ren->AddActor(planar_actor);
+	}
+
+	iren->Initialize();
+	renWin->Render();
+	iren->Start();
+}

@@ -70,5 +70,6 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("WriteVTKTangentConstraints", &Surfe_API::WriteVTKTangentConstraints)
 		.def("WriteVTKInequalityConstraints", &Surfe_API::WriteVTKInequalityConstraints)
 		.def("WriteVTKEvaluationGrid", &Surfe_API::WriteVTKEvaluationGrid)
-		.def("WriteVTKIsoSurfaces", &Surfe_API::WriteVTKIsoSurfaces);
+		.def("WriteVTKIsoSurfaces", &Surfe_API::WriteVTKIsoSurfaces)
+		.def("VisualizeVTKData", &Surfe_API::VisualizeVTKData);
 }

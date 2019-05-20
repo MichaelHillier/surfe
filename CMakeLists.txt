@@ -4,19 +4,7 @@ PROJECT(surfe)
 #SET(BUILD_SHARED_LIBS_ON)
 SET(CMAKE_CXX_STANDARD 11 )
 
-find_package(VTK COMPONENTS REQUIRED
-	vtkCommonCore
-	vtkCommonDataModel
-	vtkCommonMisc
-	vtkCommonMath
-	vtkCommonSystem
-	vtkCommonColor
-	vtkIOXML
-	vtkIOLegacy
-	vtkIOXMLParser
-	vtkFiltersCore
-	vtkFiltersGeneral
-)
+find_package(VTK REQUIRED)
 if (NOT VTK_FOUND)
 	MESSAGE(FATAL_ERROR "Could not find VTK")
 endif()

@@ -24,6 +24,18 @@
 #include <vtkVertex.h>
 #include <vtkMarchingCubes.h>
 #include <vtkNew.h>
+#include <vtkRenderer.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkDataSetMapper.h>
+#include <vtkPointGaussianMapper.h>
+#include <vtkPolyDataMapper.h>
+#include <vtkLookupTable.h>
+#include <vtkArrowSource.h>
+#include <vtkAssignAttribute.h>
+#include <vtkGlyph3D.h>
+#include <vtkActor.h>
+#include <vtkProperty.h>
 
 class SURFE_LIB_EXPORT Surfe_API {
 private:
@@ -126,6 +138,7 @@ public:
 	void WriteVTKInequalityConstraints(const char *filename);
 	void WriteVTKEvaluationGrid(const char *filename);
 	void WriteVTKIsoSurfaces(const char *filename);
+	void VisualizeVTKData();
 };
 
 #endif // SURFE_API

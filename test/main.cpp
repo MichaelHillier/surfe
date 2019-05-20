@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
 
 	surfe.BuildRegularGrid(-35000, 35000, 1000);
 
+	surfe.VisualizeVTKData();
+
 	const char *geo_string = surfe.GetEvaluatedVTKGridString();
 
 	vtkSmartPointer<vtkPolyData> iso_surfaces = vtkSmartPointer<vtkPolyData>::New();
