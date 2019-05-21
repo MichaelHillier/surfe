@@ -915,18 +915,70 @@ void Surfe_API::VisualizeVTKData()
 	iren->SetRenderWindow(renWin);
 
 	vtkNew<vtkLookupTable> lut;
+	lut->SetNumberOfColors(256);
+	lut->SetHueRange(0.0, 1.0);
+	lut->SetRange(grid->GetScalarRange());
+	lut->Build();
 
 	// grid mapper
-	vtkNew<vtkDataSetMapper> grid_mapper;
-	grid_mapper->SetInputData(grid);
-	grid_mapper->SetLookupTable(lut);
-	grid_mapper->SetScalarRange(grid->GetScalarRange());
-	grid_mapper->SetScalarModeToUsePointData();
-	// grid actor
-	vtkNew<vtkActor> grid_actor;
-	grid_actor->SetMapper(grid_mapper);
-	grid_actor->GetProperty()->SetOpacity(0.5);
-	ren->AddActor(grid_actor);
+	int dimensions[3];
+	grid->GetDimensions(dimensions);
+	// x slice
+	vtkNew<vtkImageSliceMapper> grid_xslice_mapper;
+	grid_xslice_mapper->SetInputData(grid);
+	grid_xslice_mapper->SetOrientationToX();
+	grid_xslice_mapper->SetSliceNumber(dimensions[0] - 1);
+
+	vtkNew<vtkImageSlice> grid_xslice;
+	grid_xslice->SetMapper(grid_xslice_mapper);
+	grid_xslice->GetProperty()->SetLookupTable(lut);
+	grid_xslice->GetProperty()->UseLookupTableScalarRangeOn();
+	grid_xslice->GetProperty()->SetInterpolationTypeToLinear();
+	grid_xslice->GetProperty()->SetOpacity(0.35);
+
+	ren->AddViewProp(grid_xslice);
+
+	// y slice
+	vtkNew<vtkImageSliceMapper> grid_yslice_mapper;
+	grid_yslice_mapper->SetInputData(grid);
+	grid_yslice_mapper->SetOrientationToY();
+	grid_yslice_mapper->SetSliceNumber(dimensions[1] - 1);
+
+	vtkNew<vtkImageSlice> grid_yslice;
+	grid_yslice->SetMapper(grid_yslice_mapper);
+	grid_yslice->GetProperty()->SetLookupTable(lut);
+	grid_yslice->GetProperty()->UseLookupTableScalarRangeOn();
+	grid_yslice->GetProperty()->SetInterpolationTypeToLinear();
+	grid_yslice->GetProperty()->SetOpacity(0.35);
+
+	ren->AddViewProp(grid_yslice);
+
+	// z slice
+	vtkNew<vtkImageSliceMapper> grid_zslice_mapper;
+	grid_zslice_mapper->SetInputData(grid);
+	grid_zslice_mapper->SetOrientationToZ();
+	grid_zslice_mapper->SetSliceNumber(0);
+
+	vtkNew<vtkImageSlice> grid_zslice;
+	grid_zslice->SetMapper(grid_zslice_mapper);
+	grid_zslice->GetProperty()->SetLookupTable(lut);
+	grid_zslice->GetProperty()->UseLookupTableScalarRangeOn();
+	grid_zslice->GetProperty()->SetInterpolationTypeToLinear();
+	grid_zslice->GetProperty()->SetOpacity(0.35);
+
+	ren->AddViewProp(grid_zslice);
+
+
+// 	vtkNew<vtkDataSetMapper> grid_mapper;
+// 	grid_mapper->SetInputData(grid);
+// 	grid_mapper->SetLookupTable(lut);
+// 	grid_mapper->SetScalarRange(grid->GetScalarRange());
+// 	grid_mapper->SetScalarModeToUsePointData();
+// 	// grid actor
+// 	vtkNew<vtkActor> grid_actor;
+// 	grid_actor->SetMapper(grid_mapper);
+// 	grid_actor->GetProperty()->SetOpacity(0.5);
+// 	ren->AddActor(grid_actor);
 
 	// isosurface mapper
 	vtkNew<vtkPolyDataMapper> isosurface_mapper;

@@ -30,6 +30,11 @@
 #include <vtkDataSetMapper.h>
 #include <vtkPointGaussianMapper.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkImageSliceMapper.h>
+#include <vtkImageSlice.h>
+#include <vtkImageMapToColors.h>
+#include <vtkImageProperty.h>
+#include <vtkImageActor.h>
 #include <vtkLookupTable.h>
 #include <vtkArrowSource.h>
 #include <vtkAssignAttribute.h>
