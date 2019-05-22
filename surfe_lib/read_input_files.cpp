@@ -33,7 +33,6 @@ std::vector<Interface> build_interface_constraints(const char *interface_file)
 		}
 		catch (std::exception &e)
 		{
-			std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 			std::throw_with_nested(e);
 		}
 	}

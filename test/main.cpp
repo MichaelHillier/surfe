@@ -11,6 +11,16 @@ int main(int argc, char* argv[]) {
 
 	surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/contact_data.csv");
 	surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/planar_data.csv");
+	try
+	{
+		surfe.LoadConstraintsFromFiles();
+	}
+	catch (const std::exception &e)
+	{
+		std::cout << "Surfe Exceptions: " << e.what() << " occurred. " << std::endl;
+		throw;
+	}
+
 	surfe.LoadConstraintsFromFiles();
 	// 	try
 	// 	{

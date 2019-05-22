@@ -49,8 +49,7 @@ void Surfe_API::build_constraints_from_input_files()
 	}
 	catch (const std::exception&e)
 	{
-		SurfeExceptions exceptions(e);
-		throw exceptions.what();
+		std::rethrow_if_nested(e);
 	}
 
 	constraint_files_changed_ = false; // since they have been loaded
@@ -123,8 +122,9 @@ void Surfe_API::LoadConstraintsFromFiles()
 	}
 	catch (const std::exception&e)
 	{
-		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
-		throw;
+ 		SurfeExceptions exceptions(e);
+		//std::cout << "Surfe Exceptions: " << exceptions.what() << " occurred. " << std::endl;
+		throw exceptions;
 	}
 }
 
@@ -343,6 +343,7 @@ void Surfe_API::SetInterfaceDataFile(const char *interface_file)
 	);
 	temp_interface_filename[interface_file_length] = '\0';
 
+	params_.use_interface = true;
 	params_.interface_file = temp_interface_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
@@ -367,6 +368,7 @@ void Surfe_API::SetPlanarDataFile(const char *planar_file)
 	);
 	temp_planar_filename[planar_file_length] = '\0';
 
+	params_.use_planar = true;
 	params_.planar_file = temp_planar_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
@@ -391,6 +393,7 @@ void Surfe_API::SetTangentDataFile(const char *tangent_file)
 	);
 	temp_tangent_filename[tangent_file_length] = '\0';
 
+	params_.use_tangent = true;
 	params_.tangent_file = temp_tangent_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
@@ -415,6 +418,7 @@ void Surfe_API::SetInequalityDataFile(const char *inequality_file)
 	);
 	temp_inequality_filename[inequality_file_length] = '\0';
 
+	params_.use_inequality = true;
 	params_.inequality_file = temp_inequality_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
