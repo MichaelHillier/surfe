@@ -31,7 +31,7 @@ InputImpl::InputImpl(QWidget *parent /*= 0*/)
 	connect(ok_button, SIGNAL(clicked()), SLOT(accept()));
 }
 
-UI_Parameters InputImpl::GetDialogParameters()
+InputParameters InputImpl::GetDialogParameters()
 {
 	char *argv[] = { "Surfe Input Dialog", nullptr };
 	int argc = (int)(sizeof(argv) / sizeof(argv[0])) - 1;
@@ -57,13 +57,14 @@ UI_Parameters InputImpl::GetDialogParameters()
 	InputImpl *dialog = new InputImpl;
 	dialog->show();
 	app.exec();
-	UI_Parameters parameters = dialog->get_parameters();
+	InputParameters parameters = dialog->get_parameters();
 	return parameters;
 }
 
-UI_Parameters InputImpl::get_parameters()
+InputParameters InputImpl::get_parameters()
 {
-	UI_Parameters params;
+	InputParameters input;
+	Parameters params;
 	if (single_surface_button->isChecked())
 		params.model_type = Parameter_Types::ModelType::Single_surface;
 	else if (lajuanie_button->isChecked())
@@ -101,64 +102,14 @@ UI_Parameters InputImpl::get_parameters()
 	params.smoothing_amount = smoothing_amount_lineedit->text().toDouble();
 	params.interface_uncertainty = interface_uncertainty_lineedit->text().toDouble();
 	params.angular_uncertainty = angular_uncertainty_lineedit->text().toDouble();
-	std::string interface_file_str = interface_file_text->text().toStdString();
-	std::string planar_file_str = planar_file_text->text().toStdString();
-	std::string tangent_file_str = tangent_file_text->text().toStdString();
-	std::string inequality_file_str = inequality_file_text->text().toStdString();
-	// do some c string gymnastics
-	if (!interface_file_str.empty())
-	{
-		auto interface_file_length = interface_file_str.size();
-		char *temp_interface_filename = new char[interface_file_length + 1];
-		strncpy_s(
-			temp_interface_filename,
-			interface_file_length + 1,
-			interface_file_str.c_str(),
-			interface_file_length
-		);
-		temp_interface_filename[interface_file_length] = '\0';
-		params.interface_file = temp_interface_filename;
-	}
-	if (!planar_file_str.empty())
-	{
-		auto planar_file_length = planar_file_str.size();
-		char *temp_planar_filename = new char[planar_file_length + 1];
-		strncpy_s(
-			temp_planar_filename,
-			planar_file_length + 1,
-			planar_file_str.c_str(),
-			planar_file_length
-		);
-		temp_planar_filename[planar_file_length] = '\0';
-		params.planar_file = temp_planar_filename;
-	}
-	if (!tangent_file_str.empty())
-	{
-		auto tangent_file_length = tangent_file_str.size();
-		char *temp_tangent_filename = new char[tangent_file_length + 1];
-		strncpy_s(
-			temp_tangent_filename,
-			tangent_file_length + 1,
-			tangent_file_str.c_str(),
-			tangent_file_length
-		);
-		temp_tangent_filename[tangent_file_length] = '\0';
-		params.tangent_file = temp_tangent_filename;
-	}
-	if (!inequality_file_str.empty())
-	{
-		auto inequality_file_length = inequality_file_str.size();
-		char *temp_inequality_filename = new char[inequality_file_length + 1];
-		strncpy_s(
-			temp_inequality_filename,
-			inequality_file_length + 1,
-			inequality_file_str.c_str(),
-			inequality_file_length
-		);
-		temp_inequality_filename[inequality_file_length] = '\0';
-		params.inequality_file = temp_inequality_filename;
-	}
-	return params;
+	input.interface_file = interface_file_text->text().toStdString();
+	input.planar_file = planar_file_text->text().toStdString();
+	input.tangent_file = tangent_file_text->text().toStdString();
+	input.inequality_file = inequality_file_text->text().toStdString();
+
+	input.parameters = params;
+
+	return input;
 }
 
 void InputImpl::set_interface_data_file()

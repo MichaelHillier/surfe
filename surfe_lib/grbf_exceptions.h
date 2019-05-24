@@ -161,6 +161,13 @@ class unsupportedfile : public exception {
 	}
 };
 
+class unknownmodellingmode : public exception {
+	const char* what() const throw() override {
+		return "Modelling mode code unknown; choose 1 - 5";
+	}
+};
+
+
 
 class SurfeExceptions : public exception {
 private:
@@ -221,6 +228,7 @@ namespace GRBF_Exceptions {
 	const interpolantneedsupdate interpolant_needs_update;
 	const inputfileproblem input_file_problem;
 	const unsupportedfile unsupported_file;
+	const unknownmodellingmode unknown_modelling_mode;
 }
 
 #endif //

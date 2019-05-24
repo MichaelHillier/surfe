@@ -154,7 +154,7 @@ bool Lajaunie_Approach::_get_increment_pairs() {
 	return true;
 }
 
-Lajaunie_Approach::Lajaunie_Approach(const UI_Parameters& m_p)
+Lajaunie_Approach::Lajaunie_Approach(const Parameters& m_p)
 {
 	solver = nullptr;
 	kernel = nullptr;

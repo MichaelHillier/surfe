@@ -9,6 +9,15 @@ using namespace std;
 int main(int argc, char* argv[]) {
 	Surfe_API surfe;
 
+// 	try
+// 	{
+// 		surfe.GetParametersAndConstraints();
+// 	}
+// 	catch (const std::exception &e)
+// 	{
+// 		std::cout << "Surfe Exceptions: " << e.what() << " occurred. " << std::endl;
+// 		throw;
+// 	}
 	surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/contact_data.csv");
 	surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/planar_data.csv");
 	try
@@ -20,16 +29,6 @@ int main(int argc, char* argv[]) {
 		std::cout << "Surfe Exceptions: " << e.what() << " occurred. " << std::endl;
 		throw;
 	}
-
-	surfe.LoadConstraintsFromFiles();
-	// 	try
-	// 	{
-	// 		surfe.GetUIParametersAndConstraints();
-	// 	}
-	// 	catch (const std::exception&e)
-	// 	{
-	// 		cout << "Exception: " << e.what() << endl;
-	// 	}
 
 	try
 	{

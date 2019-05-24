@@ -7,7 +7,10 @@
 #include <vtkXMLStructuredGridWriter.h>
 #include <vtkXMLImageDataWriter.h>
 
-GRBF_Modelling_Methods* Surfe_API::get_method(const UI_Parameters& params)
+#include <algorithm>
+#include <time.h>
+
+GRBF_Modelling_Methods* Surfe_API::get_method(const Parameters& params)
 {
 	if (params.model_type == Parameter_Types::Single_surface)
 		return new Single_Surface(params);
@@ -25,25 +28,29 @@ void Surfe_API::build_constraints_from_input_files()
 		throw GRBF_Exceptions::grbf_method_is_null;
 	try
 	{
-		if (strlen(params_.interface_file) != 0) {
+		if (!input_.interface_file.empty()) {
 			std::vector<Interface> interface_constraints;
-			interface_constraints = build_interface_constraints(params_.interface_file);
+			interface_constraints = build_interface_constraints(input_.interface_file.c_str());
+			method_->ui_parameters.use_interface = true;
 			method_->constraints.itrface = interface_constraints;
 		}
-		if (strlen(params_.inequality_file) != 0) {
+		if (!input_.inequality_file.empty()) {
 			std::vector<Inequality> inequality_constraints;
-			inequality_constraints = build_inequality_constraints(params_.inequality_file);
+			inequality_constraints = build_inequality_constraints(input_.inequality_file.c_str());
+			method_->ui_parameters.use_inequality = true;
 			method_->constraints.inequality = inequality_constraints;
 		}
 
-		if (strlen(params_.planar_file) != 0) {
+		if (!input_.planar_file.empty()) {
 			std::vector<Planar> planar_constraints;
-			planar_constraints = build_planar_constraints(params_.planar_file);
+			planar_constraints = build_planar_constraints(input_.planar_file.c_str());
+			method_->ui_parameters.use_planar = true;
 			method_->constraints.planar = planar_constraints;
 		}
-		if (strlen(params_.tangent_file) != 0) {
+		if (!input_.tangent_file.empty()) {
 			std::vector<Tangent> tangent_constraints;
-			tangent_constraints = build_tangent_constraints(params_.tangent_file);
+			tangent_constraints = build_tangent_constraints(input_.tangent_file.c_str());
+			method_->ui_parameters.use_tangent = true;
 			method_->constraints.tangent = tangent_constraints;
 		}
 	}
@@ -54,6 +61,21 @@ void Surfe_API::build_constraints_from_input_files()
 
 	constraint_files_changed_ = false; // since they have been loaded
 	constraints_changed_ = true;
+}
+
+void Surfe_API::progress(const float &progress_value)
+{
+	int barWidth = 70;
+
+	std::cout << "[";
+	int pos = barWidth * progress_value;
+	for (int i = 0; i < barWidth; ++i) {
+		if (i < pos) std::cout << "=";
+		else if (i == pos) std::cout << ">";
+		else std::cout << " ";
+	}
+	std::cout << "] " << int(progress_value * 100.0) << " %\r";
+	std::cout.flush();
 }
 
 Surfe_API::Surfe_API()
@@ -69,9 +91,9 @@ Surfe_API::Surfe_API()
 	evaluation_completed_ = false;
 }
 
-Surfe_API::Surfe_API(const UI_Parameters& params)
+Surfe_API::Surfe_API(const Parameters& params)
 {
-	params_ = params;
+	input_.parameters = params;
 
 	method_ = nullptr;
 	grid_ = nullptr;
@@ -82,7 +104,7 @@ Surfe_API::Surfe_API(const UI_Parameters& params)
 	constraint_files_changed_ = true;
 	constraints_changed_ = false;
 
-	method_ = get_method(params_);
+	method_ = get_method(input_.parameters);
 
 	try
 	{
@@ -96,26 +118,45 @@ Surfe_API::Surfe_API(const UI_Parameters& params)
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::GetUIParametersAndConstraints()
+void Surfe_API::GetParametersAndConstraints()
 {
-	params_ = InputImpl::GetDialogParameters();
+	input_ = InputImpl::GetDialogParameters();
+
 	parameters_changed_ = true;
 	constraint_files_changed_ = true;
-	method_ = get_method(params_);
+
+	// if method exists erase it, user could have changed parameters. 
+	// leaving existing method not valid. delete it to not have 
+	// memory leak
+	if (method_) {
+		delete method_;
+		method_ = nullptr;
+	}
+
+	method_ = get_method(input_.parameters);
 	try
 	{
 		build_constraints_from_input_files();
 	}
 	catch (const std::exception&e)
 	{
-		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
-		throw;
+		SurfeExceptions exceptions(e);
+		throw exceptions;
 	}
 }
 
 void Surfe_API::LoadConstraintsFromFiles()
 {
-	method_ = get_method(params_);
+	// if method exists erase it, user could have changed parameters. 
+	// leaving existing method not valid. delete it to not have 
+	// memory leak
+	if (method_) {
+		delete method_;
+		method_ = nullptr;
+	}
+
+	method_ = get_method(input_.parameters);
+
 	try
 	{
 		build_constraints_from_input_files();
@@ -123,37 +164,54 @@ void Surfe_API::LoadConstraintsFromFiles()
 	catch (const std::exception&e)
 	{
  		SurfeExceptions exceptions(e);
-		//std::cout << "Surfe Exceptions: " << exceptions.what() << " occurred. " << std::endl;
 		throw exceptions;
 	}
 }
 
 void Surfe_API::AddInterfaceConstraint(const double &x, const double &y, const double &z, const double &level)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	Interface interface_constraint(x, y, z, level);
 	method_->constraints.itrface.push_back(interface_constraint);
+
+	method_->ui_parameters.use_interface = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::AddPlanarConstraintwNormal(const double &x, const double &y, const double &z, const double &nx, const double &ny, const double &nz)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	Planar planar_constraint(x, y, z, nx, ny, nz);
 	method_->constraints.planar.push_back(planar_constraint);
+
+	method_->ui_parameters.use_planar = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::AddPlanarConstraintwStrikeDipPolarity(const double &x, const double &y, const double &z, const double &strike, const double &dip, const double &polarity)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	Planar planar_constraint(x, y, z, dip, strike, polarity);
 	method_->constraints.planar.push_back(planar_constraint);
+
+	method_->ui_parameters.use_planar = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::AddPlanarConstraintwAzimuthDipPolarity(const double &x, const double &y, const double &z, const double &azimuth, const double &dip, const double &polarity)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	double strike = 0.0;
 	// convert azimuth to strike
 	if (azimuth >= 90.0)
@@ -162,28 +220,43 @@ void Surfe_API::AddPlanarConstraintwAzimuthDipPolarity(const double &x, const do
 		strike = azimuth + 270.0;
 	Planar planar_constraint(x, y, z, dip, strike, polarity);
 	method_->constraints.planar.push_back(planar_constraint);
+
+	method_->ui_parameters.use_planar = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::AddTangentConstraint(const double &x, const double &y, const double &z, const double &tx, const double &ty, const double &tz)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	Tangent tangent_constraint(x, y, z, tx, ty, tz);
 	method_->constraints.tangent.push_back(tangent_constraint);
+
+	method_->ui_parameters.use_tangent = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::AddInequalityConstraint(const double &x, const double &y, const double &z, const double &level)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	Inequality inequality_constraint(x, y, z, level);
 	method_->constraints.inequality.push_back(inequality_constraint);
+
+	method_->ui_parameters.use_inequality = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::ComputeInterpolant()
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (constraint_files_changed_)
 	{
 		try
@@ -192,8 +265,8 @@ void Surfe_API::ComputeInterpolant()
 		}
 		catch (const std::exception&e)
 		{
-			std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
-			throw;
+			SurfeExceptions exceptions(e);
+			throw exceptions;
 		}
 	}
 
@@ -206,8 +279,7 @@ void Surfe_API::ComputeInterpolant()
 	catch (std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
-		std::cout << "Exceptions: " << exceptions.what() << " occurred. " << std::endl;
-		throw exceptions.what();
+		throw exceptions;
 	}
 
 	method_->get_method_parameters();
@@ -219,8 +291,7 @@ void Surfe_API::ComputeInterpolant()
 	catch (std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
-		std::cout << "Exceptions: " << exceptions.what() << " occurred. " << std::endl;
-		throw exceptions.what();
+		throw exceptions;
 	}
 
 	try
@@ -230,38 +301,125 @@ void Surfe_API::ComputeInterpolant()
 	catch (std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
-		std::cout << "Exceptions: " << exceptions.what() << " occurred. " << std::endl;
-		throw exceptions.what();
+		throw exceptions;
 	}
+
 	std::cout << "Interpolant has been computed" << std::endl;
+
 	have_interpolant_ = true;
 	constraints_changed_ = false;
 	parameters_changed_ = false;
+
+}
+
+void Surfe_API::SetModellingMode(const int &mode)
+{
+	// if method exists erase it, user could have changed parameters. 
+	// leaving existing method not valid. delete it to not have 
+	// memory leak
+
+	if (mode == 1) {
+		if (method_) {
+			delete method_;
+			method_ = nullptr;
+		}
+		method_ = new Single_Surface;
+		method_->ui_parameters.model_type = Parameter_Types::Single_surface;
+	}
+	else if (mode == 2) {
+		if (method_) {
+			delete method_;
+			method_ = nullptr;
+		}
+		method_ = new Lajaunie_Approach;
+		method_->ui_parameters.model_type = Parameter_Types::Lajaunie_approach;
+	}
+	else if (mode == 3) {
+		if (method_) {
+			delete method_;
+			method_ = nullptr;
+		}
+		method_ = new Vector_Field;
+		method_->ui_parameters.model_type = Parameter_Types::Vector_field;
+	}
+	else if (mode == 4) {
+		if (method_) {
+			delete method_;
+			method_ = nullptr;
+		}
+		method_ = new Stratigraphic_Surfaces;
+		method_->ui_parameters.model_type = Parameter_Types::Stratigraphic_horizons;
+	}
+	else if (mode == 5) {
+		if (method_) {
+			delete method_;
+			method_ = nullptr;
+		}
+		method_ = new Continuous_Property;
+		method_->ui_parameters.model_type = Parameter_Types::Continuous_property;
+	}
+	else
+		throw GRBF_Exceptions::unknown_modelling_mode;
+
+	parameters_changed_ = true;
+	evaluation_completed_ = false;
+}
+
+void Surfe_API::SetRegressionSmoothing(const bool &use_regression_smoothing, const double &amount /*= 0*/)
+{
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.use_regression_smoothing = true;
+	method_->ui_parameters.smoothing_amount = amount;
+
+	parameters_changed_ = true;
+	evaluation_completed_ = false;
+}
+
+void Surfe_API::SetGreedyAlgorithm(const bool &use_greedy, const double &interface_uncertainty /*= 0*/, const double &angular_uncertainty /*= 0*/)
+{
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.use_greedy = true;
+	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
+	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
+
+	parameters_changed_ = true;
+	evaluation_completed_ = false;
 }
 
 void Surfe_API::SetRBFKernel(const Parameter_Types::RBF &rbf)
 {
-	params_.basis_type = rbf;
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.basis_type = rbf;
+
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::SetRBFKernel(const char *rbf_name)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (rbf_name == "r3")
-		params_.basis_type = Parameter_Types::RBF::Cubic;
+		method_->ui_parameters.basis_type = Parameter_Types::RBF::Cubic;
 	else if (rbf_name == "WendlandC2")
-		params_.basis_type = Parameter_Types::RBF::WendlandC2;
+		method_->ui_parameters.basis_type = Parameter_Types::RBF::WendlandC2;
 	else if (rbf_name == "r")
-		params_.basis_type = Parameter_Types::RBF::R;
+		method_->ui_parameters.basis_type = Parameter_Types::RBF::R;
 	else if (rbf_name == "Gaussian")
-		params_.basis_type = Parameter_Types::RBF::Gaussian;
+		method_->ui_parameters.basis_type = Parameter_Types::RBF::Gaussian;
 	else if (rbf_name == "Multiquadratics")
-		params_.basis_type = Parameter_Types::RBF::MQ;
+		method_->ui_parameters.basis_type = Parameter_Types::RBF::MQ;
 	else if (rbf_name == "Thin Plate Spline")
-		params_.basis_type = Parameter_Types::RBF::TPS;
+		method_->ui_parameters.basis_type = Parameter_Types::RBF::TPS;
 	else if (rbf_name = "Inverse Multiquadratics")
-		params_.basis_type = Parameter_Types::RBF::IMQ; // Inverse Multiquadratics
+		method_->ui_parameters.basis_type = Parameter_Types::RBF::IMQ; // Inverse Multiquadratics
 	else
 		throw GRBF_Exceptions::unknown_rbf;
 
@@ -271,155 +429,104 @@ void Surfe_API::SetRBFKernel(const char *rbf_name)
 
 void Surfe_API::SetRBFShapeParameter(const double &shape_param)
 {
-	params_.shape_parameter = shape_param;
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.shape_parameter = shape_param;
+
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::SetPolynomialOrder(const int &poly_order)
 {
-	params_.polynomial_order = poly_order;
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.polynomial_order = poly_order;
+
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::SetGlobalAnisotropy(const bool &g_anisotropy)
 {
-	params_.model_global_anisotropy = g_anisotropy;
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.model_global_anisotropy = g_anisotropy;
+
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetGreedy(const bool &greedy)
-{
-	params_.use_greedy = greedy;
-	parameters_changed_ = true;
-	evaluation_completed_ = false;
-}
 
-void Surfe_API::SetRestrictedRange(const bool &rr)
+void Surfe_API::SetRestrictedRange(const bool &use_restricted_range, const double &interface_uncertainty /*= 0*/, const double &angular_uncertainty /*= 0*/)
 {
-	params_.use_restricted_range = rr;
-	parameters_changed_ = true;
-	evaluation_completed_ = false;
-}
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
 
-void Surfe_API::SetRegressionSmoothing(const bool &rs)
-{
-	params_.use_regression_smoothing = rs;
+	method_->ui_parameters.use_regression_smoothing = use_restricted_range;
+	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
+	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
+
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::SetInterfaceUncertainty(const double &interface_uncertainty)
 {
-	params_.interface_uncertainty = interface_uncertainty;
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
+
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
 }
 
 void Surfe_API::SetAngularUncertainty(const double &angular_uncertainty)
 {
-	params_.angular_uncertainty = angular_uncertainty;
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
+
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetInterfaceDataFile(const char *interface_file)
+void Surfe_API::SetInterfaceDataFile(const char *interfaceFile)
 {
-	auto params_interface_file_length = strlen(params_.interface_file);
-	if (params_interface_file_length > 0) {
-		delete[] params_.interface_file;
-		params_.interface_file = nullptr;
-	}
+	input_.interface_file = interfaceFile;
 
-	auto interface_file_length = strlen(interface_file);
-	char *temp_interface_filename = new char[interface_file_length + 1];
-	strncpy_s(
-		temp_interface_filename,
-		interface_file_length + 1,
-		interface_file,
-		interface_file_length
-	);
-	temp_interface_filename[interface_file_length] = '\0';
-
-	params_.use_interface = true;
-	params_.interface_file = temp_interface_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetPlanarDataFile(const char *planar_file)
+void Surfe_API::SetPlanarDataFile(const char *planarFile)
 {
-	auto params_planar_file_length = strlen(params_.planar_file);
-	if (params_planar_file_length > 0) {
-		delete[] params_.planar_file;
-		params_.planar_file = nullptr;
-	}
+	input_.planar_file = planarFile;
 
-	auto planar_file_length = strlen(planar_file);
-	char *temp_planar_filename = new char[planar_file_length + 1];
-	strncpy_s(
-		temp_planar_filename,
-		planar_file_length + 1,
-		planar_file,
-		planar_file_length
-	);
-	temp_planar_filename[planar_file_length] = '\0';
-
-	params_.use_planar = true;
-	params_.planar_file = temp_planar_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetTangentDataFile(const char *tangent_file)
+void Surfe_API::SetTangentDataFile(const char *tangentFile)
 {
-	auto params_tangent_file_length = strlen(params_.tangent_file);
-	if (params_tangent_file_length > 0) {
-		delete[] params_.tangent_file;
-		params_.tangent_file = nullptr;
-	}
+	input_.tangent_file = tangentFile;
 
-	auto tangent_file_length = strlen(tangent_file);
-	char *temp_tangent_filename = new char[tangent_file_length + 1];
-	strncpy_s(
-		temp_tangent_filename,
-		tangent_file_length + 1,
-		tangent_file,
-		tangent_file_length
-	);
-	temp_tangent_filename[tangent_file_length] = '\0';
-
-	params_.use_tangent = true;
-	params_.tangent_file = temp_tangent_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
 }
 
-void Surfe_API::SetInequalityDataFile(const char *inequality_file)
+void Surfe_API::SetInequalityDataFile(const char *inequalityFile)
 {
-	auto params_inequality_file_length = strlen(params_.inequality_file);
-	if (params_inequality_file_length > 0) {
-		delete[] params_.inequality_file;
-		params_.inequality_file = nullptr;
-	}
+	input_.inequality_file = inequalityFile;
 
-	auto inequality_file_length = strlen(inequality_file);
-	char *temp_inequality_filename = new char[inequality_file_length + 1];
-	strncpy_s(
-		temp_inequality_filename,
-		inequality_file_length + 1,
-		inequality_file,
-		inequality_file_length
-	);
-	temp_inequality_filename[inequality_file_length] = '\0';
-
-	params_.use_inequality = true;
-	params_.inequality_file = temp_inequality_filename;
 	constraint_files_changed_ = true;
 	constraints_changed_ = true;
 	evaluation_completed_ = false;
@@ -427,6 +534,9 @@ void Surfe_API::SetInequalityDataFile(const char *inequality_file)
 
 double Surfe_API::EvaluateInterpolantAtPoint(const double &x, const double &y, const double &z)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (have_interpolant_)
 	{
 		if (constraints_changed_ || parameters_changed_)
@@ -444,6 +554,9 @@ double Surfe_API::EvaluateInterpolantAtPoint(const double &x, const double &y, c
 
 double *Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const double &y, const double &z)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (have_interpolant_)
 	{
 		if (constraints_changed_ || parameters_changed_)
@@ -465,6 +578,9 @@ double *Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const doubl
 
 void Surfe_API::BuildRegularGrid(const double &zmin, const double &zmax, const double &resolution, const double &xy_percent_padding /*= 0*/)
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	std::vector<Point> agg_pts = convert_constraints_to_points(method_->constraints);
 
 	vtkSmartPointer<vtkPoints> pts = vtkSmartPointer<vtkPoints>::New();
@@ -532,8 +648,15 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 	sfield->SetNumberOfComponents(1);
 	sfield->SetNumberOfTuples(grid_->GetNumberOfPoints());
 
-#pragma omp parallel for schedule(dynamic)
-	for (int j = 0; j < grid_->GetNumberOfPoints(); j++) {
+	clock_t this_time = clock();
+	clock_t last_time = this_time;
+	double time_counter = 0.0;
+
+	int N = grid_->GetNumberOfPoints();
+	int evaluations_completed = 0;
+	std::cout << "Evaluating interpolant in grid: " << std::endl;
+	#pragma omp parallel for
+	for (int j = 0; j < N; j++) {
 		double point[3];
 		grid_->GetPoint(j, point);
 		Point pt(point[0], point[1], point[2]);
@@ -541,7 +664,20 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 		method_->eval_scalar_interpolant_at_point(pt);
 		double scalar_field = pt.scalar_field();
 		sfield->SetTuple1(j, scalar_field);
+		// Print progress every 1s
+		evaluations_completed++;
+		this_time = clock();
+		time_counter += (double)(this_time - last_time);
+		last_time = this_time;
+		if (time_counter > (double)(1 * CLOCKS_PER_SEC))
+		{
+			time_counter -= (double)(1 * CLOCKS_PER_SEC);
+			float percent_completed = ((float)evaluations_completed / (float)N);
+			progress(percent_completed);
+		}		
 	}
+	progress(1);
+	std::cout<<std::endl;
 	grid_->GetPointData()->SetScalars(sfield);
 
 	evaluation_completed_ = true;
@@ -590,6 +726,9 @@ vtkSmartPointer<vtkPolyData> Surfe_API::GetIsoSurfaces()
 
 vtkSmartPointer<vtkPolyData> Surfe_API::GetInterfaceConstraints()
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (!method_->constraints.itrface.empty())
 	{
 		// interface
@@ -618,6 +757,9 @@ vtkSmartPointer<vtkPolyData> Surfe_API::GetInterfaceConstraints()
 
 vtkSmartPointer<vtkPolyData> Surfe_API::GetPlanarConstraints()
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (!method_->constraints.planar.empty())
 	{
 		// planar
@@ -656,6 +798,9 @@ vtkSmartPointer<vtkPolyData> Surfe_API::GetPlanarConstraints()
 
 vtkSmartPointer<vtkPolyData> Surfe_API::GetTangentConstraints()
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (!method_->constraints.tangent.empty())
 	{
 		// tangent
@@ -687,6 +832,9 @@ vtkSmartPointer<vtkPolyData> Surfe_API::GetTangentConstraints()
 
 vtkSmartPointer<vtkPolyData> Surfe_API::GetInequalityConstraints()
 {
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
 	if (!method_->constraints.inequality.empty())
 	{
 		// inequality
@@ -766,6 +914,7 @@ const char * Surfe_API::GetVTKIsosurfacesString()
 const char * Surfe_API::GetVTKInterfaceConstraintsString()
 {
 	vtkSmartPointer<vtkPolyData> poly = GetInterfaceConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -782,6 +931,7 @@ const char * Surfe_API::GetVTKInterfaceConstraintsString()
 const char * Surfe_API::GetVTKPlanarConstraintsString()
 {
 	vtkSmartPointer<vtkPolyData> poly = GetPlanarConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -798,6 +948,7 @@ const char * Surfe_API::GetVTKPlanarConstraintsString()
 const char * Surfe_API::GetVTKTangentConstraintsString()
 {
 	vtkSmartPointer<vtkPolyData> poly = GetTangentConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -814,6 +965,7 @@ const char * Surfe_API::GetVTKTangentConstraintsString()
 const char * Surfe_API::GetVTKInequalityConstraintString()
 {
 	vtkSmartPointer<vtkPolyData> poly = GetInequalityConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -830,6 +982,7 @@ const char * Surfe_API::GetVTKInequalityConstraintString()
 void Surfe_API::WriteVTKInterfaceConstraints(const char *filename)
 {
 	vtkSmartPointer<vtkPolyData> poly = GetInterfaceConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -841,6 +994,7 @@ void Surfe_API::WriteVTKInterfaceConstraints(const char *filename)
 void Surfe_API::WriteVTKPlanarConstraints(const char *filename)
 {
 	vtkSmartPointer<vtkPolyData> poly = GetPlanarConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -852,6 +1006,7 @@ void Surfe_API::WriteVTKPlanarConstraints(const char *filename)
 void Surfe_API::WriteVTKTangentConstraints(const char *filename)
 {
 	vtkSmartPointer<vtkPolyData> poly = GetTangentConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -863,6 +1018,7 @@ void Surfe_API::WriteVTKTangentConstraints(const char *filename)
 void Surfe_API::WriteVTKInequalityConstraints(const char *filename)
 {
 	vtkSmartPointer<vtkPolyData> poly = GetInequalityConstraints();
+
 	if (poly) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
 		writer->SetInputData(poly);
@@ -899,6 +1055,9 @@ void Surfe_API::VisualizeVTKData()
 {
 	// get grid
 	vtkImageData *grid = GetEvaluatedGrid();
+	double spacing[3];
+	grid->GetSpacing(spacing);
+	double min_scale = *std::max_element(spacing, spacing + 3);
 
 	// get constraints
 	vtkSmartPointer<vtkPolyData> interface = GetInterfaceConstraints();
@@ -924,7 +1083,7 @@ void Surfe_API::VisualizeVTKData()
 	lut->SetRange(grid->GetScalarRange());
 	lut->Build();
 
-	// grid mapper
+	// Grid Objects
 	int dimensions[3];
 	grid->GetDimensions(dimensions);
 	// x slice
@@ -971,18 +1130,6 @@ void Surfe_API::VisualizeVTKData()
 	grid_zslice->GetProperty()->SetOpacity(0.35);
 
 	ren->AddViewProp(grid_zslice);
-
-
-// 	vtkNew<vtkDataSetMapper> grid_mapper;
-// 	grid_mapper->SetInputData(grid);
-// 	grid_mapper->SetLookupTable(lut);
-// 	grid_mapper->SetScalarRange(grid->GetScalarRange());
-// 	grid_mapper->SetScalarModeToUsePointData();
-// 	// grid actor
-// 	vtkNew<vtkActor> grid_actor;
-// 	grid_actor->SetMapper(grid_mapper);
-// 	grid_actor->GetProperty()->SetOpacity(0.5);
-// 	ren->AddActor(grid_actor);
 
 	// isosurface mapper
 	vtkNew<vtkPolyDataMapper> isosurface_mapper;
@@ -1031,6 +1178,46 @@ void Surfe_API::VisualizeVTKData()
 		planar_actor->SetMapper(planar_mapper);
 		planar_actor->GetProperty()->SetColor(0.6902, 0.7686, 0.8706);
 		ren->AddActor(planar_actor);
+	}
+	if (tangent)
+	{
+		vtkNew<vtkArrowSource> arrow;
+
+		vtkNew<vtkAssignAttribute> vector;
+		vector->SetInputData(tangent);
+		vector->Assign("tangent", vtkDataSetAttributes::VECTORS, vtkAssignAttribute::POINT_DATA);
+		vector->Update();
+
+		vtkNew<vtkGlyph3D> glyph;
+		glyph->SetInputConnection(0, vector->GetOutputPort());
+		glyph->SetInputConnection(1, arrow->GetOutputPort());
+		glyph->SetVectorModeToUseVector();
+		glyph->SetScaleFactor(7448);
+		glyph->OrientOn();
+		glyph->Update();
+
+
+		vtkNew<vtkPolyDataMapper> tangent_mapper;
+		tangent_mapper->SetInputConnection(glyph->GetOutputPort());
+		tangent_mapper->ScalarVisibilityOff();
+
+		vtkNew<vtkActor> tangent_actor;
+		tangent_actor->SetMapper(tangent_mapper);
+		tangent_actor->GetProperty()->SetColor(0.6902, 0.7686, 0.8706);
+		ren->AddActor(tangent_actor);
+	}
+	if (inequality)
+	{
+		// interface mapper
+		vtkNew<vtkPointGaussianMapper> inequality_mapper;
+		inequality_mapper->SetInputData(inequality);
+		inequality_mapper->SetScaleFactor(0.0);
+		// interface actor
+		vtkNew<vtkActor> inequality_actor;
+		inequality_actor->SetMapper(inequality_mapper);
+		inequality_actor->GetProperty()->SetColor(57, 152, 0);
+		inequality_actor->GetProperty()->SetPointSize(5);
+		ren->AddActor(inequality_actor);
 	}
 
 	iren->Initialize();

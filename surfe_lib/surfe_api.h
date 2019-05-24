@@ -46,7 +46,7 @@ class SURFE_LIB_EXPORT Surfe_API {
 private:
 	// members
 	GRBF_Modelling_Methods *method_;
-	UI_Parameters params_;
+	InputParameters input_;
 	vtkSmartPointer<vtkImageData> grid_;
 
 	bool have_interpolant_;
@@ -56,6 +56,7 @@ private:
 	bool constraint_files_changed_;
 	bool constraints_changed_;
 
+	// vtk geometry strings for export to python interpreter
 	std::string vtk_grid_string_;
 	std::string vtk_interface_string_;
 	std::string vtk_planar_string_;
@@ -64,12 +65,13 @@ private:
 	std::string vtk_isosurfaces_string_;
 
 	// methods
-	GRBF_Modelling_Methods* get_method(const UI_Parameters& params);
+	GRBF_Modelling_Methods* get_method(const Parameters& params);
 	void build_constraints_from_input_files();
+	void progress(const float &progress_value);
 public:
 	Surfe_API();
-	Surfe_API(const UI_Parameters& params);
-	void GetUIParametersAndConstraints();
+	Surfe_API(const Parameters& params);
+	void GetParametersAndConstraints();
 	void LoadConstraintsFromFiles();
 	void AddInterfaceConstraint(
 		const double &x, const double &y, const double &z,
@@ -96,20 +98,21 @@ public:
 		const double &level
 	);
 	void ComputeInterpolant();
+	void SetModellingMode(const int &mode);
+	void SetRegressionSmoothing(const bool &use_regression_smoothing, const double &amount = 0);
+	void SetGreedyAlgorithm(const bool &use_greedy, const double &interface_uncertainty = 0, const double &angular_uncertainty = 0);
+	void SetRestrictedRange(const bool &use_restricted_range, const double &interface_uncertainty = 0, const double &angular_uncertainty = 0);
 	void SetRBFKernel(const Parameter_Types::RBF &rbf);
 	void SetRBFKernel(const char *rbf_name);
 	void SetRBFShapeParameter(const double &shape_param);
 	void SetPolynomialOrder(const int &poly_order);
 	void SetGlobalAnisotropy(const bool &g_anisotropy);
-	void SetGreedy(const bool &greedy);
-	void SetRestrictedRange(const bool &rr);
-	void SetRegressionSmoothing(const bool &rs);
 	void SetInterfaceUncertainty(const double &interface_uncertainty);
 	void SetAngularUncertainty(const double &angular_uncertainty);
-	void SetInterfaceDataFile(const char *interface_file);
-	void SetPlanarDataFile(const char *planar_file);
-	void SetTangentDataFile(const char *tangent_file);
-	void SetInequalityDataFile(const char *inequality_file);
+	void SetInterfaceDataFile(const char *interfaceFile);
+	void SetPlanarDataFile(const char *planarFile);
+	void SetTangentDataFile(const char *tangentFile);
+	void SetInequalityDataFile(const char *inequalityFile);
 	double EvaluateInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	);

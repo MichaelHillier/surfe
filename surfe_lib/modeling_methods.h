@@ -79,7 +79,6 @@ protected:
 	// computed scalar field value using the
 	// interpolant @ interface_test_points
 	// for iso surface extraction
-	void _Progress(char message[], const int &step, const int &total);
 	bool _output_greedy_debug_objects();
 	void _SetIteration(const int &iter) { _iteration = iter; }
 
@@ -87,7 +86,7 @@ public:
 	// Destructor
 	virtual ~GRBF_Modelling_Methods() {}
 	// Methods
-	GRBF_Modelling_Methods *get_method(const UI_Parameters &m_parameters);  // factory method to get create the appropriate pointer for given problem
+	GRBF_Modelling_Methods *get_method(const Parameters &m_parameters);  // factory method to get create the appropriate pointer for given problem
 	RBFKernel *create_rbf_kernel(const Parameter_Types::RBF &rbf_type, const bool &anisotropy);
 	std::vector<Interface> get_interface_points_ouput() const { return constraints.itrface; }
 	Constraints constraints;// algorithm input
@@ -104,14 +103,13 @@ public:
 	virtual void get_method_parameters() = 0;
 	virtual void process_input_data() = 0;
 	virtual void setup_system_solver() = 0;
-	virtual bool get_minimial_and_excluded_input(
-		Constraints &greedy_input, Constraints &excluded_input) = 0;
+	virtual bool get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) = 0;
 	virtual bool measure_residuals(Constraints &input) = 0;
 	virtual bool append_greedy_input(Constraints &input) = 0;
 	virtual bool convert_modified_kernel_to_rbf_kernel() = 0;
 	virtual GRBF_Modelling_Methods *clone() = 0;
 	// Attributes
-	UI_Parameters ui_parameters;  // QT GUI parameters
+	Parameters ui_parameters;  // QT GUI parameters
 	System_Solver *solver;
 	Kernel *kernel;
 	RBFKernel *rbf_kernel;

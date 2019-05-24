@@ -184,26 +184,6 @@ bool GRBF_Modelling_Methods::_update_interface_iso_values() {
 	return true;
 }
 
-void GRBF_Modelling_Methods::_Progress(char message[], const int &step,
-	const int &total) {
-	// progress width
-	const int pwidth = 72;
-
-	// minus label len
-	int width = pwidth - strlen(message);
-	int pos = (step * width) / total;
-	int percent = (step * 100) / total;
-
-	printf("%s[", message);
-
-	// fill progress bar with =
-	for (int i = 0; i < pos; i++) printf("%c", '=');
-
-	// fill progress bar with spaces
-	printf("% *c", width - pos + 1, ']');
-	printf(" %3d%%\r", percent);
-}
-
 void GRBF_Modelling_Methods::remove_collocated_constraints()
 {
 	std::sort(constraints.inequality.begin(), constraints.inequality.end());
@@ -392,7 +372,7 @@ bool GRBF_Modelling_Methods::_output_greedy_debug_objects() {
 	return true;
 }
 
-GRBF_Modelling_Methods* GRBF_Modelling_Methods::get_method(const UI_Parameters& m_parameters)
+GRBF_Modelling_Methods* GRBF_Modelling_Methods::get_method(const Parameters& m_parameters)
 {
 	if (m_parameters.model_type == Parameter_Types::Single_surface)
 		return new Single_Surface(m_parameters);

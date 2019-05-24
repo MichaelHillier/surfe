@@ -12,7 +12,7 @@ class InputImpl : public QDialog, private Ui::SurfeInputDialog {
 public:
 	InputImpl(QWidget *parent = 0);
 	~InputImpl() {}
-	static UI_Parameters GetDialogParameters();
+	static InputParameters GetDialogParameters();
 	//UI_Parameters get_parameters();
 public slots:
 	void set_interface_data_file();
@@ -20,7 +20,7 @@ public slots:
 	void set_tangent_data_file();
 	void set_inequality_data_file();
 private:
-	UI_Parameters get_parameters();
+	InputParameters get_parameters();
 };
 
 #endif

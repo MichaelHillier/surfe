@@ -40,6 +40,8 @@
 #ifndef modelling_parameters_h
 #define modelling_parameters_h
 
+#include <string>
+
 #define D2R 0.01745329251994329576923690768489  // degrees to radians conversion factor
 #define R2D 57.295779513082320876798154814105  // radians to degrees conversion factor
 #define Epilson 1E-3 // for comparing double/float variables e.g. position accuracy
@@ -92,7 +94,7 @@ struct Parameter_Types {
 	};
 };
 
-struct UI_Parameters {
+struct Parameters {
 	////////////////////////////////
 	//        UI parameters       //
 	////////////////////////////////
@@ -119,17 +121,12 @@ struct UI_Parameters {
 	double interface_uncertainty;
 	double angular_uncertainty;
 
-	const char *interface_file;
-	const char *planar_file;
-	const char *tangent_file;
-	const char *inequality_file;
-
 	// initialization ...
-	UI_Parameters() :
+	Parameters() :
 		model_type(Parameter_Types::Single_surface),
 		min_stratigraphic_thickness(0),
-		use_interface(true),
-		use_planar(true),
+		use_interface(false),
+		use_planar(false),
 		use_tangent(false),
 		use_inequality(false),
 		basis_type(Parameter_Types::Cubic),
@@ -142,11 +139,7 @@ struct UI_Parameters {
 		smoothing_amount(0),
 		use_regression_smoothing(false),
 		interface_uncertainty(0),
-		angular_uncertainty(0),
-		interface_file(""),
-		planar_file(""),
-		tangent_file(""),
-		inequality_file("")
+		angular_uncertainty(0)
 	{}
 };
 
@@ -182,4 +175,13 @@ struct basic_parameters {
 		problem_type(Parameter_Types::Linear),
 		restricted_range(false) {}
 };
+
+struct InputParameters {
+	Parameters parameters;
+	std::string interface_file;
+	std::string planar_file;
+	std::string tangent_file;
+	std::string inequality_file;
+};
+
 #endif

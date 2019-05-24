@@ -47,7 +47,8 @@ private:
 	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
 public:
 	// Constructor/Destructor
-	Single_Surface(const UI_Parameters &mparams);
+	Single_Surface() {}
+	Single_Surface(const Parameters &mparams);
 	~Single_Surface() {};
 	// Methods
 	Polynomial_Basis *create_polynomial_basis(const int &poly_order);

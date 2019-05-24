@@ -126,7 +126,7 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 	return true;
 }
 
-Single_Surface::Single_Surface(const UI_Parameters& mparams)
+Single_Surface::Single_Surface(const Parameters& mparams)
 {
 	// set GUI parameters
 	ui_parameters = mparams;
