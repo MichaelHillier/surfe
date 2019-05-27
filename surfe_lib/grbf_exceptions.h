@@ -167,6 +167,12 @@ class unknownmodellingmode : public exception {
 	}
 };
 
+class errorparsingcsvheader : public exception {
+	const char* what() const throw() override {
+		return "Error parsing CSV header";
+	}
+};
+
 
 
 class SurfeExceptions : public exception {
@@ -229,6 +235,7 @@ namespace GRBF_Exceptions {
 	const inputfileproblem input_file_problem;
 	const unsupportedfile unsupported_file;
 	const unknownmodellingmode unknown_modelling_mode;
+	const errorparsingcsvheader error_parsing_csv_header;
 }
 
 #endif //

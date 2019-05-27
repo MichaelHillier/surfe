@@ -18,8 +18,8 @@ int main(int argc, char* argv[]) {
 // 		std::cout << "Surfe Exceptions: " << e.what() << " occurred. " << std::endl;
 // 		throw;
 // 	}
-	surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/contact_data.csv");
-	surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/planar_data.csv");
+	surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/contact_data.csv");
+	surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/planar_data.csv");
 
 	//surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/Overturn_FieldData.vtp");
 	//surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/OverturnNormals.vtp");

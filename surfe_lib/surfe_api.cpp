@@ -32,26 +32,74 @@ void Surfe_API::build_constraints_from_input_files()
 	{
 		if (!input_.interface_file.empty()) {
 			std::vector<Interface> interface_constraints;
-			interface_constraints = build_interface_constraints(input_.interface_file.c_str());
+			std::string extension = get_file_extension(input_.interface_file.c_str());
+			if (extension == "csv")
+			{
+				CSVInterfaceConstraintFileReader reader = 
+					CSVInterfaceConstraintFileReader::CreateUsingDefaultPropertyNames(input_.interface_file.c_str());
+				interface_constraints = reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKInterfaceConstraintFileReader reader = 
+					VTKInterfaceConstraintFileReader::CreateUsingDefaultPropertyNames(input_.interface_file.c_str());
+				interface_constraints = reader.GetConstraints();
+			}
 			method_->ui_parameters.use_interface = true;
 			method_->constraints.itrface = interface_constraints;
 		}
 		if (!input_.inequality_file.empty()) {
 			std::vector<Inequality> inequality_constraints;
-			inequality_constraints = build_inequality_constraints(input_.inequality_file.c_str());
+			std::string extension = get_file_extension(input_.inequality_file.c_str());
+			if (extension == "csv")
+			{
+				CSVInequalityConstraintFileReader reader =
+					CSVInequalityConstraintFileReader::CreateUsingDefaultPropertyNames(input_.inequality_file.c_str());
+				inequality_constraints = reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKInequalityConstraintFileReader reader =
+					VTKInequalityConstraintFileReader::CreateUsingDefaultPropertyNames(input_.inequality_file.c_str());
+				inequality_constraints = reader.GetConstraints();
+			}
 			method_->ui_parameters.use_inequality = true;
 			method_->constraints.inequality = inequality_constraints;
 		}
 
 		if (!input_.planar_file.empty()) {
 			std::vector<Planar> planar_constraints;
-			planar_constraints = build_planar_constraints(input_.planar_file.c_str());
+			std::string extension = get_file_extension(input_.planar_file.c_str());
+			if (extension == "csv")
+			{
+				CSVPlanarConstraintFileReader reader =
+					CSVPlanarConstraintFileReader::CreateUsingDefaultPropertyNames(input_.planar_file.c_str());
+				planar_constraints = reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKPlanarConstraintFileReader reader =
+					VTKPlanarConstraintFileReader::CreateUsingDefaultPropertyNames(input_.planar_file.c_str());
+				planar_constraints = reader.GetConstraints();
+			}
 			method_->ui_parameters.use_planar = true;
 			method_->constraints.planar = planar_constraints;
 		}
 		if (!input_.tangent_file.empty()) {
 			std::vector<Tangent> tangent_constraints;
-			tangent_constraints = build_tangent_constraints(input_.tangent_file.c_str());
+			std::string extension = get_file_extension(input_.planar_file.c_str());
+			if (extension == "csv")
+			{
+				CSVTangentConstraintFileReader reader =
+					CSVTangentConstraintFileReader::CreateUsingDefaultPropertyNames(input_.tangent_file.c_str());
+				tangent_constraints = reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKTangentConstraintFileReader reader =
+					VTKTangentConstraintFileReader::CreateUsingDefaultPropertyNames(input_.tangent_file.c_str());
+				tangent_constraints = reader.GetConstraints();
+			}
 			method_->ui_parameters.use_tangent = true;
 			method_->constraints.tangent = tangent_constraints;
 		}
@@ -921,6 +969,8 @@ const char * Surfe_API::GetVTKIsosurfacesString()
 		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
 		throw;
 	}
+
+	return nullptr;
 }
 
 const char * Surfe_API::GetVTKInterfaceConstraintsString()
