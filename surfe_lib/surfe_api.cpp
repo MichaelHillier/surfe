@@ -6,6 +6,8 @@
 #include <vtkXMLPolyDataWriter.h>
 #include <vtkXMLStructuredGridWriter.h>
 #include <vtkXMLImageDataWriter.h>
+#include <vtkImagePlaneWidget.h>
+#include <vtkCellPicker.h>
 
 #include <algorithm>
 #include <time.h>
@@ -590,6 +592,16 @@ void Surfe_API::BuildRegularGrid(const double &zmin, const double &zmax, const d
 	double bounds[6];
 	pts->GetBounds(bounds);
 
+	if (xy_percent_padding != 0 && xy_percent_padding < 100 && xy_percent_padding > 0)
+	{
+		double dx = bounds[1] - bounds[0];
+		double dy = bounds[3] - bounds[2];
+		bounds[0] -= dx * (xy_percent_padding / 100.0);
+		bounds[1] += dx * (xy_percent_padding / 100.0);
+		bounds[2] -= dy * (xy_percent_padding / 100.0);
+		bounds[3] += dy * (xy_percent_padding / 100.0);
+	}
+
 	int nx = (bounds[1] - bounds[0]) / resolution;
 	int ny = (bounds[3] - bounds[2]) / resolution;
 	int nz = (zmax - zmin) / resolution;
@@ -1086,50 +1098,48 @@ void Surfe_API::VisualizeVTKData()
 	// Grid Objects
 	int dimensions[3];
 	grid->GetDimensions(dimensions);
-	// x slice
-	vtkNew<vtkImageSliceMapper> grid_xslice_mapper;
-	grid_xslice_mapper->SetInputData(grid);
-	grid_xslice_mapper->SetOrientationToX();
-	grid_xslice_mapper->SetSliceNumber(dimensions[0] - 1);
 
-	vtkNew<vtkImageSlice> grid_xslice;
-	grid_xslice->SetMapper(grid_xslice_mapper);
-	grid_xslice->GetProperty()->SetLookupTable(lut);
-	grid_xslice->GetProperty()->UseLookupTableScalarRangeOn();
-	grid_xslice->GetProperty()->SetInterpolationTypeToLinear();
-	grid_xslice->GetProperty()->SetOpacity(0.35);
+	vtkNew<vtkCellPicker> picker;
+	picker->SetTolerance(0.005);
 
-	ren->AddViewProp(grid_xslice);
+	vtkNew<vtkImagePlaneWidget> x_plane_widget;
+	x_plane_widget->SetInputData(grid);
+	x_plane_widget->SetInteractor(iren);
+	x_plane_widget->SetPicker(picker);
+	x_plane_widget->RestrictPlaneToVolumeOn();
+	x_plane_widget->SetLookupTable(lut);
+	x_plane_widget->SetResliceInterpolateToLinear();
+	x_plane_widget->SetPlaneOrientation(0);
+	x_plane_widget->SetSliceIndex(0);
+	x_plane_widget->SetDefaultRenderer(ren);
+	x_plane_widget->On();
+	x_plane_widget->InteractionOn();
 
-	// y slice
-	vtkNew<vtkImageSliceMapper> grid_yslice_mapper;
-	grid_yslice_mapper->SetInputData(grid);
-	grid_yslice_mapper->SetOrientationToY();
-	grid_yslice_mapper->SetSliceNumber(dimensions[1] - 1);
+	vtkNew<vtkImagePlaneWidget> y_plane_widget;
+	y_plane_widget->SetInputData(grid);
+	y_plane_widget->SetInteractor(iren);
+	y_plane_widget->SetPicker(picker);
+	y_plane_widget->RestrictPlaneToVolumeOn();
+	y_plane_widget->SetLookupTable(lut);
+	y_plane_widget->SetResliceInterpolateToLinear();
+	y_plane_widget->SetPlaneOrientation(1);
+	y_plane_widget->SetSliceIndex(dimensions[1] / 2);
+	y_plane_widget->SetDefaultRenderer(ren);
+	y_plane_widget->On();
+	y_plane_widget->InteractionOn();
 
-	vtkNew<vtkImageSlice> grid_yslice;
-	grid_yslice->SetMapper(grid_yslice_mapper);
-	grid_yslice->GetProperty()->SetLookupTable(lut);
-	grid_yslice->GetProperty()->UseLookupTableScalarRangeOn();
-	grid_yslice->GetProperty()->SetInterpolationTypeToLinear();
-	grid_yslice->GetProperty()->SetOpacity(0.35);
-
-	ren->AddViewProp(grid_yslice);
-
-	// z slice
-	vtkNew<vtkImageSliceMapper> grid_zslice_mapper;
-	grid_zslice_mapper->SetInputData(grid);
-	grid_zslice_mapper->SetOrientationToZ();
-	grid_zslice_mapper->SetSliceNumber(0);
-
-	vtkNew<vtkImageSlice> grid_zslice;
-	grid_zslice->SetMapper(grid_zslice_mapper);
-	grid_zslice->GetProperty()->SetLookupTable(lut);
-	grid_zslice->GetProperty()->UseLookupTableScalarRangeOn();
-	grid_zslice->GetProperty()->SetInterpolationTypeToLinear();
-	grid_zslice->GetProperty()->SetOpacity(0.35);
-
-	ren->AddViewProp(grid_zslice);
+	vtkNew<vtkImagePlaneWidget> z_plane_widget;
+	z_plane_widget->SetInputData(grid);
+	z_plane_widget->SetInteractor(iren);
+	z_plane_widget->SetPicker(picker);
+	z_plane_widget->RestrictPlaneToVolumeOn();
+	z_plane_widget->SetLookupTable(lut);
+	z_plane_widget->SetResliceInterpolateToLinear();
+	z_plane_widget->SetPlaneOrientation(2);
+	z_plane_widget->SetSliceIndex(0);
+	z_plane_widget->SetDefaultRenderer(ren);
+	z_plane_widget->On();
+	z_plane_widget->InteractionOn();
 
 	// isosurface mapper
 	vtkNew<vtkPolyDataMapper> isosurface_mapper;
@@ -1165,7 +1175,7 @@ void Surfe_API::VisualizeVTKData()
 		glyph->SetInputConnection(0, vector->GetOutputPort());
 		glyph->SetInputConnection(1, arrow->GetOutputPort());
 		glyph->SetVectorModeToUseVector();
-		glyph->SetScaleFactor(7448);
+		glyph->SetScaleFactor(min_scale * 5);
 		glyph->OrientOn();
 		glyph->Update();
 	
@@ -1192,7 +1202,7 @@ void Surfe_API::VisualizeVTKData()
 		glyph->SetInputConnection(0, vector->GetOutputPort());
 		glyph->SetInputConnection(1, arrow->GetOutputPort());
 		glyph->SetVectorModeToUseVector();
-		glyph->SetScaleFactor(7448);
+		glyph->SetScaleFactor(min_scale*5);
 		glyph->OrientOn();
 		glyph->Update();
 

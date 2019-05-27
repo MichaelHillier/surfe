@@ -38,24 +38,22 @@ std::vector<Interface> build_interface_constraints(const char *interface_file)
 	}
 	else if (filename_extension == "vtk" || filename_extension == "vtp")
 	{
-		vtkPolyData *input = nullptr;
+		vtkSmartPointer<vtkPolyData> input = vtkSmartPointer<vtkPolyData>::New();
 		if (filename_extension == "vtk")
 		{
 			vtkNew<vtkPolyDataReader> reader;
 			reader->SetFileName(interface_file);
 			reader->Update();
-			if (reader->GetOutput()->GetNumberOfPoints() != 0)
-				input = reader->GetOutput();
+			input = reader->GetOutput();
 		}
 		if (filename_extension == "vtp")
 		{
 			vtkNew<vtkXMLPolyDataReader> reader;
 			reader->SetFileName(interface_file);
 			reader->Update();
-			if (reader->GetOutput()->GetNumberOfPoints() != 0)
-				input = reader->GetOutput();
+			input = reader->GetOutput();
 		}
-		if (input)
+		if (input->GetNumberOfPoints() != 0)
 		{
 			// search the geometry for level data
 			vtkPointData *point_data = input->GetPointData();
@@ -77,8 +75,15 @@ std::vector<Interface> build_interface_constraints(const char *interface_file)
 				}
 				return interface_constraints;
 			}
-			else
-				std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+			else // no level property. if mode is single surface we set level = 0
+			{
+				for (int j = 0; j < input->GetNumberOfPoints(); j++) {
+					double location[3];
+					input->GetPoint(j, location);
+					interface_constraints.emplace_back(Interface(location[0], location[1], location[2], 0));
+				}
+				return interface_constraints;
+			}
 		}
 		else
 			std::throw_with_nested(GRBF_Exceptions::input_file_problem);
@@ -147,7 +152,7 @@ std::vector<Planar> build_planar_constraints(const char *planar_file)
 	}
 	else if (filename_extension == "vtk" || filename_extension == "vtp")
 	{
-		vtkPolyData *input = nullptr;
+		vtkSmartPointer<vtkPolyData> input = vtkSmartPointer<vtkPolyData>::New();
 		if (filename_extension == "vtk")
 		{
 			vtkNew<vtkPolyDataReader> reader;
@@ -164,7 +169,7 @@ std::vector<Planar> build_planar_constraints(const char *planar_file)
 			if (reader->GetOutput()->GetNumberOfPoints() != 0)
 				input = reader->GetOutput();
 		}
-		if (input)
+		if (input->GetNumberOfPoints() != 0)
 		{
 			// search the geometry for level data
 			vtkPointData *point_data = input->GetPointData();
@@ -296,7 +301,7 @@ std::vector<Tangent> build_tangent_constraints(const char *tangent_file)
 	}
 	else if (filename_extension == "vtk" || filename_extension == "vtp")
 	{
-		vtkPolyData *input = nullptr;
+		vtkSmartPointer<vtkPolyData> input = vtkSmartPointer<vtkPolyData>::New();
 		if (filename_extension == "vtk")
 		{
 			vtkNew<vtkPolyDataReader> reader;
@@ -313,7 +318,7 @@ std::vector<Tangent> build_tangent_constraints(const char *tangent_file)
 			if (reader->GetOutput()->GetNumberOfPoints() != 0)
 				input = reader->GetOutput();
 		}
-		if (input)
+		if (input->GetNumberOfPoints() != 0)
 		{
 			// search the geometry for level data
 			vtkPointData *point_data = input->GetPointData();
@@ -399,7 +404,7 @@ std::vector<Inequality> build_inequality_constraints(const char *inequality_file
 	}
 	else if (filename_extension == "vtk" || filename_extension == "vtp")
 	{
-		vtkPolyData *input = nullptr;
+		vtkSmartPointer<vtkPolyData> input = vtkSmartPointer<vtkPolyData>::New();
 		if (filename_extension == "vtk")
 		{
 			vtkNew<vtkPolyDataReader> reader;
@@ -416,7 +421,7 @@ std::vector<Inequality> build_inequality_constraints(const char *inequality_file
 			if (reader->GetOutput()->GetNumberOfPoints() != 0)
 				input = reader->GetOutput();
 		}
-		if (input)
+		if (input->GetNumberOfPoints() != 0)
 		{
 			// search the geometry for level data
 			vtkPointData *point_data = input->GetPointData();
@@ -446,4 +451,182 @@ std::vector<Inequality> build_inequality_constraints(const char *inequality_file
 	}
 	else
 		std::throw_with_nested(GRBF_Exceptions::unsupported_file);
+}
+
+void ConstraintFileReader::SetFilenameAndExtension(const char *filename)
+{
+	filename_ = filename;
+	extension_ = get_file_extension(filename);
+}
+
+std::vector<Interface> CSVInterfaceConstraintFileReader::GetConstraints()
+{
+	std::vector<Interface> interface_constraints;
+
+	if (GetXName().empty() && GetYName().empty() && GetZName().empty())
+		std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+
+	rapidcsv::Document file(filename_);
+	std::vector<double> x = file.GetColumn<double>(GetXName());
+	std::vector<double> y = file.GetColumn<double>(GetYName());
+	std::vector<double> z = file.GetColumn<double>(GetZName());
+	std::vector<double> level;
+	if (!GetLevelPropertyName().empty())
+		level = file.GetColumn<double>(GetLevelPropertyName());
+
+	if (x.size() == y.size() && x.size() == z.size())
+	{
+		for (int j = 0; j < (int)x.size(); j++) {
+			if (!GetLevelPropertyName().empty())
+				if (level.size() == x.size())
+					interface_constraints.emplace_back(Interface(x[j], y[j], z[j], level[j]));
+				else
+					std::throw_with_nested(GRBF_Exceptions::input_file_problem);
+			else
+				interface_constraints.emplace_back(Interface(x[j], y[j], z[j], 0));
+		}
+	}
+	else
+		std::throw_with_nested(GRBF_Exceptions::input_file_problem);
+
+	return interface_constraints;
+}
+
+void CSVInterfaceConstraintFileReader::SearchForDefaultPropertyNames()
+{
+	// find default property names
+	for (const auto &prop_name : property_names_) {
+		if (prop_name == "x" || prop_name == "X")
+			SetXName(prop_name.c_str());
+		if (prop_name == "y" || prop_name == "Y")
+			SetYName(prop_name.c_str());
+		if (prop_name == "z" || prop_name == "Z")
+			SetZName(prop_name.c_str());
+		if (prop_name == "level" || prop_name == "Level")
+			SetLevelPropertyName(prop_name.c_str());
+	}
+}
+
+std::vector<Interface> VTKInterfaceConstraintFileReader::GetConstraints()
+{
+	std::vector<Interface> interface_constraints;
+
+	vtkPointData *point_data = constraints_vtk->GetPointData();
+	vtkDoubleArray *level = nullptr;
+	if (!GetLevelPropertyName().empty()) {
+		std::string level_name = GetLevelPropertyName();
+		level = vtkDoubleArray::SafeDownCast(point_data->GetAbstractArray(level_name.c_str()));
+	}
+
+	for (int j = 0; j < constraints_vtk->GetNumberOfPoints(); j++) {
+		double location[3];
+		constraints_vtk->GetPoint(j, location);
+		if (level)
+			interface_constraints.emplace_back(Interface(location[0], location[1], location[2], level->GetTuple1(j)));
+		else
+			interface_constraints.emplace_back(Interface(location[0], location[1], location[2], 0));
+	}
+
+	return interface_constraints;
+}
+
+void VTKInterfaceConstraintFileReader::SearchForDefaultPropertyNames()
+{
+	// find default property names
+	for (const auto &prop_name : property_names_) {
+		if (prop_name == "level" || prop_name == "Level")
+			SetLevelPropertyName(prop_name.c_str());
+	}
+}
+
+void CSVConstraintFileReader::ReadPropertyNames()
+{
+	rapidcsv::Document file(filename_);
+	property_names_ = file.GetColumnNames();
+}
+
+void CSVConstraintFileReader::SearchForDefaultCoordinatePropertyNames()
+{
+	for (const auto &prop_name : property_names_) {
+		if (prop_name == "x" || prop_name == "X")
+			SetXName(prop_name.c_str());
+		if (prop_name == "y" || prop_name == "Y")
+			SetYName(prop_name.c_str());
+		if (prop_name == "z" || prop_name == "Z")
+			SetZName(prop_name.c_str());
+	}
+}
+
+void VTKConstraintFileReader::ReadPropertyNames()
+{
+	constraints_vtk = vtkSmartPointer<vtkPolyData>::New();
+
+	if (extension_ == "vtk")
+	{
+		vtkNew<vtkPolyDataReader> reader;
+		reader->SetFileName(filename_.c_str());
+		reader->Update();
+		if (reader->GetOutput()->GetNumberOfPoints() != 0)
+			constraints_vtk = reader->GetOutput();
+	}
+	if (extension_ == "vtp")
+	{
+		vtkNew<vtkXMLPolyDataReader> reader;
+		reader->SetFileName(filename_.c_str());
+		reader->Update();
+		if (reader->GetOutput()->GetNumberOfPoints() != 0)
+			constraints_vtk = reader->GetOutput();
+	}
+	if (constraints_vtk->GetNumberOfPoints() > 0)
+	{
+		vtkPointData *pd = constraints_vtk->GetPointData();
+		for (int j = 0; j < pd->GetNumberOfArrays(); j++)
+			property_names_.emplace_back(pd->GetAbstractArray(j)->GetName());
+	}
+}
+
+void PlanarConstraintFileReader::SearchForDefaultPropertyNames()
+{
+// 	for (const auto &prop_name : property_names_) {
+// 		if (prop_name == "x")
+// 			SetXName(prop_name.c_str());
+// 		if (prop_name == "X")
+// 			SetXName(prop_name.c_str());
+// 		if (prop_name == "y")
+// 			SetYName(prop_name.c_str());
+// 		if (prop_name == "Y")
+// 			SetYName(prop_name.c_str());
+// 		if (prop_name == "z")
+// 			SetZName(prop_name.c_str());
+// 		if (prop_name == "Z")
+// 			SetZName(prop_name.c_str());
+// 	}
+}
+
+void CSVPlanarConstraintFileReader::SearchForDefaultPropertyNames()
+{
+// 	for (const auto &prop_name : property_names_) {
+//  		if (prop_name == "x")
+// 			SetXName(prop_name.c_str());
+// 		if (prop_name == "X")
+//  			SetXName(prop_name.c_str());
+//  		if (prop_name == "y")
+//  			SetYName(prop_name.c_str());
+//  		if (prop_name == "Y")
+//  			SetYName(prop_name.c_str());
+//  		if (prop_name == "z")
+//  			SetZName(prop_name.c_str());
+//  		if (prop_name == "Z")
+//  			SetZName(prop_name.c_str());
+// 		if ()
+//  	}
+}
+
+void InterfaceConstraintFileReader::SearchForDefaultPropertyNames()
+{
+	// find default property names
+	for (const auto &prop_name : property_names_) {
+		if (prop_name == "level" || prop_name == "Level")
+			SetLevelPropertyName(prop_name.c_str());
+	}
 }

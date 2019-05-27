@@ -20,6 +20,9 @@ int main(int argc, char* argv[]) {
 // 	}
 	surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/contact_data.csv");
 	surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/planar_data.csv");
+
+	//surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/Overturn_FieldData.vtp");
+	//surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/OverturnNormals.vtp");
 	try
 	{
 		surfe.LoadConstraintsFromFiles();
@@ -40,6 +43,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	surfe.BuildRegularGrid(-35000, 35000, 1000);
+	//surfe.BuildRegularGrid(-200, 200, 10, 25);
 
 	surfe.VisualizeVTKData();
 
