@@ -127,11 +127,11 @@ void Vector_Field::setup_system_solver() {
 
 	MatrixXd interpolation_matrix(n, n);
 	if (!get_interpolation_matrix(interpolation_matrix))
-		std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+		throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 	Linear_LU_decomposition llu(interpolation_matrix, equality_values);
 	if (!llu.solve())
-		std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
+		throw GRBF_Exceptions::linear_solver_failure;
 	solver = &llu;
 }
 

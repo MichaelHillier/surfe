@@ -113,6 +113,37 @@ void Surfe_API::build_constraints_from_input_files()
 	constraints_changed_ = true;
 }
 
+SpatialParameters Surfe_API::compute_constraint_bounds_and_resolution()
+{
+	if (!method_)
+		throw GRBF_Exceptions::grbf_method_is_null;
+
+	// collect all constraints
+	std::vector<Point> points;
+	for (const auto &constraint : method_->constraints.inequality)
+		points.emplace_back(Point(constraint.x(),constraint.y(),constraint.z()));
+	for (const auto &constraint : method_->constraints.itrface)
+		points.emplace_back(Point(constraint.x(), constraint.y(), constraint.z()));
+	for (const auto &constraint : method_->constraints.planar)
+		points.emplace_back(Point(constraint.x(), constraint.y(), constraint.z()));
+	for (const auto &constraint : method_->constraints.tangent)
+		points.emplace_back(Point(constraint.x(), constraint.y(), constraint.z()));
+
+	// compute bounds and resolutions
+	double xmin, xmax,ymin, ymax, zmin, zmax, resolution;
+	if (!spatial_metrics(points, resolution, xmin, xmax, ymin, ymax, zmin, zmax))
+		throw GRBF_Exceptions::problem_computing_spatial_parameters;
+	SpatialParameters spatial;
+	spatial.resolution = resolution;
+	spatial.xmin = xmin;
+	spatial.xmax = xmax;
+	spatial.ymin = ymin;
+	spatial.ymax = ymax;
+	spatial.zmin = zmin;
+	spatial.zmax = zmax;
+	return spatial;
+}
+
 void Surfe_API::progress(const float &progress_value)
 {
 	int barWidth = 70;
@@ -326,7 +357,7 @@ void Surfe_API::ComputeInterpolant()
 	{
 		method_->process_input_data();
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
 		throw exceptions;
@@ -338,7 +369,7 @@ void Surfe_API::ComputeInterpolant()
 	{
 		method_->setup_basis_functions();
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
 		throw exceptions;
@@ -348,7 +379,7 @@ void Surfe_API::ComputeInterpolant()
 	{
 		method_->setup_system_solver();
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
 		SurfeExceptions exceptions(e);
 		throw exceptions;
@@ -364,50 +395,17 @@ void Surfe_API::ComputeInterpolant()
 
 void Surfe_API::SetModellingMode(const int &mode)
 {
-	// if method exists erase it, user could have changed parameters. 
-	// leaving existing method not valid. delete it to not have 
-	// memory leak
 
-	if (mode == 1) {
-		if (method_) {
-			delete method_;
-			method_ = nullptr;
-		}
-		method_ = new Single_Surface;
-		method_->ui_parameters.model_type = Parameter_Types::Single_surface;
-	}
-	else if (mode == 2) {
-		if (method_) {
-			delete method_;
-			method_ = nullptr;
-		}
-		method_ = new Lajaunie_Approach;
-		method_->ui_parameters.model_type = Parameter_Types::Lajaunie_approach;
-	}
-	else if (mode == 3) {
-		if (method_) {
-			delete method_;
-			method_ = nullptr;
-		}
-		method_ = new Vector_Field;
-		method_->ui_parameters.model_type = Parameter_Types::Vector_field;
-	}
-	else if (mode == 4) {
-		if (method_) {
-			delete method_;
-			method_ = nullptr;
-		}
-		method_ = new Stratigraphic_Surfaces;
-		method_->ui_parameters.model_type = Parameter_Types::Stratigraphic_horizons;
-	}
-	else if (mode == 5) {
-		if (method_) {
-			delete method_;
-			method_ = nullptr;
-		}
-		method_ = new Continuous_Property;
-		method_->ui_parameters.model_type = Parameter_Types::Continuous_property;
-	}
+	if (mode == 1)
+		input_.parameters.model_type = Parameter_Types::Single_surface;
+	else if (mode == 2) 
+		input_.parameters.model_type = Parameter_Types::Lajaunie_approach;
+	else if (mode == 3)
+		input_.parameters.model_type = Parameter_Types::Vector_field;
+	else if (mode == 4)
+		input_.parameters.model_type = Parameter_Types::Stratigraphic_horizons;
+	else if (mode == 5)
+		input_.parameters.model_type = Parameter_Types::Continuous_property;
 	else
 		throw GRBF_Exceptions::unknown_modelling_mode;
 
@@ -453,23 +451,20 @@ void Surfe_API::SetRBFKernel(const Parameter_Types::RBF &rbf)
 
 void Surfe_API::SetRBFKernel(const char *rbf_name)
 {
-	if (!method_)
-		throw GRBF_Exceptions::grbf_method_is_null;
-
 	if (rbf_name == "r3")
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::Cubic;
+		input_.parameters.basis_type = Parameter_Types::RBF::Cubic;
 	else if (rbf_name == "WendlandC2")
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::WendlandC2;
+		input_.parameters.basis_type = Parameter_Types::RBF::WendlandC2;
 	else if (rbf_name == "r")
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::R;
+		input_.parameters.basis_type = Parameter_Types::RBF::R;
 	else if (rbf_name == "Gaussian")
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::Gaussian;
+		input_.parameters.basis_type = Parameter_Types::RBF::Gaussian;
 	else if (rbf_name == "Multiquadratics")
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::MQ;
+		input_.parameters.basis_type = Parameter_Types::RBF::MQ;
 	else if (rbf_name == "Thin Plate Spline")
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::TPS;
+		input_.parameters.basis_type = Parameter_Types::RBF::TPS;
 	else if (rbf_name = "Inverse Multiquadratics")
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::IMQ; // Inverse Multiquadratics
+		input_.parameters.basis_type = Parameter_Types::RBF::IMQ; // Inverse Multiquadratics
 	else
 		throw GRBF_Exceptions::unknown_rbf;
 
@@ -479,10 +474,7 @@ void Surfe_API::SetRBFKernel(const char *rbf_name)
 
 void Surfe_API::SetRBFShapeParameter(const double &shape_param)
 {
-	if (!method_)
-		throw GRBF_Exceptions::grbf_method_is_null;
-
-	method_->ui_parameters.shape_parameter = shape_param;
+	input_.parameters.shape_parameter = shape_param;
 
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
@@ -490,10 +482,7 @@ void Surfe_API::SetRBFShapeParameter(const double &shape_param)
 
 void Surfe_API::SetPolynomialOrder(const int &poly_order)
 {
-	if (!method_)
-		throw GRBF_Exceptions::grbf_method_is_null;
-
-	method_->ui_parameters.polynomial_order = poly_order;
+	input_.parameters.polynomial_order = poly_order;
 
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
@@ -501,10 +490,7 @@ void Surfe_API::SetPolynomialOrder(const int &poly_order)
 
 void Surfe_API::SetGlobalAnisotropy(const bool &g_anisotropy)
 {
-	if (!method_)
-		throw GRBF_Exceptions::grbf_method_is_null;
-
-	method_->ui_parameters.model_global_anisotropy = g_anisotropy;
+	input_.parameters.model_global_anisotropy = g_anisotropy;
 
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
@@ -513,12 +499,9 @@ void Surfe_API::SetGlobalAnisotropy(const bool &g_anisotropy)
 
 void Surfe_API::SetRestrictedRange(const bool &use_restricted_range, const double &interface_uncertainty /*= 0*/, const double &angular_uncertainty /*= 0*/)
 {
-	if (!method_)
-		throw GRBF_Exceptions::grbf_method_is_null;
-
-	method_->ui_parameters.use_regression_smoothing = use_restricted_range;
-	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
-	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
+	input_.parameters.use_regression_smoothing = use_restricted_range;
+	input_.parameters.interface_uncertainty = interface_uncertainty;
+	input_.parameters.angular_uncertainty = angular_uncertainty;
 
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
@@ -526,10 +509,7 @@ void Surfe_API::SetRestrictedRange(const bool &use_restricted_range, const doubl
 
 void Surfe_API::SetInterfaceUncertainty(const double &interface_uncertainty)
 {
-	if (!method_)
-		throw GRBF_Exceptions::grbf_method_is_null;
-
-	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
+	input_.parameters.interface_uncertainty = interface_uncertainty;
 
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
@@ -537,10 +517,7 @@ void Surfe_API::SetInterfaceUncertainty(const double &interface_uncertainty)
 
 void Surfe_API::SetAngularUncertainty(const double &angular_uncertainty)
 {
-	if (!method_)
-		throw GRBF_Exceptions::grbf_method_is_null;
-
-	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
+	input_.parameters.angular_uncertainty = angular_uncertainty;
 
 	parameters_changed_ = true;
 	evaluation_completed_ = false;
@@ -683,6 +660,58 @@ void Surfe_API::BuildRegularGrid(
 	constructed_grid->SetSpacing(resolution, resolution, resolution);
 
 	grid_ = constructed_grid;
+}
+
+void Surfe_API::BuildRegularGrid(const double &xy_percent_padding /*= 0*/)
+{
+	try
+	{
+		// get spatial parameters
+		SpatialParameters spatial = compute_constraint_bounds_and_resolution();
+
+		double bounds[6];
+		bounds[0] = spatial.xmin;
+		bounds[1] = spatial.xmax;
+		bounds[2] = spatial.ymin;
+		bounds[3] = spatial.ymax;
+		bounds[4] = spatial.zmin;
+		bounds[5] = spatial.zmax;
+		if (xy_percent_padding != 0 && xy_percent_padding < 100 && xy_percent_padding > 0)
+		{
+			double dx = spatial.xmax - spatial.xmin;
+			double dy = spatial.ymax - spatial.ymin;
+			double dz = spatial.zmax - spatial.zmin;
+			bounds[0] -= dx * (xy_percent_padding / 100.0);
+			bounds[1] += dx * (xy_percent_padding / 100.0);
+			bounds[2] -= dy * (xy_percent_padding / 100.0);
+			bounds[3] += dy * (xy_percent_padding / 100.0);
+			bounds[4] -= dy * (xy_percent_padding / 100.0);
+			bounds[5] += dy * (xy_percent_padding / 100.0);
+		}
+		if (spatial.resolution == 0)
+			throw GRBF_Exceptions::problem_computing_grid;
+
+		int nx = (bounds[1] - bounds[0]) / spatial.resolution;
+		int ny = (bounds[3] - bounds[2]) / spatial.resolution;
+		int nz = (bounds[5] - bounds[4]) / spatial.resolution;
+
+		if (nx == 0 || ny == 0 || nz == 0)
+			throw GRBF_Exceptions::problem_computing_grid;
+
+		double origin[3] = { bounds[0],bounds[2], bounds[4] };
+
+		vtkSmartPointer<vtkImageData> constructed_grid = vtkSmartPointer<vtkImageData>::New();
+		constructed_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
+		constructed_grid->SetOrigin(origin);
+		constructed_grid->SetSpacing(spatial.resolution, spatial.resolution, spatial.resolution);
+
+		grid_ = constructed_grid;
+
+	}
+	catch (const std::exception&)
+	{
+		throw;
+	}
 }
 
 vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
@@ -1102,7 +1131,7 @@ void Surfe_API::WriteVTKEvaluationGrid(const char *filename)
 
 void Surfe_API::WriteVTKIsoSurfaces(const char *filename)
 {
-	vtkPolyData *isosurfaces = GetIsoSurfaces();
+	vtkSmartPointer<vtkPolyData> isosurfaces = GetIsoSurfaces();
 
 	if (isosurfaces) {
 		vtkNew<vtkXMLPolyDataWriter> writer;
@@ -1120,6 +1149,8 @@ void Surfe_API::VisualizeVTKData()
 	double spacing[3];
 	grid->GetSpacing(spacing);
 	double min_scale = *std::max_element(spacing, spacing + 3);
+	SpatialParameters spatial = compute_constraint_bounds_and_resolution();
+	min_scale = spatial.resolution;
 
 	// get constraints
 	vtkSmartPointer<vtkPolyData> interface = GetInterfaceConstraints();
@@ -1225,7 +1256,7 @@ void Surfe_API::VisualizeVTKData()
 		glyph->SetInputConnection(0, vector->GetOutputPort());
 		glyph->SetInputConnection(1, arrow->GetOutputPort());
 		glyph->SetVectorModeToUseVector();
-		glyph->SetScaleFactor(min_scale * 5);
+		glyph->SetScaleFactor(min_scale);
 		glyph->OrientOn();
 		glyph->Update();
 	
@@ -1252,7 +1283,7 @@ void Surfe_API::VisualizeVTKData()
 		glyph->SetInputConnection(0, vector->GetOutputPort());
 		glyph->SetInputConnection(1, arrow->GetOutputPort());
 		glyph->SetVectorModeToUseVector();
-		glyph->SetScaleFactor(min_scale*5);
+		glyph->SetScaleFactor(min_scale);
 		glyph->OrientOn();
 		glyph->Update();
 

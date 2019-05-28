@@ -108,9 +108,11 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	es.compute(covMat);
 	Vector3f eVals = es.eigenvalues().real();
 	Matrix3f eVectors = es.eigenvectors().real();
-	// cout << "The eigenvalues of A are:" << endl << es.eigenvalues() << endl;
-	// cout << "The matrix of eigenvectors, V, is:" << endl << es.eigenvectors()
-	// << endl << endl;
+#ifndef NDEBUG
+	cout << "The eigenvalues of A are:" << endl << es.eigenvalues() << endl;
+	cout << "The matrix of eigenvectors, V, is:" << endl << es.eigenvectors() << endl << endl;
+#endif
+
 
 	_Global_Plunge[0] = eVectors(0, 0);
 	_Global_Plunge[1] = eVectors(1, 0);
@@ -123,13 +125,13 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 
 	// might have to check eval(0) smallest eigenvalue
 	// if there are normals sampled from a perfect cylinderical fold
-	if (eVals(0) < 1e-8)
+	if (eVals(0) < 0.0001)
 		eVals(0) = 0.0001;
 	// eval(0) = ~1e-16 machine precision.
 	// perhaps set to eval(0) = 0.0001 ...
 
 	Matrix3f ISQR;
-	ISQR(0, 0) = 1;
+	ISQR(0, 0) = 1.0;
 	ISQR(1, 0) = 0;
 	ISQR(2, 0) = 0;
 	ISQR(0, 1) = 0;
@@ -140,7 +142,9 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	ISQR(2, 2) = sqrt(eVals(2) / eVals(0));
 
 	_Transform = eVectors * ISQR * eVectors.transpose();
-	// cout << "The _Transform is:" << endl << _Transform << endl << endl;
+#ifndef NDEBUG
+	cout << "The _Transform is:" << endl << _Transform << endl << endl;
+#endif
 
 	return true; // should really validate the computation here
 }

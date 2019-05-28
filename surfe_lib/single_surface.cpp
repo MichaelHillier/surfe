@@ -202,7 +202,7 @@ void Single_Surface::setup_system_solver() {
 
 			MatrixXd interpolation_matrix(n_c, n_c);
 			if (!get_interpolation_matrix(interpolation_matrix))
-				std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+				throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 			MatrixXd inequality_matrix(n_c, n_c);
 			inequality_matrix = interpolation_matrix;
@@ -210,7 +210,7 @@ void Single_Surface::setup_system_solver() {
 			Quadratic_Predictor_Corrector_LOQO *qpc =
 				new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
 			if (!qpc->solve())
-				std::throw_with_nested(GRBF_Exceptions::loqo_quadratic_solver_failure);
+				throw GRBF_Exceptions::loqo_quadratic_solver_failure;
 			solver = qpc;
 		}
 		else {
@@ -222,22 +222,22 @@ void Single_Surface::setup_system_solver() {
 
 			MatrixXd interpolation_matrix(n_c, n_c);
 			if (!get_interpolation_matrix(interpolation_matrix))
-				std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+				throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 			MatrixXd inequality_matrix(n_ie, n_c);
 			if (!get_inequality_matrix(interpolation_matrix, inequality_matrix))
-				std::throw_with_nested(GRBF_Exceptions::error_computing_inequality_vector);
+				throw GRBF_Exceptions::error_computing_inequality_vector;
 
 			MatrixXd equality_matrix(n_e, n_c);
 			if (!get_equality_matrix(interpolation_matrix, equality_matrix))
-				std::throw_with_nested(GRBF_Exceptions::error_computing_equality_vector);
+				throw GRBF_Exceptions::error_computing_equality_vector;
 
 			Quadratic_Predictor_Corrector *qpc =
 				new Quadratic_Predictor_Corrector(
 					interpolation_matrix, equality_matrix, inequality_matrix,
 					equality_values, inequality_values);
 			if (!qpc->solve())
-				std::throw_with_nested(GRBF_Exceptions::pc_quadratic_solver_failure);
+				throw GRBF_Exceptions::pc_quadratic_solver_failure;
 			solver = qpc;
 		}
 	}
@@ -249,12 +249,12 @@ void Single_Surface::setup_system_solver() {
 
 		MatrixXd interpolation_matrix(n_e + n_p, n_e + n_p);
 		if (!get_interpolation_matrix(interpolation_matrix))
-			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+			throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 		Linear_LU_decomposition *llu =
 			new Linear_LU_decomposition(interpolation_matrix, equality_values);
 		if (!llu->solve())
-			std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
+			throw GRBF_Exceptions::linear_solver_failure;
 		solver = llu;
 	}
 
@@ -876,7 +876,7 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 
 void Single_Surface::process_input_data() {
 	if (!get_interface_data())
-		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
+		throw GRBF_Exceptions::no_iterface_data;
 
 	if (ui_parameters.use_restricted_range) {
 		for (auto &interface_pt : constraints.itrface) {

@@ -173,6 +173,17 @@ class errorparsingcsvheader : public exception {
 	}
 };
 
+class problemcomputingspatialparameters : public exception {
+	const char* what() const throw() override {
+		return "Problem computing spatial parameters";
+	}
+};
+
+class problemcomputinggrid : public exception{
+	const char* what() const throw() override {
+		return "Problem computing grid { resolution or bounds are issues}";
+	}
+};
 
 
 class SurfeExceptions : public exception {
@@ -236,6 +247,8 @@ namespace GRBF_Exceptions {
 	const unsupportedfile unsupported_file;
 	const unknownmodellingmode unknown_modelling_mode;
 	const errorparsingcsvheader error_parsing_csv_header;
+	const problemcomputingspatialparameters problem_computing_spatial_parameters;
+	const problemcomputinggrid problem_computing_grid;
 }
 
 #endif //

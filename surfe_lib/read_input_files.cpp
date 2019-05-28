@@ -139,7 +139,7 @@ std::vector<Interface> VTKInterfaceConstraintFileReader::GetConstraints()
 	vtkPointData *point_data = poly->GetPointData();
 	vtkDoubleArray *level = nullptr;
 	std::string level_name = GetLevelPropertyName();
-	if (level_name.empty())
+	if (!level_name.empty())
 		level = vtkDoubleArray::SafeDownCast(point_data->GetAbstractArray(level_name.c_str()));
 
 	for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
@@ -166,7 +166,7 @@ void InterfaceConstraintFileReader::SearchForDefaultPropertyNames()
 			SetYName(prop_name.c_str());
 		if (lowercase_string == "z")
 			SetZName(prop_name.c_str());
-		if (lowercase_string == "level")
+		if (lowercase_string.find("level") != string::npos)
 			SetLevelPropertyName(prop_name);
 	}
 }
@@ -183,15 +183,16 @@ void PlanarConstraintFileReader::SearchForDefaultPropertyNames()
 			SetYName(prop_name.c_str());
 		if (lowercase_string == "z")
 			SetZName(prop_name.c_str());
-		if (lowercase_string == "dip")
+		if (lowercase_string.find("dip") != string::npos)
 			SetDipPropertyName(prop_name);
-		if (lowercase_string == "strike")
+		if (lowercase_string.find("strike") != string::npos)
 			SetStrikePropertyName(prop_name);
-		if (lowercase_string == "azimuth" || lowercase_string == "dip_direction")
+		if (lowercase_string.find("azimuth") != string::npos ||
+			(lowercase_string.find("dip") != string::npos && lowercase_string.find("direction")))
 			SetAzimuthPropertyName(prop_name);
-		if (lowercase_string == "polarity")
+		if (lowercase_string.find("polarity") != string::npos)
 			SetPolarityPropertyName(prop_name);
-		if (lowercase_string == "normal")
+		if (lowercase_string.find("normal") != string::npos)
 			SetNormalVecPropertyName(prop_name);
 		if (lowercase_string == "nx")
 			SetNxPropertyName(prop_name);
@@ -265,7 +266,7 @@ void TangentConstraintFileReader::SearchForDefaultPropertyNames()
 			SetYName(prop_name.c_str());
 		if (lowercase_string == "z")
 			SetZName(prop_name.c_str());
-		if (lowercase_string == "vector" || lowercase_string == "tangent")
+		if (lowercase_string.find("vector") != string::npos || lowercase_string.find("tangent") != string::npos)
 			SetVectorPropertyName(prop_name);
 		if (lowercase_string == "vx" || lowercase_string == "tx")
 			SetVxPropertyName(prop_name);

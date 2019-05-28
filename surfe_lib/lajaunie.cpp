@@ -200,7 +200,7 @@ void  Lajaunie_Approach::get_method_parameters() {
 
 void Lajaunie_Approach::process_input_data() {
 	if (!get_interface_data())
-		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
+		throw GRBF_Exceptions::no_iterface_data;
 
 	// For greedy algorithm this function can get called many times.
 	// Need to take some care and make sure we are not appending
@@ -208,7 +208,7 @@ void Lajaunie_Approach::process_input_data() {
 	if (!_increment_pairs.empty()) _increment_pairs.clear();
 
 	if (!_get_increment_pairs())
-		std::throw_with_nested(GRBF_Exceptions::no_interface_increment_pairs);
+		throw GRBF_Exceptions::no_interface_increment_pairs;
 
 	if (ui_parameters.use_restricted_range) {
 		for (auto &planar_pt : constraints.planar) {
@@ -232,7 +232,7 @@ void Lajaunie_Approach::setup_system_solver() {
 
 		MatrixXd interpolation_matrix(n_c, n_c);
 		if (!get_interpolation_matrix(interpolation_matrix))
-			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+			throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 		MatrixXd inequality_matrix(n_c, n_c);
 		inequality_matrix = interpolation_matrix;
@@ -240,7 +240,7 @@ void Lajaunie_Approach::setup_system_solver() {
 		Quadratic_Predictor_Corrector_LOQO *qpc =
 			new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
 		if (!qpc->solve())
-			std::throw_with_nested(GRBF_Exceptions::pc_quadratic_solver_failure);
+			throw GRBF_Exceptions::pc_quadratic_solver_failure;
 		solver = qpc;
 	}
 	else {
@@ -249,16 +249,16 @@ void Lajaunie_Approach::setup_system_solver() {
 		get_equality_values(equality_values);
 		MatrixXd interpolation_matrix(n, n);
 		if (!get_interpolation_matrix(interpolation_matrix))
-			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+			throw GRBF_Exceptions::error_computing_interpolation_matrix;
 		Linear_LU_decomposition *llu =
 			new Linear_LU_decomposition(interpolation_matrix, equality_values);
 		if (!llu->solve())
-			std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
+			throw GRBF_Exceptions::linear_solver_failure;
 		solver = llu;
 	}
 
 	if (!_update_interface_iso_values())
-		std::throw_with_nested(GRBF_Exceptions::error_updating_interface_iso_values);
+		throw GRBF_Exceptions::error_updating_interface_iso_values;
 }
 
 bool Lajaunie_Approach::get_minimial_and_excluded_input(Constraints &greedy_input, Constraints &excluded_input) {

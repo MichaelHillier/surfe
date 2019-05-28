@@ -382,6 +382,49 @@ double avg_nn_distance(const std::vector<Point> &pts)
 	return average_nn_distance;
 }
 
+bool spatial_metrics(const std::vector<Point> &pts, double &resolution, double &xmin, double &xmax, double &ymin, double &ymax, double &zmin, double &zmax)
+{
+	// remove collocated points if any exist
+	std::vector<Point> points = pts; // copy because we don't want to change original inputted data
+	std::sort(points.begin(), points.end());
+	auto unique_end = std::unique(points.begin(), points.end(), collocated);
+	points.erase(unique_end, points.end());
+
+	double average_nearest_neighbor_distance = 0.0;
+	resolution = DBL_MAX;
+	xmin = DBL_MAX;
+	xmax = -DBL_MAX;
+	ymin = DBL_MAX;
+	ymax = -DBL_MAX;
+	zmin = DBL_MAX;
+	zmax = -DBL_MAX;
+	int n = (int)points.size();
+	for (int j = 0; j < n; j++) {
+		double min_dist_j = DBL_MAX;
+		for (int k = 0; k < n; k++) {
+			if (k != j) {
+				double dist = distance_btw_pts(points[j], points[k]);
+				if (dist < min_dist_j) min_dist_j = dist;
+			}
+		}
+		if (n == 1)
+			min_dist_j = 0;  // trap this edge case
+		if (points[j].x() < xmin) xmin = points[j].x();
+		if (points[j].x() > xmax) xmax = points[j].x();
+		if (points[j].y() < ymin) ymin = points[j].y();
+		if (points[j].y() > ymax) ymax = points[j].y();
+		if (points[j].z() < zmin) zmin = points[j].z();
+		if (points[j].z() > zmax) zmax = points[j].z();
+		average_nearest_neighbor_distance += min_dist_j;
+	}
+	if (n != 0)
+		average_nearest_neighbor_distance /= n;
+
+	resolution = average_nearest_neighbor_distance/2.0;
+
+	return true;
+}
+
 bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts, int(&TwoIndexes)[2])
 {
 	if (pts.size() < 2) return false;

@@ -49,7 +49,6 @@ private:
 
 public:
 	// Constructor/Destructor
-	Continuous_Property() { }
 	Continuous_Property(const Parameters &mparams);
 	~Continuous_Property();
 	// Methods

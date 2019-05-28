@@ -155,7 +155,7 @@ public:
 	{
 		VTKInterfaceConstraintFileReader reader;
 		reader.SetFilenameAndExtension(interface_filename);
-		reader.property_names_ = ReadPropertyNamesFromCSV(interface_filename);
+		reader.property_names_ = ReadPropertyNamesFromVTK(interface_filename);
 		reader.SearchForDefaultPropertyNames();
 		return reader;
 	}
@@ -245,7 +245,7 @@ public:
 	{
 		VTKPlanarConstraintFileReader reader;
 		reader.SetFilenameAndExtension(planar_filename);
-		reader.property_names_ = ReadPropertyNamesFromCSV(planar_filename);
+		reader.property_names_ = ReadPropertyNamesFromVTK(planar_filename);
 		reader.SearchForDefaultPropertyNames();
 		reader.setCaseFromDefaultSearch();
 		return reader;
@@ -416,7 +416,7 @@ public:
 	{
 		VTKInequalityConstraintFileReader reader;
 		reader.SetFilenameAndExtension(inequality_filename);
-		reader.property_names_ = ReadPropertyNamesFromCSV(inequality_filename);
+		reader.property_names_ = ReadPropertyNamesFromVTK(inequality_filename);
 		reader.SearchForDefaultPropertyNames();
 		return reader;
 	}

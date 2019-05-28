@@ -67,6 +67,7 @@ private:
 	// methods
 	GRBF_Modelling_Methods* get_method(const Parameters& params);
 	void build_constraints_from_input_files();
+	SpatialParameters compute_constraint_bounds_and_resolution();
 	void progress(const float &progress_value);
 public:
 	Surfe_API();
@@ -119,6 +120,7 @@ public:
 	double *EvaluateVectorInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	); // client responsible for deleting dynamically allocated array vector[3]
+	void BuildRegularGrid(const double &xy_percent_padding = 0);
 	void BuildRegularGrid(
 		const double &zmin, const double &zmax,
 		const double &resolution, const double &xy_percent_padding = 0

@@ -312,11 +312,11 @@ void Stratigraphic_Surfaces::get_method_parameters() {
 
 void Stratigraphic_Surfaces::process_input_data() {
 	if (!get_interface_data())
-		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
+		throw GRBF_Exceptions::no_iterface_data;
 	if (!_get_increment_pairs())
-		std::throw_with_nested(GRBF_Exceptions::no_interface_increment_pairs);
+		throw GRBF_Exceptions::no_interface_increment_pairs;
 	if (!check_input_data())
-		std::throw_with_nested(GRBF_Exceptions::invalid_input_data);
+		throw GRBF_Exceptions::invalid_input_data;
 
 	if (ui_parameters.use_restricted_range) {
 		for (int j = 0; j < (int)constraints.planar.size(); j++) {
@@ -628,7 +628,7 @@ void Stratigraphic_Surfaces::setup_system_solver() {
 
 		MatrixXd interpolation_matrix(n_c, n_c);
 		if (!get_interpolation_matrix(interpolation_matrix))
-			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+			throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 		MatrixXd inequality_matrix(n_c, n_c);
 		inequality_matrix = interpolation_matrix;
@@ -636,7 +636,7 @@ void Stratigraphic_Surfaces::setup_system_solver() {
 		Quadratic_Predictor_Corrector_LOQO *qpc =
 			new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
 		if (!qpc->solve())
-			std::throw_with_nested(GRBF_Exceptions::loqo_quadratic_solver_failure);
+			throw GRBF_Exceptions::loqo_quadratic_solver_failure;
 		solver = qpc;
 	}
 	else {
@@ -648,26 +648,26 @@ void Stratigraphic_Surfaces::setup_system_solver() {
 
 		MatrixXd interpolation_matrix(n_c, n_c);
 		if (!get_interpolation_matrix(interpolation_matrix))
-			std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+			throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 		MatrixXd inequality_matrix(n_ie, n_c);
 		if (!get_inequality_matrix(interpolation_matrix, inequality_matrix))
-			std::throw_with_nested(GRBF_Exceptions::error_computing_inequality_vector);
+			throw GRBF_Exceptions::error_computing_inequality_vector;
 
 		MatrixXd equality_matrix(n_e, n_c);
 		if (!get_equality_matrix(interpolation_matrix, equality_matrix))
-			std::throw_with_nested(GRBF_Exceptions::error_computing_equality_vector);
+			throw GRBF_Exceptions::error_computing_equality_vector;
 
 		Quadratic_Predictor_Corrector *qpc = new Quadratic_Predictor_Corrector(
 			interpolation_matrix, equality_matrix, inequality_matrix,
 			equality_values, inequality_values);
 		if (!qpc->solve())
-			std::throw_with_nested(GRBF_Exceptions::pc_quadratic_solver_failure);
+			throw GRBF_Exceptions::pc_quadratic_solver_failure;
 		solver = qpc;
 	}
 
 	if (!_update_interface_iso_values())
-		std::throw_with_nested(GRBF_Exceptions::error_updating_interface_iso_values);
+		throw GRBF_Exceptions::error_updating_interface_iso_values;
 }
 
 bool Stratigraphic_Surfaces::convert_modified_kernel_to_rbf_kernel() {

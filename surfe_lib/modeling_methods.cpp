@@ -167,7 +167,7 @@ bool GRBF_Modelling_Methods::_update_interface_iso_values() {
 	if (interface_test_points.empty()) return false;
 
 	// evaluate the interpolant at these interface_test_points
-	if (!solver)  // check if we have a valid interpolant first
+	if (solver)  // check if we have a valid interpolant first
 	{
 		for (auto &interface_test_point : interface_test_points)
 			eval_scalar_interpolant_at_point(interface_test_point);

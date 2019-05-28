@@ -188,11 +188,11 @@ void Continuous_Property::setup_system_solver() {
 	MatrixXd interpolation_matrix(n, n);
 
 	if (!get_interpolation_matrix(interpolation_matrix))
-		std::throw_with_nested(GRBF_Exceptions::error_computing_interpolation_matrix);
+		throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
 	Linear_LU_decomposition *llu = new Linear_LU_decomposition(interpolation_matrix, equality_values);
 	if (!llu->solve())
-		std::throw_with_nested(GRBF_Exceptions::linear_solver_failure);
+		throw GRBF_Exceptions::linear_solver_failure;
 	solver = llu;
 }
 
@@ -459,7 +459,7 @@ bool Continuous_Property::get_equality_values(VectorXd &equality_values) {
 
 void Continuous_Property::process_input_data() {
 	if (constraints.itrface.empty())
-		std::throw_with_nested(GRBF_Exceptions::no_iterface_data);
+		throw GRBF_Exceptions::no_iterface_data;
 }
 
 bool Continuous_Property::get_interpolation_matrix(

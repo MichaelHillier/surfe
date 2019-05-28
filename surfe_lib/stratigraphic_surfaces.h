@@ -60,7 +60,6 @@ private:
 
 public:
 	// Constructor/Destructor
-	Stratigraphic_Surfaces() {}
 	Stratigraphic_Surfaces(const Parameters &m_params);
 	~Stratigraphic_Surfaces() {};
 	// Methods

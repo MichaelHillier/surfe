@@ -303,6 +303,16 @@ public:
 	void SetTangentAvgNNDist(const double &dist) { _avg_nn_dist_t = dist; }
 };
 
+struct SpatialParameters {
+	double resolution;
+	double xmin;
+	double xmax;
+	double ymin;
+	double ymax;
+	double zmin;
+	double zmax;
+};
+
 std::vector<Point> convert_constraints_to_points(const Constraints& constraints);
 double distance_btw_pts(const Point &p1, const Point &p2);
 int nearest_neighbour_index(const Point &p, const std::vector<Point> &pts);
@@ -310,6 +320,7 @@ std::vector<int> get_n_nearest_neighbours_to_point(const int &n, const Point &p,
 int furtherest_neighbour_index(const Point &p, const std::vector<Point> &pts);
 int furtherest_neighbour_index(const std::vector<Point> &pts1, const std::vector<Point> &pts2);
 double avg_nn_distance(const std::vector<Point> &pts);
+bool spatial_metrics(const std::vector<Point> &pts, double &resolution, double &xmin, double &xmax, double &ymin, double &ymax, double &zmin, double &zmax);
 bool Find_STL_Vector_Indices_FurtherestTwoPoints(const std::vector<Point> &pts, int(&TwoIndexes)[2]);
 int Find_STL_Vector_Index_ofPointClosestToOtherPointWithinDistance(const Point &p, const std::vector<Point> &pts, const double &dist);
 void calculate_bounds(const std::vector<Point> &pts, double(&bounds)[6]);

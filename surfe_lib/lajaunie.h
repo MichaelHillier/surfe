@@ -52,7 +52,6 @@ private:
 
 public:
 	// Constructor/Destructor
-	Lajaunie_Approach() {}
 	Lajaunie_Approach(const Parameters &m_p);
 	~Lajaunie_Approach() {};
 	// Methods
