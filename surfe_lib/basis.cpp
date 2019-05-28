@@ -127,6 +127,8 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	// if there are normals sampled from a perfect cylinderical fold
 	if (eVals(0) < 0.0001)
 		eVals(0) = 0.0001;
+	if (eVals(1) < 0.0001)
+		eVals(1) = 0.0001;
 	// eval(0) = ~1e-16 machine precision.
 	// perhaps set to eval(0) = 0.0001 ...
 
@@ -143,6 +145,7 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 
 	_Transform = eVectors * ISQR * eVectors.transpose();
 #ifndef NDEBUG
+	cout << "Anisotropy scaling matrix is :" << endl << ISQR << endl;
 	cout << "The _Transform is:" << endl << _Transform << endl << endl;
 #endif
 
