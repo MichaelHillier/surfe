@@ -20,8 +20,12 @@ GRBF_Modelling_Methods* Surfe_API::get_method(const Parameters& params)
 		return new Lajaunie_Approach(params);
 	else if (params.model_type == Parameter_Types::Stratigraphic_horizons)
 		return new Stratigraphic_Surfaces(params);
-	else
+	else if (params.model_type == Parameter_Types::Vector_field)
+		return new Vector_Field(params);
+	else if (params.model_type == Parameter_Types::Continuous_property)
 		return new Continuous_Property(params);
+	else
+		std::throw_with_nested(GRBF_Exceptions::unknown_modelling_mode);
 }
 
 void Surfe_API::build_constraints_from_input_files()
@@ -451,19 +455,19 @@ void Surfe_API::SetRBFKernel(const Parameter_Types::RBF &rbf)
 
 void Surfe_API::SetRBFKernel(const char *rbf_name)
 {
-	if (rbf_name == "r3")
+	if (strcmp(rbf_name,"r3") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::Cubic;
-	else if (rbf_name == "WendlandC2")
+	else if (strcmp(rbf_name,"WendlandC2") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::WendlandC2;
-	else if (rbf_name == "r")
+	else if (strcmp(rbf_name,"r") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::R;
-	else if (rbf_name == "Gaussian")
+	else if (strcmp(rbf_name,"Gaussian") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::Gaussian;
-	else if (rbf_name == "Multiquadratics")
+	else if (strcmp(rbf_name,"Multiquadratics") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::MQ;
-	else if (rbf_name == "Thin Plate Spline")
+	else if (strcmp(rbf_name,"Thin Plate Spline") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::TPS;
-	else if (rbf_name = "Inverse Multiquadratics")
+	else if (strcmp(rbf_name,"Inverse Multiquadratics") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::IMQ; // Inverse Multiquadratics
 	else
 		throw GRBF_Exceptions::unknown_rbf;
@@ -704,6 +708,58 @@ void Surfe_API::BuildRegularGrid(const double &xy_percent_padding /*= 0*/)
 		constructed_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
 		constructed_grid->SetOrigin(origin);
 		constructed_grid->SetSpacing(spatial.resolution, spatial.resolution, spatial.resolution);
+
+		grid_ = constructed_grid;
+
+	}
+	catch (const std::exception&)
+	{
+		throw;
+	}
+}
+
+void Surfe_API::BuildRegularGrid(const double &resolution, const double &xy_percent_padding /*= 0*/)
+{
+	try
+	{
+		// get spatial parameters
+		SpatialParameters spatial = compute_constraint_bounds_and_resolution();
+
+		double bounds[6];
+		bounds[0] = spatial.xmin;
+		bounds[1] = spatial.xmax;
+		bounds[2] = spatial.ymin;
+		bounds[3] = spatial.ymax;
+		bounds[4] = spatial.zmin;
+		bounds[5] = spatial.zmax;
+		if (xy_percent_padding != 0 && xy_percent_padding < 100 && xy_percent_padding > 0)
+		{
+			double dx = spatial.xmax - spatial.xmin;
+			double dy = spatial.ymax - spatial.ymin;
+			double dz = spatial.zmax - spatial.zmin;
+			bounds[0] -= dx * (xy_percent_padding / 100.0);
+			bounds[1] += dx * (xy_percent_padding / 100.0);
+			bounds[2] -= dy * (xy_percent_padding / 100.0);
+			bounds[3] += dy * (xy_percent_padding / 100.0);
+			bounds[4] -= dy * (xy_percent_padding / 100.0);
+			bounds[5] += dy * (xy_percent_padding / 100.0);
+		}
+		if (spatial.resolution == 0)
+			throw GRBF_Exceptions::problem_computing_grid;
+
+		int nx = (bounds[1] - bounds[0]) / resolution;
+		int ny = (bounds[3] - bounds[2]) / resolution;
+		int nz = (bounds[5] - bounds[4]) / resolution;
+
+		if (nx == 0 || ny == 0 || nz == 0)
+			throw GRBF_Exceptions::problem_computing_grid;
+
+		double origin[3] = { bounds[0],bounds[2], bounds[4] };
+
+		vtkSmartPointer<vtkImageData> constructed_grid = vtkSmartPointer<vtkImageData>::New();
+		constructed_grid->SetDimensions(nx + 1, ny + 1, nz + 1);
+		constructed_grid->SetOrigin(origin);
+		constructed_grid->SetSpacing(resolution, resolution, resolution);
 
 		grid_ = constructed_grid;
 
@@ -1120,13 +1176,26 @@ void Surfe_API::WriteVTKInequalityConstraints(const char *filename)
 
 void Surfe_API::WriteVTKEvaluationGrid(const char *filename)
 {
-	if (evaluation_completed_ && grid_) {
-		vtkNew<vtkXMLImageDataWriter> writer;
-		writer->SetInputData(grid_);
-		writer->SetFileName(filename);
-		writer->SetDataModeToBinary();
-		writer->Write();
+
+	if (!grid_)
+		throw GRBF_Exceptions::no_sgrid_exists;
+
+	if (!evaluation_completed_ || parameters_changed_ || constraints_changed_) {
+		try
+		{
+			GetEvaluatedGrid();
+		}
+		catch (const std::exception&)
+		{
+			throw;
+		}
 	}
+
+	vtkNew<vtkXMLImageDataWriter> writer;
+	writer->SetInputData(grid_);
+	writer->SetFileName(filename);
+	writer->SetDataModeToBinary();
+	writer->Write();
 }
 
 void Surfe_API::WriteVTKIsoSurfaces(const char *filename)

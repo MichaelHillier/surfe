@@ -110,7 +110,7 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	Matrix3f eVectors = es.eigenvectors().real();
 #ifndef NDEBUG
 	cout << "The eigenvalues of A are:" << endl << es.eigenvalues() << endl;
-	cout << "The matrix of eigenvectors, V, is:" << endl << es.eigenvectors() << endl << endl;
+	cout << "The matrix of eigenvectors, V, is:" << endl << es.eigenvectors() << endl;
 #endif
 
 
@@ -133,7 +133,7 @@ bool RBFKernel::get_global_anisotropy(const std::vector<Planar> &planar)
 	// perhaps set to eval(0) = 0.0001 ...
 
 	Matrix3f ISQR;
-	ISQR(0, 0) = 1.0;
+	ISQR(0, 0) = 1;
 	ISQR(1, 0) = 0;
 	ISQR(2, 0) = 0;
 	ISQR(0, 1) = 0;
@@ -1564,6 +1564,136 @@ double AR::dzy() { return dyz(); }
 double AR::dzz() {
 	throw - 666;
 	return 0;
+}
+
+double WendlandC2::basis()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0; // if larger we truncate
+	// rescale the radius variable
+	_radius /= _cutoff;
+	return pow(1.0 - _radius, 4)*(1.0 + 4.0*_radius);
+}
+
+
+double WendlandC2::dx_p1()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0; // if larger we truncate
+	return 20.0*(_x_delta)*(pow(_radius - _cutoff, 3) / pow(_cutoff, 5));
+}
+
+double WendlandC2::dx_p2()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0; // if larger we truncate
+	return -20.0*(_x_delta)*(pow(_radius - _cutoff, 3) / pow(_cutoff, 5));
+}
+
+double WendlandC2::dy_p1()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0; // if larger we truncate
+	return 20.0*(_y_delta)*(pow(_radius - _cutoff, 3) / pow(_cutoff, 5));
+}
+
+double WendlandC2::dy_p2()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0; // if larger we truncate
+	return -20.0*(_y_delta)*(pow(_radius - _cutoff, 3) / pow(_cutoff, 5));
+}
+
+double WendlandC2::dz_p1()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0; // if larger we truncate
+	return 20.0*(_z_delta)*(pow(_radius - _cutoff, 3) / pow(_cutoff, 5));
+}
+
+double WendlandC2::dz_p2()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0; // if larger we truncate
+	return -20.0*(_z_delta)*(pow(_radius - _cutoff, 3) / pow(_cutoff, 5));
+}
+
+double WendlandC2::dxx()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0;
+	if (_radius == 0) return 20.0 / (_cutoff*_cutoff);
+	double a = -20.0 / (pow(_cutoff, 5)*_radius*_radius);
+	double b = pow(_cutoff - _radius, 2);
+	double c = -_cutoff * _radius*_radius + _radius * (4 * _x_delta*_x_delta + _y_delta * _y_delta + _z_delta * _z_delta);
+	return a * b*c;
+}
+
+double WendlandC2::dxy()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0;
+	if (_radius == 0) return 0.0;
+	double a = -60.0 *_x_delta*_y_delta / (pow(_cutoff, 5)*_radius);
+	double b = pow(_cutoff - _radius, 2);
+	return a * b;
+}
+
+double WendlandC2::dxz()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0;
+	if (_radius == 0) return 0.0;
+	double a = -60.0 *_x_delta*_z_delta / (pow(_cutoff, 5)*_radius);
+	double b = pow(_cutoff - _radius, 2);
+	return a * b;
+}
+
+double WendlandC2::dyx()
+{
+	return dxy();
+}
+
+double WendlandC2::dyy()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0;
+	if (_radius == 0) return 20.0 / (_cutoff*_cutoff);
+	double a = -20.0 / (pow(_cutoff, 5)*_radius*_radius);
+	double b = pow(_cutoff - _radius, 2);
+	double c = -_cutoff * _radius*_radius + _radius * (_x_delta*_x_delta + 4 * _y_delta*_y_delta + _z_delta * _z_delta);
+	return a * b*c;
+}
+
+double WendlandC2::dyz()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0;
+	if (_radius == 0) return 0.0;
+	double a = -60.0 *_y_delta*_z_delta / (pow(_cutoff, 5)*_radius);
+	double b = pow(_cutoff - _radius, 2);
+	return a * b;
+}
+
+double WendlandC2::dzx()
+{
+	return dxz();
+}
+
+double WendlandC2::dzy()
+{
+	return dyz();
+}
+
+double WendlandC2::dzz()
+{
+	radius();
+	if (_radius > _cutoff) return 0.0;
+	if (_radius == 0) return 20.0 / (_cutoff*_cutoff);
+	double a = -20.0 / (pow(_cutoff, 5)*_radius*_radius);
+	double b = pow(_cutoff - _radius, 2);
+	double c = -_cutoff * _radius*_radius + _radius * (_x_delta*_x_delta + _y_delta * _y_delta + 4 * _z_delta*_z_delta);
+	return a * b*c;
 }
 
 bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector<std::vector<Interface> > &interface_point_lists) {

@@ -47,6 +47,10 @@
 bool Linear_LU_decomposition::solve() {
 	if (_constraint_values.rows() != _interpolation_matrix.rows()) return false;
 	weights = _interpolation_matrix.partialPivLu().solve(_constraint_values);
+#ifndef NDEBUG
+	double condition_num = 1.0/_interpolation_matrix.partialPivLu().rcond();
+	std::cout << "Condition number of interpolation matrix is:" << condition_num << std::endl;
+#endif
 	if (!weights.allFinite()) return false;
 	return true;
 }

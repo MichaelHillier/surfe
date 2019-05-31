@@ -326,7 +326,7 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
 			}
 		}
-		else {
+		else if (rbf_type == Parameter_Types::TPS) {
 			try
 			{
 				return new ATPS(constraints.planar);
@@ -337,9 +337,10 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 				std::throw_with_nested(GRBF_Exceptions::failure_creating_anisotropic_kernel);
 			}
 		}
+		else
+			throw GRBF_Exceptions::unknown_rbf;
 	}
 	else {
-		// if (b_input._weights.size() != 0) return new Scaled_Cubic(b_input._weights,b_input._points);
 		if (rbf_type == Parameter_Types::Cubic)
 			return new Cubic;
 		else if (rbf_type == Parameter_Types::Gaussian)
@@ -350,8 +351,12 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 			return new MQ(ui_parameters.shape_parameter);
 		else if (rbf_type == Parameter_Types::R)
 			return new R;
-		else
+		else if (rbf_type == Parameter_Types::TPS)
 			return new TPS;
+		else if (rbf_type == Parameter_Types::WendlandC2)
+			return new WendlandC2(ui_parameters.shape_parameter);
+		else
+			throw GRBF_Exceptions::unknown_rbf;
 	}
 }
 

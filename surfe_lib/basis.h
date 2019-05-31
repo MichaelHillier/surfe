@@ -520,6 +520,31 @@ public:
 	AR *clone() override { return new AR(*this); }
 };
 
+class WendlandC2 : public RBFKernel {
+private:
+	double _cutoff;
+public:
+	WendlandC2(const double &cut_off) : _cutoff(cut_off) {}
+	~WendlandC2() {}
+	double basis();
+	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1(); // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2();
+	double dz_p1();
+	double dz_p2();
+	double dxx();
+	double dxy();
+	double dxz();
+	double dyx();
+	double dyy();
+	double dyz();
+	double dzx();
+	double dzy();
+	double dzz();
+	virtual WendlandC2 *clone() { return new WendlandC2(*this); }
+};
+
 class Polynomial_Basis {
 protected:
 	Point *_p;

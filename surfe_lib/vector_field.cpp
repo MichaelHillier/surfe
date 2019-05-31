@@ -94,7 +94,7 @@ bool Vector_Field::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 	for (int j = 0; j < n_p; j++) {
 		// Row:planar/Column:planar block
 		for (int k = 0; k < n_p; k++) {
-			kernel->set_points(constraints.planar[j], constraints.planar[j]);
+			kernel->set_points(constraints.planar[j], constraints.planar[k]);
 			interpolation_matrix(3 * j, 3 * k) =
 				kernel->basis_planar_planar(Parameter_Types::DXDX);
 			interpolation_matrix(3 * j, 3 * k + 1) =
@@ -122,50 +122,36 @@ bool Vector_Field::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 void Vector_Field::setup_system_solver() {
 	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
 
-	VectorXd equality_values;
+	VectorXd equality_values(n);
 	get_equality_values(equality_values);
 
 	MatrixXd interpolation_matrix(n, n);
 	if (!get_interpolation_matrix(interpolation_matrix))
 		throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
-	Linear_LU_decomposition llu(interpolation_matrix, equality_values);
-	if (!llu.solve())
+#ifndef NDEBUG
+	cout << "Interpolation matrix for Vector Field method:" << endl << interpolation_matrix << endl;
+#endif
+
+	Linear_LU_decomposition *llu =
+		new Linear_LU_decomposition(interpolation_matrix, equality_values);
+	if (!llu->solve())
 		throw GRBF_Exceptions::linear_solver_failure;
-	solver = &llu;
+	solver = llu;
 }
 
 void Vector_Field::eval_scalar_interpolant_at_point(Point &p) {
 	int n_p = b_parameters.n_planar;
 
 	Kernel *kernel_j = kernel->clone();
-	double elemsum_x = 0.0;
-	double elemsum_y = 0.0;
-	double elemsum_z = 0.0;
+	double elemsum = 0.0;
 	for (int k = 0; k < n_p; k++) {
 		kernel_j->set_points(p, constraints.planar[k]);
-		elemsum_x += solver->weights[3 * k] *
-			kernel_j->basis_planar_planar(Parameter_Types::DXDX);
-		elemsum_x += solver->weights[3 * k + 1] *
-			kernel_j->basis_planar_planar(Parameter_Types::DXDY);
-		elemsum_x += solver->weights[3 * k + 2] *
-			kernel_j->basis_planar_planar(Parameter_Types::DXDZ);
-
-		elemsum_y += solver->weights[3 * k] *
-			kernel_j->basis_planar_planar(Parameter_Types::DYDX);
-		elemsum_y += solver->weights[3 * k + 1] *
-			kernel_j->basis_planar_planar(Parameter_Types::DYDY);
-		elemsum_y += solver->weights[3 * k + 2] *
-			kernel_j->basis_planar_planar(Parameter_Types::DYDZ);
-
-		elemsum_z += solver->weights[3 * k] *
-			kernel_j->basis_planar_planar(Parameter_Types::DZDX);
-		elemsum_z += solver->weights[3 * k + 1] *
-			kernel_j->basis_planar_planar(Parameter_Types::DZDY);
-		elemsum_z += solver->weights[3 * k + 2] *
-			kernel_j->basis_planar_planar(Parameter_Types::DZDZ);
+		elemsum += solver->weights[3 * k] * kernel_j->basis_pt_planar_x();
+		elemsum += solver->weights[3 * k + 1] * kernel_j->basis_pt_planar_y();
+		elemsum += solver->weights[3 * k + 2] * kernel_j->basis_pt_planar_z();
 	}
-	p.set_vector_field(elemsum_x, elemsum_y, elemsum_z);
+	p.set_scalar_field(elemsum);
 	delete kernel_j;
 }
 

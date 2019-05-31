@@ -194,7 +194,7 @@ void  Lajaunie_Approach::get_method_parameters() {
 	}
 	int m = ui_parameters.polynomial_order + 1;
 	b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6) - 1;
-	// minus 1 due to the nature of the indepentent pair constraints and
+	// minus 1 due to the nature of the independent pair constraints and
 	// the vanishing of the constant term in the polynomial
 }
 
