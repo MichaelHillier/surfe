@@ -74,7 +74,8 @@ struct Parameter_Types {
 		IMQ,
 		TPS,
 		R,
-		WendlandC2
+		WendlandC2,
+		MaternC4
 	};
 	enum SolverType {
 		Linear,

@@ -355,6 +355,8 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 			return new TPS;
 		else if (rbf_type == Parameter_Types::WendlandC2)
 			return new WendlandC2(ui_parameters.shape_parameter);
+		else if (rbf_type == Parameter_Types::MaternC4)
+			return new MaternC4(ui_parameters.shape_parameter);
 		else
 			throw GRBF_Exceptions::unknown_rbf;
 	}

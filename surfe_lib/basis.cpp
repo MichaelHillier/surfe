@@ -3218,3 +3218,118 @@ VectorXd Poly_Second::dz() {
 		return v;
 	}
 }
+
+double MaternC4::basis()
+{
+	radius();
+	double a = _s * _radius;
+	return exp(-a)*(3.0 + 3.0*a + a*a);
+}
+
+double MaternC4::dx_p1()
+{
+	radius();
+	double a = _s * _radius;
+	return -exp(-a)*_s*_s*(1.0 + a)*(_p1->x() - _p2->x());
+}
+
+double MaternC4::dx_p2()
+{
+	radius();
+	double a = _s * _radius;
+	return exp(-a)*_s*_s*(1.0 + a)*(_p1->x() - _p2->x());
+}
+
+double MaternC4::dy_p1()
+{
+	radius();
+	double a = _s * _radius;
+	return -exp(-a)*_s*_s*(1.0 + a)*(_p1->y() - _p2->y());
+}
+
+double MaternC4::dy_p2()
+{
+	radius();
+	double a = _s * _radius;
+	return exp(-a)*_s*_s*(1.0 + a)*(_p1->y() - _p2->y());
+}
+
+double MaternC4::dz_p1()
+{
+	radius();
+	double a = _s * _radius;
+	return -exp(-a)*_s*_s*(1.0 + a)*(_p1->z() - _p2->z());
+}
+
+double MaternC4::dz_p2()
+{
+	radius();
+	double a = _s * _radius;
+	return exp(-a)*_s*_s*(1.0 + a)*(_p1->z() - _p2->z());
+}
+
+double MaternC4::dxx()
+{
+	radius();
+	double a = _s * _radius;
+	double dx = _p1->x() - _p2->x();
+	return exp(-a)*(_s*_s + _radius*_s*_s*_s - _s*_s*_s*_s*dx*dx);
+}
+
+double MaternC4::dxy()
+{
+	radius();
+	double a = _s * _radius;
+	double dx = _p1->x() - _p2->x();
+	double dy = _p1->y() - _p2->y();
+	return -exp(-a)*_s*_s*_s*_s*dx*dy;
+}
+
+double MaternC4::dxz()
+{
+	radius();
+	double a = _s * _radius;
+	double dx = _p1->x() - _p2->x();
+	double dz = _p1->z() - _p2->z();
+	return -exp(-a)*_s*_s*_s*_s*dx*dz;
+}
+
+double MaternC4::dyx()
+{
+	return dxy();
+}
+
+double MaternC4::dyy()
+{
+	radius();
+	double a = _s * _radius;
+	double dy = _p1->y() - _p2->y();
+	return exp(-a)*(_s*_s + _radius * _s*_s*_s - _s * _s*_s*_s*dy*dy);
+}
+
+double MaternC4::dyz()
+{
+	radius();
+	double a = _s * _radius;
+	double dy = _p1->y() - _p2->y();
+	double dz = _p1->z() - _p2->z();
+	return -exp(-a)*_s*_s*_s*_s*dy*dz;
+}
+
+double MaternC4::dzx()
+{
+	return dxz();
+}
+
+double MaternC4::dzy()
+{
+	return dyz();
+}
+
+double MaternC4::dzz()
+{
+	radius();
+	double a = _s * _radius;
+	double dz = _p1->z() - _p2->z();
+	return exp(-a)*(_s*_s + _radius * _s*_s*_s - _s * _s*_s*_s*dz*dz);
+}

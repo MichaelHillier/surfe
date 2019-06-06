@@ -545,6 +545,31 @@ public:
 	virtual WendlandC2 *clone() { return new WendlandC2(*this); }
 };
 
+class MaternC4 : public RBFKernel {
+private:
+	double _s;
+public:
+	MaternC4(const double &shape_parameter) : _s(shape_parameter) {}
+	~MaternC4() {}
+	double basis();
+	double dx_p1(); // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2(); // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1(); // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2();
+	double dz_p1();
+	double dz_p2();
+	double dxx();
+	double dxy();
+	double dxz();
+	double dyx();
+	double dyy();
+	double dyz();
+	double dzx();
+	double dzy();
+	double dzz();
+	virtual MaternC4 *clone() { return new MaternC4(*this); }
+};
+
 class Polynomial_Basis {
 protected:
 	Point *_p;

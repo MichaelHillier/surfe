@@ -26,16 +26,16 @@ int main(int argc, char* argv[]) {
 // 	surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/anisotropy_test_interface.csv");
 // 	surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/anisotropy_test_planar.csv");
 
-	surfe.SetModellingMode(2);
+	//surfe.SetModellingMode(2);
 	//surfe.SetGlobalAnisotropy(true);
-	surfe.SetPolynomialOrder(2);
-	surfe.SetRBFKernel("WendlandC2");
-	surfe.SetRBFShapeParameter(100.0);
-	surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/refolded_isoclinal_interface.vtp");
-	surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/refolded_isoclinal_normals.vtp");
+	//surfe.SetPolynomialOrder(1);
+// 	surfe.SetRBFKernel("MaternC4");
+// 	surfe.SetRBFShapeParameter(0.02);
+	//surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/refolded_isoclinal_interface.vtp");
+	//surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/refolded_isoclinal_normals.vtp");
 
-	//surfe.SetInterfaceDataFile("D:/Development/surfe_lib/data/Overturn_FieldData.vtp");
-	//surfe.SetPlanarDataFile("D:/Development/surfe_lib/data/OverturnNormals.vtp");
+	surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/Overturn_FieldData.vtp");
+	surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/OverturnNormals.vtp");
 	try
 	{
 		surfe.LoadConstraintsFromFiles();
@@ -57,15 +57,15 @@ int main(int argc, char* argv[]) {
 	}
 
 	//surfe.BuildRegularGrid(-2, 18, -2, 2, -20, 20, 0.125);
-	surfe.BuildRegularGrid(10,25);
-	//surfe.BuildRegularGrid(25);
+	//surfe.BuildRegularGrid(10,25);
+	surfe.BuildRegularGrid(5,25);
 	//surfe.BuildRegularGrid(-35000, 35000, 1000);
 	//surfe.BuildRegularGrid(-200, 200, 10, 25);
 
 	//surfe.WriteVTKInterfaceConstraints("G:/a_test_itr_pts.vtp");
 	//surfe.WriteVTKPlanarConstraints("G:/a_test_planar_pts.vtp");
-	surfe.WriteVTKIsoSurfaces("G:/Refold_WC2_100_2nd_poly.vtp");
-	//surfe.WriteVTKEvaluationGrid("G:/Refold_WC2_500_2ndpoly.vti");
+	//surfe.WriteVTKIsoSurfaces("G:/Refold_Matern_0_1_poly1.vtp");
+	surfe.WriteVTKEvaluationGrid("G:/Refold_R3_wNorm.vti");
 
 	surfe.VisualizeVTKData();
 

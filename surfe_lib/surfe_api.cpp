@@ -455,20 +455,22 @@ void Surfe_API::SetRBFKernel(const Parameter_Types::RBF &rbf)
 
 void Surfe_API::SetRBFKernel(const char *rbf_name)
 {
-	if (strcmp(rbf_name,"r3") == 0)
+	if (strcmp(rbf_name, "r3") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::Cubic;
-	else if (strcmp(rbf_name,"WendlandC2") == 0)
+	else if (strcmp(rbf_name, "WendlandC2") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::WendlandC2;
-	else if (strcmp(rbf_name,"r") == 0)
+	else if (strcmp(rbf_name, "r") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::R;
-	else if (strcmp(rbf_name,"Gaussian") == 0)
+	else if (strcmp(rbf_name, "Gaussian") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::Gaussian;
-	else if (strcmp(rbf_name,"Multiquadratics") == 0)
+	else if (strcmp(rbf_name, "Multiquadratics") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::MQ;
-	else if (strcmp(rbf_name,"Thin Plate Spline") == 0)
+	else if (strcmp(rbf_name, "Thin Plate Spline") == 0)
 		input_.parameters.basis_type = Parameter_Types::RBF::TPS;
-	else if (strcmp(rbf_name,"Inverse Multiquadratics") == 0)
-		input_.parameters.basis_type = Parameter_Types::RBF::IMQ; // Inverse Multiquadratics
+	else if (strcmp(rbf_name, "Inverse Multiquadratics") == 0)
+		input_.parameters.basis_type = Parameter_Types::RBF::IMQ;
+	else if (strcmp(rbf_name, "MaternC4") == 0)
+		input_.parameters.basis_type = Parameter_Types::MaternC4;
 	else
 		throw GRBF_Exceptions::unknown_rbf;
 
@@ -793,6 +795,11 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 	sfield->SetNumberOfComponents(1);
 	sfield->SetNumberOfTuples(grid_->GetNumberOfPoints());
 
+// 	vtkSmartPointer<vtkDoubleArray> normfield = vtkSmartPointer<vtkDoubleArray>::New();
+// 	normfield->SetName("Gradient Norm");
+// 	normfield->SetNumberOfComponents(1);
+// 	normfield->SetNumberOfTuples(grid_->GetNumberOfPoints());
+
 	clock_t this_time = clock();
 	clock_t last_time = this_time;
 	double time_counter = 0.0;
@@ -809,6 +816,13 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 		method_->eval_scalar_interpolant_at_point(pt);
 		double scalar_field = pt.scalar_field();
 		sfield->SetTuple1(j, scalar_field);
+// 		method_->eval_vector_interpolant_at_point(pt);
+// 		double nx = pt.nx_interp();
+// 		double ny = pt.ny_interp();
+// 		double nz = pt.nz_interp();
+// 		double norm = sqrt(nx*nx + ny * ny + nz * nz);
+// 		normfield->SetTuple1(j, norm);
+
 		// Print progress every 1s
 		evaluations_completed++;
 		this_time = clock();
@@ -818,12 +832,14 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 		{
 			time_counter -= (double)(1 * CLOCKS_PER_SEC);
 			float percent_completed = ((float)evaluations_completed / (float)N);
+			#pragma critical
 			progress(percent_completed);
 		}		
 	}
 	progress(1);
 	std::cout<<std::endl;
 	grid_->GetPointData()->SetScalars(sfield);
+	//grid_->GetPointData()->AddArray(normfield);
 
 	evaluation_completed_ = true;
 
@@ -1218,8 +1234,8 @@ void Surfe_API::VisualizeVTKData()
 	double spacing[3];
 	grid->GetSpacing(spacing);
 	double min_scale = *std::max_element(spacing, spacing + 3);
-	SpatialParameters spatial = compute_constraint_bounds_and_resolution();
-	min_scale = spatial.resolution;
+// 	SpatialParameters spatial = compute_constraint_bounds_and_resolution();
+// 	min_scale = spatial.resolution;
 
 	// get constraints
 	vtkSmartPointer<vtkPolyData> interface = GetInterfaceConstraints();
@@ -1325,7 +1341,7 @@ void Surfe_API::VisualizeVTKData()
 		glyph->SetInputConnection(0, vector->GetOutputPort());
 		glyph->SetInputConnection(1, arrow->GetOutputPort());
 		glyph->SetVectorModeToUseVector();
-		glyph->SetScaleFactor(min_scale);
+		glyph->SetScaleFactor(min_scale*3);
 		glyph->OrientOn();
 		glyph->Update();
 	
@@ -1352,7 +1368,7 @@ void Surfe_API::VisualizeVTKData()
 		glyph->SetInputConnection(0, vector->GetOutputPort());
 		glyph->SetInputConnection(1, arrow->GetOutputPort());
 		glyph->SetVectorModeToUseVector();
-		glyph->SetScaleFactor(min_scale);
+		glyph->SetScaleFactor(min_scale*3);
 		glyph->OrientOn();
 		glyph->Update();
 
