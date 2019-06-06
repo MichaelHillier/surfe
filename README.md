@@ -4,45 +4,76 @@ This code was development at Natural Resources Canada (Geological Survey of Cana
 
 ### What is this repository for? ###
 
-* This is a library for the SURFE algorithm that implements generalized interpolation using multivariate and scattered structural geologic constraints. It accepts 4 types of constraints: inequalities, interface, planar, and tangent points. It computes an interpolant/approximate for the constraints and evaluates that function at the user supplied points. IF you want to get a surface you will have to generate a list of points that are sampled from a grid/tetrahedral structure and once you have the results of the scalar field at the list of points you will have to put those values back into your grid/tetrahedral structure then perform a marching cube/tetrahedral algorithm.  
+* This is a library for the SURFE algorithm that implements generalized interpolation using multivariate and scattered structural geologic constraints. It accepts 4 types of constraints: inequalities, interface, planar, and tangent points. It computes an interpolant/approximate for the constraints and evaluates that function at the user supplied points.
 
 ### How do I get set up? ###
 
 * Summary of set up
 To setup a visual studio project to compile you must get cmake (https://cmake.org/). In cmake you will setup the compiler and dependences.
 * Dependencies
-GMP (https://gmplib.org/) and Eigen library (http://eigen.tuxfamily.org)
-* CMake Instructions:
-	1. Point to a folder that contains the downloaded source code (e.g. ../surfe_lib)
-	2. Point to an output folder for the build results (e.g. ../surfe_lib/_build)
-	3. Select configure at bottom left.
-	4. Select the version of you want for the vs project (make sure it's 64 bit version) Keep "Use default native compiler" selected.
-	5. Then click on finish, some errors will pop, CMake needs to know paths to some libraries. When paths are entered reselect configure option.
-	6. Error on EIGEN3_INCLUDE_DIR --> unzip downloaded eigen tar and point to folder that contains eigen cmake file (e.g. …/eigen)
-	7. Error on GMP_INCLUDE_DIR --> Point to SURFE downloaded code folder "gmp_lib" (e.g. ../surfe_lib/gmp_lib)
-	8. Error on GMP_LIBRARY_C --> Point to SURFE downloaded code library (e.g. ../surfe_lib/gmp_lib/Release/lib/libgmp-3.lib)
-	9. Error on GMP_LIBRARY_CPP -> Point to SURFE downloaded code library (e.g. ../surfe_lib/gmp_lib/Release/lib/libgmpxx-3.lib).
-	10. When configure is done, click on generate.
+	* [GMP](https://gmplib.org/)
+	* [Eigen3](http://eigen.tuxfamily.org)
+	* [VTK](https://vtk.org/)
+	* [Qt5](https://www.qt.io/download)
+	* [pybind11](https://github.com/pybind/pybind11)
+* CMake Instructions on Windows (GUI-based):
+Fill in required fields for
+	* GMP include dir
+	* GMP C library
+	* GMP C++ library
+	* Eigen3 include dir
+	* Qt5_DIR
+	* Python exe
+![CMake GUI settings](/docs/cmake_surfe.JPG?raw=true "CMake GUI settings (Windows)")
  
-* What does the algorithm expect as input?
-1) Fill the Basic_input (modelling_input.h) data structure with the constraints that you have and their corresponding properties/attributes : 
-// input data 
-std::vector< Inequality > *inequality;
-std::vector< Interface > *itrface;
-std::vector< Planar > *planar;
-std::vector< Tangent > *tangent;
+* How can I use this library
+	* Use python terminal 
+![Python terminal](/docs/python_term.JPG?raw=true)
+	* Use native C++ code
+	See code examples in the test project; main.cpp
+	* Link the generated lib/so files in your own application with the corresponding dll's 
 
-// evaluation sites in grid
-std::vector< Evaluation_Point > *evaluation_pts; // these are the x/y/z locations where the interpolant is going to be evaluated.
+* Algorithm Pipeline
+	1. Set modelling paramters
+	2. Set input constraints: inequality, interface, planar, tangent (Note: Algorithm requires at least 1 planar constraint be given)
+	3. Compute interpolant (To obtain a structural model)
+	4. Build a grid upon which the interpolant is evaluated   
+	5. Extract Isosurfaces (To obtain surfaces representing iso-contours or structural interfaces)
 
-2) Fill the model_parameters (modelling_parameters.h) data structure with the appropriate values for your model/data
+* How do I specify the modelling parameters and constraints
+	1. Use the Qt gui - called by GetParametersAndConstraints()
+![QT GUI](/docs/gui.JPG?raw=true)
+	2. Manually specifying the individual parameters using the API and the input files containing the data
+	3. Manually building the constraints using the API
 
-3) Get the appropriate method
-GRBF_Modelling_Methods* method = ... that is appropriate - note I will make a more appropriate method in the base class that will take care of this. 
+* What file types are supported?
+	1. csv files
+	2. vtk/vtp files
+	Coming: gocad ascii
 
-4) Run the algorithm:  method->run_algorithm() or method->run_greedy_algorithm() (for greedy)
+Developers can also easily expand on the support file types by deriving from the ConstraintFileReader and the corresponding subclasses. See read_input_files for reference.
 
-5) Get the results: method->get_evaluation_points_output()
+* Default property names for constraint types
+	* Inequality: x, y, z, level
+	* Interface: x, y, z, level
+	* Planar: x, y, z, dip, strike, azimuth, polarity, normal, nx, ny, nz
+	Note: for orientational data not all of the properties have to be specified. 
+	Multiple situations: {dip, strike, polarity}, {dip, azimuth, polarity}, {normal (a 3 component vector)}, {nx, ny, nz}
+	* Tangent: x, y, z, vector, vx, vy, vz
+	Note: for orientational data not all of the properties have to be specified. 
+	Two situations:  {vector (a 3 component vector)}, {vx, vy, vz}
+	
+* Current GUI limitations:
+At this time, it is assumed that default properties names are used in the input constraint files. However the ConstraintFileReader class is able to read the property names from the files (not necessarily the default property names) and individual property names can be manually set.
+
+Updates to GUI will resolve this limitations. Very soon!
+
+* Build-in 3D visualization
+API provides users the ability to easily visualize both their data and generated models. VTK is used for the visualization needs.
+![3D Visualization](/docs/3dViz.JPG?raw=true)
+
+* Model and Data File export
+	* Models and Data can be exported to vtp (VTK File Format).
 
 ### Who do I talk to? ###
 
