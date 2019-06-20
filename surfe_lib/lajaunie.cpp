@@ -408,7 +408,7 @@ bool Lajaunie_Approach::measure_residuals(Constraints &input) {
 				v2.push_back(tangent_pt.nx_interp());
 				v2.push_back(tangent_pt.ny_interp());
 				v2.push_back(tangent_pt.nz_interp());
-				Math_methods::angle_btw_2_vectors<double>(v1, v2, angle);
+				Math_methods::angle_btw_2_vectors(v1, v2, angle);
 				tangent_pt.setResidual(angle);
 			}
 		}

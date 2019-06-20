@@ -29,13 +29,31 @@ int main(int argc, char* argv[]) {
 	//surfe.SetModellingMode(2);
 	//surfe.SetGlobalAnisotropy(true);
 	//surfe.SetPolynomialOrder(1);
+// 	surfe.SetRBFKernel("WendlandC2");
+// 	surfe.SetRBFShapeParameter(200.0);
+//	surfe.SetRBFKernel("Gaussian");
+//	surfe.SetRBFShapeParameter(4.44e-3);
 // 	surfe.SetRBFKernel("MaternC4");
 // 	surfe.SetRBFShapeParameter(0.02);
 	//surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/refolded_isoclinal_interface.vtp");
 	//surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/refolded_isoclinal_normals.vtp");
 
-	surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/Overturn_FieldData.vtp");
-	surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/OverturnNormals.vtp");
+// 	surfe.SetModellingMode(4);
+// 	surfe.SetInequalityDataFile("C:/Development/surfe_lib/data/strat_inequality25.vtp");
+// 	surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/strat_interface25.vtp");
+// 	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/strat_normal25.vtp");
+
+	surfe.SetModellingMode(1);
+	surfe.SetInequalityDataFile("C:/Development/surfe_lib/data/conic_ie10.vtp");
+	surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/conic_itr10.vtp");
+	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/conic_normal10.vtp");
+
+
+	//surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/disconnection_interface.csv");
+	//surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/disconnection_normal.csv");
+
+	//surfe.SetInterfaceDataFile("G:/Development/surfe_lib/data/Overturn_FieldData.vtp");
+	//surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/OverturnNormals.vtp");
 	try
 	{
 		surfe.LoadConstraintsFromFiles();
@@ -56,16 +74,19 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	//surfe.BuildRegularGrid(-2, 18, -2, 2, -20, 20, 0.125);
+	surfe.BuildRegularGrid(25,25);
+	//surfe.BuildRegularGrid(-10, 200, -20, 75, -100, 20, 1);
 	//surfe.BuildRegularGrid(10,25);
-	surfe.BuildRegularGrid(5,25);
+	//surfe.BuildRegularGrid(5,25);
 	//surfe.BuildRegularGrid(-35000, 35000, 1000);
 	//surfe.BuildRegularGrid(-200, 200, 10, 25);
 
-	//surfe.WriteVTKInterfaceConstraints("G:/a_test_itr_pts.vtp");
-	//surfe.WriteVTKPlanarConstraints("G:/a_test_planar_pts.vtp");
-	//surfe.WriteVTKIsoSurfaces("G:/Refold_Matern_0_1_poly1.vtp");
-	surfe.WriteVTKEvaluationGrid("G:/Refold_R3_wNorm.vti");
+	//surfe.WriteVTKInterfaceConstraints("C:/Research/SurfeOutput/a_test_itr_pts.vtp");
+	//surfe.WriteVTKPlanarConstraints("C:/Research/SurfeOutput/a_test_planar_pts.vtp");
+// 	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/strat_r3.vtp");
+// 	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/strat_r3.vti");
+	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/conic_r3.vtp");
+	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/conic_r3.vti");
 
 	surfe.VisualizeVTKData();
 

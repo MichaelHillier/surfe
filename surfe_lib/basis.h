@@ -40,7 +40,6 @@
 #ifndef basis_h
 #define basis_h
 
-#include <gmpxx.h>
 #include <modelling_input.h>
 #include <grbf_exceptions.h>
 
@@ -620,8 +619,8 @@ public:
 
 class Lagrangian_Polynomial_Basis {
 private:
-	Matrix<mpf_class, Dynamic, 1> _polynomial_constants;
-	Matrix<mpf_class, Dynamic, Dynamic> _derivative_polynomial_constants;
+	VectorXd _polynomial_constants;
+	MatrixXd _derivative_polynomial_constants;
 	bool _get_unisolvent_subset(
 		const std::vector<std::vector<Interface> > &interface_point_lists);
 	void _initialize_basis();
@@ -630,17 +629,16 @@ public:
 	Lagrangian_Polynomial_Basis(
 		const std::vector<std::vector<Interface> > &interface_point_lists)
 	{
-		mpf_set_default_prec(128.0);
 		if (_get_unisolvent_subset(interface_point_lists))
 			_initialize_basis();
 		else {
 			std::throw_with_nested(GRBF_Exceptions::failure_creating_lagrangian_polynomial_basis);
 		}
 	}
-	Matrix<mpf_class, Dynamic, 1> poly(const Point *p);
-	Matrix<mpf_class, Dynamic, 1> poly_dx(const Point *p);
-	Matrix<mpf_class, Dynamic, 1> poly_dy(const Point *p);
-	Matrix<mpf_class, Dynamic, 1> poly_dz(const Point *p);
+	VectorXd poly(const Point *p);
+	VectorXd poly_dx(const Point *p);
+	VectorXd poly_dy(const Point *p);
+	VectorXd poly_dz(const Point *p);
 	std::vector<Interface> unisolvent_subset_points;
 };
 
@@ -650,7 +648,6 @@ public:
 		RBFKernel *arbfkernel,
 		const std::vector<std::vector<Interface> > &interface_point_lists)
 	{
-		mpf_set_default_prec(128.0);
 		_aRBFKernel = arbfkernel;
 		try
 		{

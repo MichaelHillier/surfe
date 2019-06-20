@@ -47,8 +47,8 @@ private:
 	// Methods
 	bool _get_increment_pairs();
 	std::vector<std::vector<Point>> _get_lithostratigraphic_increment_pairs_for_inequality_point(const Inequality &ie_pt);
-	double _get_closest_horizon_level_above_given_level(const double &given_level, const std::vector<double> &horizon_levels);
-	double _get_closest_horizon_level_below_given_level(const double &given_level, const std::vector<double> &horizon_levels);
+	bool _get_closest_horizon_level_above_given_level(const double &given_level, const std::vector<double> &horizon_levels, double &above_level);
+	bool _get_closest_horizon_level_below_given_level(const double &given_level, const std::vector<double> &horizon_levels, double &below_level);
 	bool _get_polynomial_matrix_block(MatrixXd &poly_matrix);
 	bool _insert_polynomial_matrix_blocks_in_interpolation_matrix(const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix);
 	// Attributes

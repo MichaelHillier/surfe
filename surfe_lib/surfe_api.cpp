@@ -394,6 +394,7 @@ void Surfe_API::ComputeInterpolant()
 	have_interpolant_ = true;
 	constraints_changed_ = false;
 	parameters_changed_ = false;
+	evaluation_completed_ = false;
 
 }
 
@@ -777,6 +778,9 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 	if (!grid_)
 		throw GRBF_Exceptions::no_sgrid_exists;
 
+	if (evaluation_completed_)
+		return grid_;
+
 	if (!have_interpolant_ || parameters_changed_ || constraints_changed_)
 	{
 		try
@@ -832,7 +836,6 @@ vtkSmartPointer<vtkImageData> Surfe_API::GetEvaluatedGrid()
 		{
 			time_counter -= (double)(1 * CLOCKS_PER_SEC);
 			float percent_completed = ((float)evaluations_completed / (float)N);
-			#pragma critical
 			progress(percent_completed);
 		}		
 	}

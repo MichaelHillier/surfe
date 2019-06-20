@@ -75,58 +75,65 @@ bool Linear_LU_decomposition::check_solution()
 	return true;
 }
 
-Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_convert_double_matrix_2_mpf(
-	const MatrixXd &matrix)
-{
-	int nrows = (int)matrix.rows();
-	int ncols = (int)matrix.cols();
-
-	Matrix<mpf_class, Dynamic, Dynamic> mpf_matrix(nrows, ncols);
-
-	for (int j = 0; j < nrows; j++) {
-		for (int k = 0; k < ncols; k++) {
-			mpf_matrix(j, k) = matrix(j, k);
-		}
-	}
-
-	return mpf_matrix;
-}
-
-Matrix<mpf_class, Dynamic, 1> Quadratic_Predictor_Corrector::_convert_double_vector_2_mpf(
-	const VectorXd &vector)
-{
-	int nrows = (int)vector.rows();
-	Matrix<mpf_class, Dynamic, 1> mpf_vector(nrows);
-
-	for (int j = 0; j < nrows; j++) mpf_vector(j) = vector(j);
-	return mpf_vector;
-}
-
-VectorXd Quadratic_Predictor_Corrector::_convert_mpf_vector_2_double(
-	const Matrix<mpf_class, Dynamic, 1> &vector)
-{
-	int nrows = (int)vector.rows();
-	VectorXd v(nrows);
-
-	for (int j = 0; j < nrows; j++) v(j) = vector(j).get_d();
-	return v;
-}
-
-Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_get_hessian_matrix(
-	const Matrix<mpf_class, Dynamic, Dynamic> &matrix)
-{
-	int nrows = (int)matrix.rows();
-	int ncols = (int)matrix.cols();
-	Matrix<mpf_class, Dynamic, Dynamic> hessian(nrows, ncols);
-
-	hessian = 2.0 * matrix;
-
-	return hessian;
-}
+// Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_convert_double_matrix_2_mpf(
+// 	const MatrixXd &matrix)
+// {
+// 	int nrows = (int)matrix.rows();
+// 	int ncols = (int)matrix.cols();
+// 
+// 	Matrix<mpf_class, Dynamic, Dynamic> mpf_matrix(nrows, ncols);
+// 
+// 	for (int j = 0; j < nrows; j++) {
+// 		for (int k = 0; k < ncols; k++) {
+// 			mpf_matrix(j, k) = matrix(j, k);
+// 		}
+// 	}
+// 
+// 	return mpf_matrix;
+// }
+// 
+// Matrix<mpf_class, Dynamic, 1> Quadratic_Predictor_Corrector::_convert_double_vector_2_mpf(
+// 	const VectorXd &vector)
+// {
+// 	int nrows = (int)vector.rows();
+// 	Matrix<mpf_class, Dynamic, 1> mpf_vector(nrows);
+// 
+// 	for (int j = 0; j < nrows; j++) mpf_vector(j) = vector(j);
+// 	return mpf_vector;
+// }
+// 
+// VectorXd Quadratic_Predictor_Corrector::_convert_mpf_vector_2_double(
+// 	const Matrix<mpf_class, Dynamic, 1> &vector)
+// {
+// 	int nrows = (int)vector.rows();
+// 	VectorXd v(nrows);
+// 
+// 	for (int j = 0; j < nrows; j++) v(j) = vector(j).get_d();
+// 	return v;
+// }
+// 
+// Matrix<mpf_class, Dynamic, Dynamic> Quadratic_Predictor_Corrector::_get_hessian_matrix(
+// 	const Matrix<mpf_class, Dynamic, Dynamic> &matrix)
+// {
+// 	int nrows = (int)matrix.rows();
+// 	int ncols = (int)matrix.cols();
+// 	Matrix<mpf_class, Dynamic, Dynamic> hessian(nrows, ncols);
+// 
+// 	hessian = 2.0 * matrix;
+// 
+// 	return hessian;
+// }
 
 bool Quadratic_Predictor_Corrector::solve()
 {
 	int n = (int)_hessian_matrixD.rows();
+
+#ifndef NDEBUG
+	EigenSolver<MatrixXd> EigenMatrix(_hessian_matrixD);
+	std::cout << "Eigen values for this matrix: " << std::endl << EigenMatrix.eigenvalues() << std::endl;
+	double condition_num = 1.0 / _hessian_matrixD.partialPivLu().rcond();
+	std::cout << "Condition number of interpolation matrix is:" << condition_num << std::endl;
+#endif
 
 	// Matrix <mpf_class, Dynamic, 1> fvalues(n);
 	Matrix<double, Dynamic, 1> fvalues(n);

@@ -14,23 +14,6 @@ if (${VTK_VERSION} VERSION_LESS_EQUAL 8.2)
 	include(${VTK_USE_FILE})
 endif()
 
-# Get GMP dependency
-find_path(GMP_INCLUDE_DIR gmp.h gmpxx.h)
-find_library(GMP_LIBRARY_C NAMES gmp)
-find_library(GMP_LIBRARY_CPP NAMES gmpxx)
-
-if(GMP_INCLUDE_DIR AND GMP_LIBRARY_C AND GMP_LIBRARY_CPP)
-    get_filename_component(GMP_LIBRARY_C_DIR ${GMP_LIBRARY_C} PATH)
-	get_filename_component(GMP_LIBRARY_CPP_DIR ${GMP_LIBRARY_CPP} PATH)
-    set(GMP_FOUND TRUE)
-endif()
-
-if(GMP_FOUND)
-   MESSAGE(STATUS "Found GMP_C: ${GMP_LIBRARY_C}")
-   MESSAGE(STATUS "Found GMP_CPP: ${GMP_LIBRARY_CPP}")
-else()
-   MESSAGE(FATAL_ERROR "Could not find GMP")
-endif()
 find_package(OpenMP)
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -43,16 +26,12 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# Set link directories
-link_directories(${GMP_LIBRARY_C_DIR} ${GMP_LIBRARY_CPP_DIR})
-
 # Setup math_lib
 FILE(GLOB MATH_LIB_HEADERS "math_lib/*.h")
 FILE(GLOB MATH_LIB_SOURCES "math_lib/*.cpp")
 
 add_library(math_lib SHARED ${MATH_LIB_HEADERS} ${MATH_LIB_SOURCES})
 target_include_directories(math_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/math_lib)
-target_link_libraries(math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP})
 
 # QT library
 find_package(Qt5 COMPONENTS REQUIRED
@@ -81,7 +60,7 @@ source_group("UI Files"	FILES ${SRC_UI})
 add_library(surfe_lib SHARED ${SURFE_LIB_HEADERS} ${SURFE_LIB_SOURCES} ${SRC_UI} ${ui_wrap} ${moc_sources} ${rcc_resources})
 target_include_directories(surfe_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/surfe_lib
                                             ${CMAKE_CURRENT_SOURCE_DIR}/math_lib)
-target_link_libraries(surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP} ${VTK_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(surfe_lib math_lib ${VTK_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)
 
 #Setup test
 FILE(GLOB TEST_HEADERS "test/*.h")
@@ -90,12 +69,12 @@ FILE(GLOB TEST_SOURCES "test/*.cpp")
 include_directories(${GMP_INCLUDE_DIR})
 
 ADD_EXECUTABLE(test test/main.cpp)
-target_link_libraries(test surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP} ${VTK_LIBRARIES})
+target_link_libraries(test surfe_lib math_lib ${VTK_LIBRARIES})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test ${CMAKE_CURRENT_SOURCE_DIR}/surfe_lib
                                             ${CMAKE_CURRENT_SOURCE_DIR}/math_lib)
 
 add_subdirectory(pybind11)
 #setup python
 pybind11_add_module(surfepy surfe_pybindings/pybindings.cpp)
-target_link_libraries(surfepy surfe_lib math_lib ${GMP_LIBRARY_C} ${GMP_LIBRARY_CPP} ${VTK_LIBRARIES})
+target_link_libraries(surfepy surfe_lib math_lib ${VTK_LIBRARIES})
 

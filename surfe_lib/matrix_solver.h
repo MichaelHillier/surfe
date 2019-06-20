@@ -40,8 +40,6 @@
 #ifndef matrix_solver_h
 #define matrix_solver_h
 
-#include <gmpxx.h>
-
 #include <Eigen/Core>
 #include <fstream>
 #include <iomanip>
@@ -94,23 +92,23 @@ public:
 
 class Quadratic_Predictor_Corrector : public System_Solver {
 private:
-	mpf_class _largest_element;
+	//mpf_class _largest_element;
 	MatrixXd _interpolation_matrixD;
 	MatrixXd _hessian_matrixD;
 	MatrixXd _equality_matrixD;
 	MatrixXd _inequality_matrixD;
 	VectorXd _equality_vectorD;
 	VectorXd _inequality_vectorD;
-	Matrix<mpf_class, Dynamic, Dynamic> _hessian_matrix;
-	Matrix<mpf_class, Dynamic, Dynamic> _interpolation_matrix;
-	Matrix<mpf_class, Dynamic, Dynamic> _equality_matrix;
-	Matrix<mpf_class, Dynamic, Dynamic> _inequality_matrix;
-	Matrix<mpf_class, Dynamic, 1> _equality_vector;
-	Matrix<mpf_class, Dynamic, 1> _inequality_vector;
-	Matrix<mpf_class, Dynamic, Dynamic> _convert_double_matrix_2_mpf(const MatrixXd &matrix);
-	Matrix<mpf_class, Dynamic, 1> _convert_double_vector_2_mpf(const VectorXd &vector);
-	VectorXd _convert_mpf_vector_2_double(const Matrix<mpf_class, Dynamic, 1> &vector);
-	Matrix<mpf_class, Dynamic, Dynamic> _get_hessian_matrix(const Matrix<mpf_class, Dynamic, Dynamic> &matrix);
+// 	Matrix<mpf_class, Dynamic, Dynamic> _hessian_matrix;
+// 	Matrix<mpf_class, Dynamic, Dynamic> _interpolation_matrix;
+// 	Matrix<mpf_class, Dynamic, Dynamic> _equality_matrix;
+// 	Matrix<mpf_class, Dynamic, Dynamic> _inequality_matrix;
+// 	Matrix<mpf_class, Dynamic, 1> _equality_vector;
+// 	Matrix<mpf_class, Dynamic, 1> _inequality_vector;
+// 	Matrix<mpf_class, Dynamic, Dynamic> _convert_double_matrix_2_mpf(const MatrixXd &matrix);
+// 	Matrix<mpf_class, Dynamic, 1> _convert_double_vector_2_mpf(const VectorXd &vector);
+// 	VectorXd _convert_mpf_vector_2_double(const Matrix<mpf_class, Dynamic, 1> &vector);
+// 	Matrix<mpf_class, Dynamic, Dynamic> _get_hessian_matrix(const Matrix<mpf_class, Dynamic, Dynamic> &matrix);
 public:
 	Quadratic_Predictor_Corrector(const MatrixXd &interpolation_matrix,
 		const MatrixXd &equality_matrix,

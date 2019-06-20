@@ -1737,9 +1737,9 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector<std::
 		Zcoord_array.push_back(interface_point_lists[index][j].z());
 	}
 	// Sort those arrays
-	Math_methods::sort_vector_w_index<double>(Xcoord_array, Index_Xcoord_array);
-	Math_methods::sort_vector_w_index<double>(Ycoord_array, Index_Ycoord_array);
-	Math_methods::sort_vector_w_index<double>(Zcoord_array, Index_Zcoord_array);
+	Math_methods::sort_vector_w_index(Xcoord_array, Index_Xcoord_array);
+	Math_methods::sort_vector_w_index(Ycoord_array, Index_Ycoord_array);
+	Math_methods::sort_vector_w_index(Zcoord_array, Index_Zcoord_array);
 
 	// 	cout<<" sorted x array"<<endl;
 	// 	for (int j = 0; j < n; j++ ) cout<<" ["<<j<<"]= "<<Xcoord_array[j]<<"
@@ -1951,23 +1951,23 @@ bool Lagrangian_Polynomial_Basis::_get_unisolvent_subset(const std::vector<std::
 }
 
 void Lagrangian_Polynomial_Basis::_initialize_basis() {
-	mpf_class x1 = unisolvent_subset_points[0].x();
-	mpf_class y1 = unisolvent_subset_points[0].y();
-	mpf_class z1 = unisolvent_subset_points[0].z();
+	auto x1 = unisolvent_subset_points[0].x();
+	auto y1 = unisolvent_subset_points[0].y();
+	auto z1 = unisolvent_subset_points[0].z();
 
-	mpf_class x2 = unisolvent_subset_points[1].x();
-	mpf_class y2 = unisolvent_subset_points[1].y();
-	mpf_class z2 = unisolvent_subset_points[1].z();
+	auto x2 = unisolvent_subset_points[1].x();
+	auto y2 = unisolvent_subset_points[1].y();
+	auto z2 = unisolvent_subset_points[1].z();
 
-	mpf_class x3 = unisolvent_subset_points[2].x();
-	mpf_class y3 = unisolvent_subset_points[2].y();
-	mpf_class z3 = unisolvent_subset_points[2].z();
+	auto x3 = unisolvent_subset_points[2].x();
+	auto y3 = unisolvent_subset_points[2].y();
+	auto z3 = unisolvent_subset_points[2].z();
 
-	mpf_class x4 = unisolvent_subset_points[3].x();
-	mpf_class y4 = unisolvent_subset_points[3].y();
-	mpf_class z4 = unisolvent_subset_points[3].z();
+	auto x4 = unisolvent_subset_points[3].x();
+	auto y4 = unisolvent_subset_points[3].y();
+	auto z4 = unisolvent_subset_points[3].z();
 
-	mpf_class d =
+	auto d =
 		(x1 * (y4 * z2 - y3 * z2 + y2 * z3 - y4 * z3 - y2 * z4 + y3 * z4) +
 			x2 * (y3 * z1 - y4 * z1 - y1 * z3 + y4 * z3 + y1 * z4 - y3 * z4) +
 			x3 * (y4 * z1 + y1 * z2 - y4 * z2 - y1 * z4 - y2 * z1 + y2 * z4) +
@@ -2031,8 +2031,8 @@ void Lagrangian_Polynomial_Basis::_initialize_basis() {
 	_derivative_polynomial_constants(2, 3) = _polynomial_constants[15]; // basis 4
 }
 
-Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly(const Point *p) {
-	Matrix<mpf_class, Dynamic, 1> basis;
+VectorXd Lagrangian_Polynomial_Basis::poly(const Point *p) {
+	VectorXd basis;
 	basis.resize(4);
 
 	basis(0) = _polynomial_constants(0) + _polynomial_constants(1) * p->x() +
@@ -2051,8 +2051,8 @@ Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly(const Point *p) 
 	return basis;
 }
 
-Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly_dx(const Point *p) {
-	Matrix<mpf_class, Dynamic, 1> basis;
+VectorXd Lagrangian_Polynomial_Basis::poly_dx(const Point *p) {
+	VectorXd basis;
 	basis.resize(4);
 
 	basis(0) = _derivative_polynomial_constants(0, 0);
@@ -2063,8 +2063,8 @@ Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly_dx(const Point *
 	return basis;
 }
 
-Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly_dy(const Point *p) {
-	Matrix<mpf_class, Dynamic, 1> basis;
+VectorXd Lagrangian_Polynomial_Basis::poly_dy(const Point *p) {
+	VectorXd basis;
 	basis.resize(4);
 
 	basis(0) = _derivative_polynomial_constants(1, 0);
@@ -2075,8 +2075,8 @@ Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly_dy(const Point *
 	return basis;
 }
 
-Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly_dz(const Point *p) {
-	Matrix<mpf_class, Dynamic, 1> basis;
+VectorXd Lagrangian_Polynomial_Basis::poly_dz(const Point *p) {
+	VectorXd basis;
 	basis.resize(4);
 
 	basis(0) = _derivative_polynomial_constants(2, 0);
@@ -2088,16 +2088,16 @@ Matrix<mpf_class, Dynamic, 1> Lagrangian_Polynomial_Basis::poly_dz(const Point *
 }
 
 double Modified_Kernel::basis_pt_pt() {
-	mpf_class t1, t2, t3, t4;
+	double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1 = this->_aLPB->poly(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
+	VectorXd p1 = this->_aLPB->poly(this->p1());
+	VectorXd p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1(this->_aRBFKernel->basis());
+		double b1 = this->_aRBFKernel->basis();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2(this->_aRBFKernel->basis());
+		double b2 = this->_aRBFKernel->basis();
 		t1 += p1(j) * b1;
 		t2 += p2(j) * b2;
 		t3 += p1(j) * p2(j);
@@ -2105,27 +2105,27 @@ double Modified_Kernel::basis_pt_pt() {
 			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4 += p1(j) * p2(k) * b3;
 			}
 		}
 	}
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class sum = this->_aRBFKernel->basis() - t1 - t2 + t3 + t4;
-	return sum.get_d();
+	double sum = this->_aRBFKernel->basis() - t1 - t2 + t3 + t4;
+	return sum;
 }
 
 double Modified_Kernel::basis_pt_planar_x() {
-	mpf_class t1x, t2x, t3x, t4x;
+	double t1x = 0, t2x = 0, t3x = 0, t4x = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1 = this->_aLPB->poly(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
+	VectorXd p1 = this->_aLPB->poly(this->p1());
+	VectorXd p2x = this->_aLPB->poly_dx(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1x(this->_aRBFKernel->dx_p2());
+		double b1x = this->_aRBFKernel->dx_p2();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2(this->_aRBFKernel->basis());
+		double b2 = this->_aRBFKernel->basis();
 		t1x += p1(j) * b1x;
 		t2x += p2x(j) * b2;
 		t3x += p1(j) * p2x(j);
@@ -2133,84 +2133,84 @@ double Modified_Kernel::basis_pt_planar_x() {
 			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4x += p1(j) * p2x(k) * b3;
 			}
 		}
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class sum = this->_aRBFKernel->dx_p2() - t1x - t2x + t3x + t4x;
-	return sum.get_d();
+	double sum = this->_aRBFKernel->dx_p2() - t1x - t2x + t3x + t4x;
+	return sum;
 }
 
 double Modified_Kernel::basis_planar_x_pt() {
-	mpf_class t1x, t2x, t3x, t4x;
+	double t1x = 0, t2x = 0, t3x = 0, t4x = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
+	VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+	VectorXd p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1(this->_aRBFKernel->basis());
+		double b1 = this->_aRBFKernel->basis();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2x(this->_aRBFKernel->dx_p1());
+		double b2x = this->_aRBFKernel->dx_p1();
 		t1x += p1x(j) * b1;
 		t2x += p2(j) * b2x;
 		t3x += p1x(j) * p2(j);
 		for (int k = 0; k < 4; k++) {
 			if (k != j) {
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4x += p1x(j) * p2(k) * b3;
 			}
 		}
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class sum = this->_aRBFKernel->dx_p1() - t1x - t2x + t3x + t4x;
-	return sum.get_d();
+	double sum = this->_aRBFKernel->dx_p1() - t1x - t2x + t3x + t4x;
+	return sum;
 }
 
 double Modified_Kernel::basis_pt_planar_y() {
-	mpf_class t1y, t2y, t3y, t4y;
+	double t1y = 0, t2y = 0, t3y = 0, t4y = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1 = this->_aLPB->poly(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
+	VectorXd p1 = this->_aLPB->poly(this->p1());
+	VectorXd p2y = this->_aLPB->poly_dy(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1y(this->_aRBFKernel->dy_p2());
+		double b1y = this->_aRBFKernel->dy_p2();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2(this->_aRBFKernel->basis());
+		double b2 = this->_aRBFKernel->basis();
 		t1y += p1(j) * b1y;
 		t2y += p2y(j) * b2;
 		t3y += p1(j) * p2y(j);
 		for (int k = 0; k < 4; k++) {
 			if (k != j) {
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4y += p1(j) * p2y(k) * b3;
 			}
 		}
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class sum = this->_aRBFKernel->dy_p2() - t1y - t2y + t3y + t4y;
-	return sum.get_d();
+	double sum = this->_aRBFKernel->dy_p2() - t1y - t2y + t3y + t4y;
+	return sum;
 }
 
 double Modified_Kernel::basis_planar_y_pt() {
-	mpf_class t1y, t2y, t3y, t4y;
+	double t1y = 0, t2y = 0, t3y = 0, t4y = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
+	VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+	VectorXd p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1(this->_aRBFKernel->basis());
+		double b1 = this->_aRBFKernel->basis();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2y(this->_aRBFKernel->dy_p1());
+		double b2y = this->_aRBFKernel->dy_p1();
 		t1y += p1y(j) * b1;
 		t2y += p2(j) * b2y;
 		t3y += p1y(j) * p2(j);
@@ -2218,28 +2218,28 @@ double Modified_Kernel::basis_planar_y_pt() {
 			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4y += p1y(j) * p2(k) * b3;
 			}
 		}
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class sum = this->_aRBFKernel->dy_p1() - t1y - t2y + t3y + t4y;
-	return sum.get_d();
+	double sum = this->_aRBFKernel->dy_p1() - t1y - t2y + t3y + t4y;
+	return sum;
 }
 
 double Modified_Kernel::basis_pt_planar_z() {
-	mpf_class t1z, t2z, t3z, t4z;
+	double t1z = 0, t2z = 0, t3z = 0, t4z = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1 = this->_aLPB->poly(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+	VectorXd p1 = this->_aLPB->poly(this->p1());
+	VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1z(this->_aRBFKernel->dz_p2());
+		double b1z = this->_aRBFKernel->dz_p2();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2(this->_aRBFKernel->basis());
+		double b2 = this->_aRBFKernel->basis();
 		t1z += p1(j) * b1z;
 		t2z += p2z(j) * b2;
 		t3z += p1(j) * p2z(j);
@@ -2247,28 +2247,28 @@ double Modified_Kernel::basis_pt_planar_z() {
 			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4z += p1(j) * p2z(k) * b3;
 			}
 		}
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class sum = this->_aRBFKernel->dz_p2() - t1z - t2z + t3z + t4z;
-	return sum.get_d();
+	double sum = this->_aRBFKernel->dz_p2() - t1z - t2z + t3z + t4z;
+	return sum;
 }
 
 double Modified_Kernel::basis_planar_z_pt() {
-	mpf_class t1z, t2z, t3z, t4z;
+	double t1z = 0, t2z = 0, t3z = 0, t4z = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
+	VectorXd p1z = this->_aLPB->poly_dz(this->p1());
+	VectorXd p2 = this->_aLPB->poly(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1(this->_aRBFKernel->basis());
+		double b1 = this->_aRBFKernel->basis();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2z(this->_aRBFKernel->dz_p1());
+		double b2z = this->_aRBFKernel->dz_p1();
 		t1z += p1z(j) * b1;
 		t2z += p2(j) * b2z;
 		t3z += p1z(j) * p2(j);
@@ -2276,33 +2276,33 @@ double Modified_Kernel::basis_planar_z_pt() {
 			if (k != j)
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4z += p1z(j) * p2(k) * b3;
 			}
 		}
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class sum = this->_aRBFKernel->dz_p1() - t1z - t2z + t3z + t4z;
-	return sum.get_d();
+	double sum = this->_aRBFKernel->dz_p1() - t1z - t2z + t3z + t4z;
+	return sum;
 }
 
 double Modified_Kernel::basis_pt_tangent() {
-	mpf_class t1x, t2x, t3x, t4x, t1y, t2y, t3y, t4y, t1z, t2z, t3z, t4z;
+	double t1x = 0, t2x = 0, t3x = 0, t4x = 0, t1y = 0, t2y = 0, t3y = 0, t4y = 0, t1z = 0, t2z = 0, t3z = 0, t4z = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1 = this->_aLPB->poly(this->p1());
+	VectorXd p1 = this->_aLPB->poly(this->p1());
 
-	Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
-	Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
-	Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+	VectorXd p2x = this->_aLPB->poly_dx(this->p2());
+	VectorXd p2y = this->_aLPB->poly_dy(this->p2());
+	VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1x(this->_aRBFKernel->dx_p2());
-		mpf_class b1y(this->_aRBFKernel->dy_p2());
-		mpf_class b1z(this->_aRBFKernel->dz_p2());
+		double b1x = this->_aRBFKernel->dx_p2();
+		double b1y = this->_aRBFKernel->dy_p2();
+		double b1z = this->_aRBFKernel->dz_p2();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2(this->_aRBFKernel->basis());
+		double b2 = this->_aRBFKernel->basis();
 		// for dx component
 		t1x += p1(j) * b1x;
 		t2x += p2x(j) * b2;
@@ -2334,7 +2334,7 @@ double Modified_Kernel::basis_pt_tangent() {
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 					this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4x += p1(j) * p2x(k) * b3;
 				t4y += p1(j) * p2y(k) * b3;
 				t4z += p1(j) * p2z(k) * b3;
@@ -2343,35 +2343,35 @@ double Modified_Kernel::basis_pt_tangent() {
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class dx = this->_aRBFKernel->dx_p2() - t1x - t2x + t3x + t4x;
-	mpf_class dy = this->_aRBFKernel->dy_p2() - t1y - t2y + t3y + t4y;
-	mpf_class dz = this->_aRBFKernel->dz_p2() - t1z - t2z + t3z + t4z;
+	double dx = this->_aRBFKernel->dx_p2() - t1x - t2x + t3x + t4x;
+	double dy = this->_aRBFKernel->dy_p2() - t1y - t2y + t3y + t4y;
+	double dz = this->_aRBFKernel->dz_p2() - t1z - t2z + t3z + t4z;
 
 	// It is your responsibility to supply the right type
 	// It is not worth the cost of dynamic_cast + if
 	Tangent *t = static_cast<Tangent *>(this->p2());
-	mpf_class sum = dx * t->tx() + dy * t->ty() + dz * t->tz();
+	double sum = dx * t->tx() + dy * t->ty() + dz * t->tz();
 
-	return sum.get_d();
+	return sum;
 }
 
 double Modified_Kernel::basis_tangent_pt()
 {
-	mpf_class t1x, t2x, t3x, t4x, t1y, t2y, t3y, t4y, t1z, t2z, t3z, t4z;
+	double t1x = 0, t2x = 0, t3x = 0, t4x = 0, t1y = 0, t2y = 0, t3y = 0, t4y = 0, t1z = 0, t2z = 0, t3z = 0, t4z = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p2 = this->_aLPB->poly(this->p2());
+	VectorXd p2 = this->_aLPB->poly(this->p2());
 
-	Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
+	VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+	VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+	VectorXd p1z = this->_aLPB->poly_dz(this->p1());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1(this->_aRBFKernel->basis());
+		double b1 = this->_aRBFKernel->basis();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2x(this->_aRBFKernel->dx_p1());
-		mpf_class b2y(this->_aRBFKernel->dy_p1());
-		mpf_class b2z(this->_aRBFKernel->dz_p1());
+		double b2x = this->_aRBFKernel->dx_p1();
+		double b2y = this->_aRBFKernel->dy_p1();
+		double b2z = this->_aRBFKernel->dz_p1();
 		// for dx component
 		t1x += p1x(j) * b1;
 		t2x += p2(j) * b2x;
@@ -2389,7 +2389,7 @@ double Modified_Kernel::basis_tangent_pt()
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 					this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4x += p1x(j) * p2(k) * b3;
 				t4y += p1y(j) * p2(k) * b3;
 				t4z += p1z(j) * p2(k) * b3;
@@ -2398,40 +2398,40 @@ double Modified_Kernel::basis_tangent_pt()
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class dx = this->_aRBFKernel->dx_p1() - t1x - t2x + t3x + t4x;
-	mpf_class dy = this->_aRBFKernel->dy_p1() - t1y - t2y + t3y + t4y;
-	mpf_class dz = this->_aRBFKernel->dz_p1() - t1z - t2z + t3z + t4z;
+	double dx = this->_aRBFKernel->dx_p1() - t1x - t2x + t3x + t4x;
+	double dy = this->_aRBFKernel->dy_p1() - t1y - t2y + t3y + t4y;
+	double dz = this->_aRBFKernel->dz_p1() - t1z - t2z + t3z + t4z;
 
 	// It is your responsibility to supply the right type
 	// It is not worth the cost of dynamic_cast + if
 	Tangent *t = static_cast<Tangent *>(this->p1());
-	mpf_class sum = dx * t->tx() + dy * t->ty() + dz * t->tz();
+	double sum = dx * t->tx() + dy * t->ty() + dz * t->tz();
 
-	return sum.get_d();
+	return sum;
 }
 
 double Modified_Kernel::basis_planar_planar(const Parameter_Types::SecondDerivatives &sd)
 {
-	mpf_class t1, t2, t3, t4;
+	double t1 = 0, t2 = 0, t3 = 0, t4 = 0;
 
-	Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
+	VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+	VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+	VectorXd p1z = this->_aLPB->poly_dz(this->p1());
 
-	Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
-	Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
-	Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+	VectorXd p2x = this->_aLPB->poly_dx(this->p2());
+	VectorXd p2y = this->_aLPB->poly_dy(this->p2());
+	VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1x(this->_aRBFKernel->dx_p2());
-		mpf_class b1y(this->_aRBFKernel->dy_p2());
-		mpf_class b1z(this->_aRBFKernel->dz_p2());
+		double b1x = this->_aRBFKernel->dx_p2();
+		double b1y = this->_aRBFKernel->dy_p2();
+		double b1z = this->_aRBFKernel->dz_p2();
 		this->_aRBFKernel->set_points(*this->p1(),
 			this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2x(this->_aRBFKernel->dx_p1());
-		mpf_class b2y(this->_aRBFKernel->dy_p1());
-		mpf_class b2z(this->_aRBFKernel->dz_p1());
+		double b2x = this->_aRBFKernel->dx_p1();
+		double b2y = this->_aRBFKernel->dy_p1();
+		double b2z = this->_aRBFKernel->dz_p1();
 		if (sd == Parameter_Types::DXDX) {
 			t1 += p1x(j) * b1x;
 			t2 += p2x(j) * b2x;
@@ -2482,7 +2482,7 @@ double Modified_Kernel::basis_planar_planar(const Parameter_Types::SecondDerivat
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 					this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				if (sd == Parameter_Types::DXDX)
 					t4 += p2x(k) * b3 * p1x(j);
 				if (sd == Parameter_Types::DYDY)
@@ -2506,7 +2506,7 @@ double Modified_Kernel::basis_planar_planar(const Parameter_Types::SecondDerivat
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class base;
+	double base;
 	if (sd == Parameter_Types::DXDX)
 		base = this->_aRBFKernel->dxx();
 	if (sd == Parameter_Types::DYDY)
@@ -2526,39 +2526,39 @@ double Modified_Kernel::basis_planar_planar(const Parameter_Types::SecondDerivat
 	if (sd == Parameter_Types::DZDY)
 		base = this->_aRBFKernel->dzy();
 
-	mpf_class sum = base - t1 - t2 + t3 + t4;
-	return sum.get_d();
+	double sum = base - t1 - t2 + t3 + t4;
+	return sum;
 }
 
 double Modified_Kernel::basis_tangent_tangent()
 {
-	Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-	Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
+	VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+	VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+	VectorXd p1z = this->_aLPB->poly_dz(this->p1());
 
-	Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
-	Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
-	Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+	VectorXd p2x = this->_aLPB->poly_dx(this->p2());
+	VectorXd p2y = this->_aLPB->poly_dy(this->p2());
+	VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
-	mpf_class t1xx, t2xx, t3xx, t4xx;
-	mpf_class t1yy, t2yy, t3yy, t4yy;
-	mpf_class t1zz, t2zz, t3zz, t4zz;
-	mpf_class t1xy, t2xy, t3xy, t4xy;
-	mpf_class t1xz, t2xz, t3xz, t4xz;
-	mpf_class t1yz, t2yz, t3yz, t4yz;
-	mpf_class t1yx, t2yx, t3yx, t4yx;
-	mpf_class t1zx, t2zx, t3zx, t4zx;
-	mpf_class t1zy, t2zy, t3zy, t4zy;
+	double t1xx = 0, t2xx = 0, t3xx = 0, t4xx = 0;
+	double t1yy = 0, t2yy = 0, t3yy = 0, t4yy = 0;
+	double t1zz = 0, t2zz = 0, t3zz = 0, t4zz = 0;
+	double t1xy = 0, t2xy = 0, t3xy = 0, t4xy = 0;
+	double t1xz = 0, t2xz = 0, t3xz = 0, t4xz = 0;
+	double t1yz = 0, t2yz = 0, t3yz = 0, t4yz = 0;
+	double t1yx = 0, t2yx = 0, t3yx = 0, t4yx = 0;
+	double t1zx = 0, t2zx = 0, t3zx = 0, t4zx = 0;
+	double t1zy = 0, t2zy = 0, t3zy = 0, t4zy = 0;
 
 	for (int j = 0; j < 4; j++) {
 		this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j], *this->p2());
-		mpf_class b1x(this->_aRBFKernel->dx_p2());
-		mpf_class b1y(this->_aRBFKernel->dy_p2());
-		mpf_class b1z(this->_aRBFKernel->dz_p2());
+		double b1x = this->_aRBFKernel->dx_p2();
+		double b1y = this->_aRBFKernel->dy_p2();
+		double b1z = this->_aRBFKernel->dz_p2();
 		this->_aRBFKernel->set_points(*this->p1(), this->_aLPB->unisolvent_subset_points[j]);
-		mpf_class b2x(this->_aRBFKernel->dx_p1());
-		mpf_class b2y(this->_aRBFKernel->dy_p1());
-		mpf_class b2z(this->_aRBFKernel->dz_p1());
+		double b2x = this->_aRBFKernel->dx_p1();
+		double b2y = this->_aRBFKernel->dy_p1();
+		double b2z = this->_aRBFKernel->dz_p1();
 		// dxx
 		t1xx += p1x(j) * b1x;
 		t2xx += p2x(j) * b2x;
@@ -2600,7 +2600,7 @@ double Modified_Kernel::basis_tangent_tangent()
 			{
 				this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 					this->_aLPB->unisolvent_subset_points[k]);
-				mpf_class b3(this->_aRBFKernel->basis());
+				double b3 = this->_aRBFKernel->basis();
 				t4xx += p2x(k) * b3 * p1x(j);
 				t4yy += p2y(k) * b3 * p1y(j);
 				t4zz += p2z(k) * b3 * p1z(j);
@@ -2615,50 +2615,50 @@ double Modified_Kernel::basis_tangent_tangent()
 	}
 
 	this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-	mpf_class xx = this->_aRBFKernel->dxx() - t1xx - t2xx + t3xx + t4xx;
-	mpf_class yy = this->_aRBFKernel->dyy() - t1yy - t2yy + t3yy + t4yy;
-	mpf_class zz = this->_aRBFKernel->dzz() - t1zz - t2zz + t3zz + t4zz;
-	mpf_class xy = this->_aRBFKernel->dxy() - t1xy - t2xy + t3xy + t4xy;
-	mpf_class xz = this->_aRBFKernel->dxz() - t1xz - t2xz + t3xz + t4xz;
-	mpf_class yx = this->_aRBFKernel->dyx() - t1yx - t2yx + t3yx + t4yx;
-	mpf_class yz = this->_aRBFKernel->dyz() - t1yz - t2yz + t3yz + t4yz;
-	mpf_class zx = this->_aRBFKernel->dzx() - t1zx - t2zx + t3zx + t4zx;
-	mpf_class zy = this->_aRBFKernel->dzy() - t1zy - t2zy + t3zy + t4zy;
+	double xx = this->_aRBFKernel->dxx() - t1xx - t2xx + t3xx + t4xx;
+	double yy = this->_aRBFKernel->dyy() - t1yy - t2yy + t3yy + t4yy;
+	double zz = this->_aRBFKernel->dzz() - t1zz - t2zz + t3zz + t4zz;
+	double xy = this->_aRBFKernel->dxy() - t1xy - t2xy + t3xy + t4xy;
+	double xz = this->_aRBFKernel->dxz() - t1xz - t2xz + t3xz + t4xz;
+	double yx = this->_aRBFKernel->dyx() - t1yx - t2yx + t3yx + t4yx;
+	double yz = this->_aRBFKernel->dyz() - t1yz - t2yz + t3yz + t4yz;
+	double zx = this->_aRBFKernel->dzx() - t1zx - t2zx + t3zx + t4zx;
+	double zy = this->_aRBFKernel->dzy() - t1zy - t2zy + t3zy + t4zy;
 
 	Tangent *t1 = static_cast<Tangent *>(this->p1());
 	Tangent *t2 = static_cast<Tangent *>(this->p2());
 
-	mpf_class value = t1->tx() * t2->tx() * xx + t1->tx() * t2->ty() * xy +
+	double value = t1->tx() * t2->tx() * xx + t1->tx() * t2->ty() * xy +
 		t1->tx() * t2->tz() * xz + t1->ty() * t2->tx() * yx +
 		t1->ty() * t2->ty() * yy + t1->ty() * t2->tz() * yz +
 		t1->tz() * t2->tx() * zx + t1->tz() * t2->ty() * zy +
 		t1->tz() * t2->tz() * zz;
 
-	return value.get_d();
+	return value;
 }
 
 double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivatives &fd)
 {
 	if (fd == Parameter_Types::DX)
 	{
-		Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
-		Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
-		Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+		VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+		VectorXd p2x = this->_aLPB->poly_dx(this->p2());
+		VectorXd p2y = this->_aLPB->poly_dy(this->p2());
+		VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
-		mpf_class t1xx, t2xx, t3xx, t4xx;
-		mpf_class t1xy, t2xy, t3xy, t4xy;
-		mpf_class t1xz, t2xz, t3xz, t4xz;
+		double t1xx = 0, t2xx = 0, t3xx = 0, t4xx = 0;
+		double t1xy = 0, t2xy = 0, t3xy = 0, t4xy = 0;
+		double t1xz = 0, t2xz = 0, t3xz = 0, t4xz = 0;
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 				*this->p2());
-			mpf_class b1x(this->_aRBFKernel->dx_p2());
-			mpf_class b1y(this->_aRBFKernel->dy_p2());
-			mpf_class b1z(this->_aRBFKernel->dz_p2());
+			double b1x = this->_aRBFKernel->dx_p2();
+			double b1y = this->_aRBFKernel->dy_p2();
+			double b1z = this->_aRBFKernel->dz_p2();
 			this->_aRBFKernel->set_points(*this->p1(),
 				this->_aLPB->unisolvent_subset_points[j]);
-			mpf_class b2x(this->_aRBFKernel->dx_p1());
+			double b2x = this->_aRBFKernel->dx_p1();
 			// dxx
 			t1xx += p1x(j) * b1x;
 			t2xx += p2x(j) * b2x;
@@ -2676,7 +2676,7 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 					this->_aRBFKernel->set_points(
 						this->_aLPB->unisolvent_subset_points[j],
 						this->_aLPB->unisolvent_subset_points[k]);
-					mpf_class b3(this->_aRBFKernel->basis());
+					double b3 = this->_aRBFKernel->basis();
 					t4xx += p2x(k) * b3 * p1x(j);
 					t4xy += p2y(k) * b3 * p1x(j);
 					t4xz += p2z(k) * b3 * p1x(j);
@@ -2685,35 +2685,35 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 		}
 
 		this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-		mpf_class xx = this->_aRBFKernel->dxx() - t1xx - t2xx + t3xx + t4xx;
-		mpf_class xy = this->_aRBFKernel->dxy() - t1xy - t2xy + t3xy + t4xy;
-		mpf_class xz = this->_aRBFKernel->dxz() - t1xz - t2xz + t3xz + t4xz;
+		double xx = this->_aRBFKernel->dxx() - t1xx - t2xx + t3xx + t4xx;
+		double xy = this->_aRBFKernel->dxy() - t1xy - t2xy + t3xy + t4xy;
+		double xz = this->_aRBFKernel->dxz() - t1xz - t2xz + t3xz + t4xz;
 
 		Tangent *t = static_cast<Tangent *>(this->p2());
 
-		mpf_class value = t->tx() * xx + t->ty() * xy + t->tz() * xz;
+		double value = t->tx() * xx + t->ty() * xy + t->tz() * xz;
 
-		return value.get_d();
+		return value;
 	}
 	else if (fd == Parameter_Types::DY) {
-		Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
-		Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
-		Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+		VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+		VectorXd p2x = this->_aLPB->poly_dx(this->p2());
+		VectorXd p2y = this->_aLPB->poly_dy(this->p2());
+		VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
-		mpf_class t1yy, t2yy, t3yy, t4yy;
-		mpf_class t1yz, t2yz, t3yz, t4yz;
-		mpf_class t1yx, t2yx, t3yx, t4yx;
+		double t1yy = 0, t2yy = 0, t3yy = 0, t4yy = 0;
+		double t1yz = 0, t2yz = 0, t3yz = 0, t4yz = 0;
+		double t1yx = 0, t2yx = 0, t3yx = 0, t4yx = 0;
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 				*this->p2());
-			mpf_class b1x(this->_aRBFKernel->dx_p2());
-			mpf_class b1y(this->_aRBFKernel->dy_p2());
-			mpf_class b1z(this->_aRBFKernel->dz_p2());
+			double b1x = this->_aRBFKernel->dx_p2();
+			double b1y = this->_aRBFKernel->dy_p2();
+			double b1z = this->_aRBFKernel->dz_p2();
 			this->_aRBFKernel->set_points(*this->p1(),
 				this->_aLPB->unisolvent_subset_points[j]);
-			mpf_class b2y(this->_aRBFKernel->dy_p1());
+			double b2y = this->_aRBFKernel->dy_p1();
 			// dyy
 			t1yy += p1y(j) * b1y;
 			t2yy += p2y(j) * b2y;
@@ -2731,7 +2731,7 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 					this->_aRBFKernel->set_points(
 						this->_aLPB->unisolvent_subset_points[j],
 						this->_aLPB->unisolvent_subset_points[k]);
-					mpf_class b3(this->_aRBFKernel->basis());
+					double b3 = this->_aRBFKernel->basis();
 					t4yy += p2y(k) * b3 * p1y(j);
 					t4yz += p2z(k) * b3 * p1y(j);
 					t4yx += p2x(k) * b3 * p1y(j);
@@ -2740,36 +2740,36 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 		}
 
 		this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-		mpf_class yy = this->_aRBFKernel->dyy() - t1yy - t2yy + t3yy + t4yy;
-		mpf_class yx = this->_aRBFKernel->dyx() - t1yx - t2yx + t3yx + t4yx;
-		mpf_class yz = this->_aRBFKernel->dyz() - t1yz - t2yz + t3yz + t4yz;
+		double yy = this->_aRBFKernel->dyy() - t1yy - t2yy + t3yy + t4yy;
+		double yx = this->_aRBFKernel->dyx() - t1yx - t2yx + t3yx + t4yx;
+		double yz = this->_aRBFKernel->dyz() - t1yz - t2yz + t3yz + t4yz;
 
 		Tangent *t = static_cast<Tangent *>(this->p2());
 
-		mpf_class value = t->tx() * yx + t->ty() * yy + t->tz() * yz;
+		double value = t->tx() * yx + t->ty() * yy + t->tz() * yz;
 
-		return value.get_d();
+		return value;
 	}
 	else // fd == DZ
 	{
-		Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
-		Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
-		Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+		VectorXd p1z = this->_aLPB->poly_dz(this->p1());
+		VectorXd p2x = this->_aLPB->poly_dx(this->p2());
+		VectorXd p2y = this->_aLPB->poly_dy(this->p2());
+		VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
-		mpf_class t1zz, t2zz, t3zz, t4zz;
-		mpf_class t1zx, t2zx, t3zx, t4zx;
-		mpf_class t1zy, t2zy, t3zy, t4zy;
+		double t1zz = 0, t2zz = 0, t3zz = 0, t4zz = 0;
+		double t1zx = 0, t2zx = 0, t3zx = 0, t4zx = 0;
+		double t1zy = 0, t2zy = 0, t3zy = 0, t4zy = 0;
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 				*this->p2());
-			mpf_class b1x(this->_aRBFKernel->dx_p2());
-			mpf_class b1y(this->_aRBFKernel->dy_p2());
-			mpf_class b1z(this->_aRBFKernel->dz_p2());
+			double b1x = this->_aRBFKernel->dx_p2();
+			double b1y = this->_aRBFKernel->dy_p2();
+			double b1z = this->_aRBFKernel->dz_p2();
 			this->_aRBFKernel->set_points(*this->p1(),
 				this->_aLPB->unisolvent_subset_points[j]);
-			mpf_class b2z(this->_aRBFKernel->dz_p1());
+			double b2z = this->_aRBFKernel->dz_p1();
 			// dzz
 			t1zz += p1z(j) * b1z;
 			t2zz += p2z(j) * b2z;
@@ -2787,7 +2787,7 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 					this->_aRBFKernel->set_points(
 						this->_aLPB->unisolvent_subset_points[j],
 						this->_aLPB->unisolvent_subset_points[k]);
-					mpf_class b3(this->_aRBFKernel->basis());
+					double b3 = this->_aRBFKernel->basis();
 					t4zz += p2z(k) * b3 * p1z(j);
 					t4zx += p2x(k) * b3 * p1z(j);
 					t4zy += p2y(k) * b3 * p1z(j);
@@ -2796,39 +2796,39 @@ double Modified_Kernel::basis_planar_tangent(const Parameter_Types::FirstDerivat
 		}
 
 		this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-		mpf_class zz = this->_aRBFKernel->dzz() - t1zz - t2zz + t3zz + t4zz;
-		mpf_class zx = this->_aRBFKernel->dzx() - t1zx - t2zx + t3zx + t4zx;
-		mpf_class zy = this->_aRBFKernel->dzy() - t1zy - t2zy + t3zy + t4zy;
+		double zz = this->_aRBFKernel->dzz() - t1zz - t2zz + t3zz + t4zz;
+		double zx = this->_aRBFKernel->dzx() - t1zx - t2zx + t3zx + t4zx;
+		double zy = this->_aRBFKernel->dzy() - t1zy - t2zy + t3zy + t4zy;
 
 		Tangent *t = static_cast<Tangent *>(this->p2());
 
-		mpf_class value = t->tx() * zx + t->ty() * zy + t->tz() * zz;
+		double value = t->tx() * zx + t->ty() * zy + t->tz() * zz;
 
-		return value.get_d();
+		return value;
 	}
 }
 
 double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivatives &fd) {
 	if (fd == Parameter_Types::DX)
 	{
-		Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p2x = this->_aLPB->poly_dx(this->p2());
+		VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+		VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+		VectorXd p1z = this->_aLPB->poly_dz(this->p1());
+		VectorXd p2x = this->_aLPB->poly_dx(this->p2());
 
-		mpf_class t1xx, t2xx, t3xx, t4xx;
-		mpf_class t1yx, t2yx, t3yx, t4yx;
-		mpf_class t1zx, t2zx, t3zx, t4zx;
+		double t1xx = 0, t2xx = 0, t3xx = 0, t4xx = 0;
+		double t1yx = 0, t2yx = 0, t3yx = 0, t4yx = 0;
+		double t1zx = 0, t2zx = 0, t3zx = 0, t4zx = 0;
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 				*this->p2());
-			mpf_class b1x(this->_aRBFKernel->dx_p2());
+			double b1x = this->_aRBFKernel->dx_p2();
 			this->_aRBFKernel->set_points(*this->p1(),
 				this->_aLPB->unisolvent_subset_points[j]);
-			mpf_class b2x(this->_aRBFKernel->dx_p1());
-			mpf_class b2y(this->_aRBFKernel->dy_p1());
-			mpf_class b2z(this->_aRBFKernel->dz_p1());
+			double b2x = this->_aRBFKernel->dx_p1();
+			double b2y = this->_aRBFKernel->dy_p1();
+			double b2z = this->_aRBFKernel->dz_p1();
 			// dxx
 			t1xx += p1x(j) * b1x;
 			t2xx += p2x(j) * b2x;
@@ -2846,7 +2846,7 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 					this->_aRBFKernel->set_points(
 						this->_aLPB->unisolvent_subset_points[j],
 						this->_aLPB->unisolvent_subset_points[k]);
-					mpf_class b3(this->_aRBFKernel->basis());
+					double b3 = this->_aRBFKernel->basis();
 					t4xx += p2x(k) * b3 * p1x(j);
 					t4yx += p2x(k) * b3 * p1y(j);
 					t4zx += p2x(k) * b3 * p1z(j);
@@ -2855,36 +2855,36 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 		}
 
 		this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-		mpf_class xx = this->_aRBFKernel->dxx() - t1xx - t2xx + t3xx + t4xx;
-		mpf_class yx = this->_aRBFKernel->dyx() - t1yx - t2yx + t3yx + t4yx;
-		mpf_class zx = this->_aRBFKernel->dzx() - t1zx - t2zx + t3zx + t4zx;
+		double xx = this->_aRBFKernel->dxx() - t1xx - t2xx + t3xx + t4xx;
+		double yx = this->_aRBFKernel->dyx() - t1yx - t2yx + t3yx + t4yx;
+		double zx = this->_aRBFKernel->dzx() - t1zx - t2zx + t3zx + t4zx;
 
 		Tangent *t = static_cast<Tangent *>(this->p1());
 
-		mpf_class value = t->tx() * xx + t->ty() * yx + t->tz() * zx;
+		double value = t->tx() * xx + t->ty() * yx + t->tz() * zx;
 
-		return value.get_d();
+		return value;
 	}
 	else if (fd == Parameter_Types::DY)
 	{
-		Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p2y = this->_aLPB->poly_dy(this->p2());
+		VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+		VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+		VectorXd p1z = this->_aLPB->poly_dz(this->p1());
+		VectorXd p2y = this->_aLPB->poly_dy(this->p2());
 
-		mpf_class t1yy, t2yy, t3yy, t4yy;
-		mpf_class t1zy, t2zy, t3zy, t4zy;
-		mpf_class t1xy, t2xy, t3xy, t4xy;
+		double t1yy = 0, t2yy = 0, t3yy = 0, t4yy = 0;
+		double t1zy = 0, t2zy = 0, t3zy = 0, t4zy = 0;
+		double t1xy = 0, t2xy = 0, t3xy = 0, t4xy = 0;
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 				*this->p2());
-			mpf_class b1y(this->_aRBFKernel->dy_p2());
+			double b1y = this->_aRBFKernel->dy_p2();
 			this->_aRBFKernel->set_points(*this->p1(),
 				this->_aLPB->unisolvent_subset_points[j]);
-			mpf_class b2x(this->_aRBFKernel->dx_p1());
-			mpf_class b2y(this->_aRBFKernel->dy_p1());
-			mpf_class b2z(this->_aRBFKernel->dz_p1());
+			double b2x = this->_aRBFKernel->dx_p1();
+			double b2y = this->_aRBFKernel->dy_p1();
+			double b2z = this->_aRBFKernel->dz_p1();
 			// dyy
 			t1yy += p1y(j) * b1y;
 			t2yy += p2y(j) * b2y;
@@ -2902,7 +2902,7 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 					this->_aRBFKernel->set_points(
 						this->_aLPB->unisolvent_subset_points[j],
 						this->_aLPB->unisolvent_subset_points[k]);
-					mpf_class b3(this->_aRBFKernel->basis());
+					double b3 = this->_aRBFKernel->basis();
 					t4yy += p2y(k) * b3 * p1y(j);
 					t4xy += p2y(k) * b3 * p1x(j);
 					t4zy += p2y(k) * b3 * p1z(j);
@@ -2911,36 +2911,36 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 		}
 
 		this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-		mpf_class yy = this->_aRBFKernel->dyy() - t1yy - t2yy + t3yy + t4yy;
-		mpf_class zy = this->_aRBFKernel->dzy() - t1zy - t2zy + t3zy + t4zy;
-		mpf_class xy = this->_aRBFKernel->dxy() - t1xy - t2xy + t3xy + t4xy;
+		double yy = this->_aRBFKernel->dyy() - t1yy - t2yy + t3yy + t4yy;
+		double zy = this->_aRBFKernel->dzy() - t1zy - t2zy + t3zy + t4zy;
+		double xy = this->_aRBFKernel->dxy() - t1xy - t2xy + t3xy + t4xy;
 
 		Tangent *t = static_cast<Tangent *>(this->p1());
 
-		mpf_class value = t->tx() * xy + t->ty() * yy + t->tz() * zy;
+		double value = t->tx() * xy + t->ty() * yy + t->tz() * zy;
 
-		return value.get_d();
+		return value;
 	}
 	else // fd == DZ
 	{
-		Matrix<mpf_class, Dynamic, 1> p1x = this->_aLPB->poly_dx(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p1y = this->_aLPB->poly_dy(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p1z = this->_aLPB->poly_dz(this->p1());
-		Matrix<mpf_class, Dynamic, 1> p2z = this->_aLPB->poly_dz(this->p2());
+		VectorXd p1x = this->_aLPB->poly_dx(this->p1());
+		VectorXd p1y = this->_aLPB->poly_dy(this->p1());
+		VectorXd p1z = this->_aLPB->poly_dz(this->p1());
+		VectorXd p2z = this->_aLPB->poly_dz(this->p2());
 
-		mpf_class t1zz, t2zz, t3zz, t4zz;
-		mpf_class t1xz, t2xz, t3xz, t4xz;
-		mpf_class t1yz, t2yz, t3yz, t4yz;
+		double t1zz = 0, t2zz = 0, t3zz = 0, t4zz = 0;
+		double t1xz = 0, t2xz = 0, t3xz = 0, t4xz = 0;
+		double t1yz = 0, t2yz = 0, t3yz = 0, t4yz = 0;
 
 		for (int j = 0; j < 4; j++) {
 			this->_aRBFKernel->set_points(this->_aLPB->unisolvent_subset_points[j],
 				*this->p2());
-			mpf_class b1z(this->_aRBFKernel->dz_p2());
+			double b1z = this->_aRBFKernel->dz_p2();
 			this->_aRBFKernel->set_points(*this->p1(),
 				this->_aLPB->unisolvent_subset_points[j]);
-			mpf_class b2x(this->_aRBFKernel->dx_p1());
-			mpf_class b2y(this->_aRBFKernel->dy_p1());
-			mpf_class b2z(this->_aRBFKernel->dz_p1());
+			double b2x = this->_aRBFKernel->dx_p1();
+			double b2y = this->_aRBFKernel->dy_p1();
+			double b2z = this->_aRBFKernel->dz_p1();
 			// dzz
 			t1zz += p1z(j) * b1z;
 			t2zz += p2z(j) * b2z;
@@ -2958,7 +2958,7 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 					this->_aRBFKernel->set_points(
 						this->_aLPB->unisolvent_subset_points[j],
 						this->_aLPB->unisolvent_subset_points[k]);
-					mpf_class b3(this->_aRBFKernel->basis());
+					double b3 = this->_aRBFKernel->basis();
 					t4zz += p2z(k) * b3 * p1z(j);
 					t4xz += p2z(k) * b3 * p1x(j);
 					t4yz += p2z(k) * b3 * p1y(j);
@@ -2967,15 +2967,15 @@ double Modified_Kernel::basis_tangent_planar(const Parameter_Types::FirstDerivat
 		}
 
 		this->_aRBFKernel->set_points(*this->_p1, *this->_p2);
-		mpf_class zz = this->_aRBFKernel->dzz() - t1zz - t2zz + t3zz + t4zz;
-		mpf_class xz = this->_aRBFKernel->dxz() - t1xz - t2xz + t3xz + t4xz;
-		mpf_class yz = this->_aRBFKernel->dyz() - t1yz - t2yz + t3yz + t4yz;
+		double zz = this->_aRBFKernel->dzz() - t1zz - t2zz + t3zz + t4zz;
+		double xz = this->_aRBFKernel->dxz() - t1xz - t2xz + t3xz + t4xz;
+		double yz = this->_aRBFKernel->dyz() - t1yz - t2yz + t3yz + t4yz;
 
 		Tangent *t = static_cast<Tangent *>(this->p1());
 
-		mpf_class value = t->tx() * xz + t->ty() * yz + t->tz() * zz;
+		double value = t->tx() * xz + t->ty() * yz + t->tz() * zz;
 
-		return value.get_d();
+		return value;
 	}
 }
 

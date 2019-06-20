@@ -54,10 +54,11 @@ bool Stratigraphic_Surfaces::_get_increment_pairs() {
 	_increment_pairs.resize(_n_sequenced_interface_pairs);
 	for (int j = 0; j < _n_sequenced_interface_pairs; j++) {
 		_increment_pairs[j].push_back(interface_test_points[j]);
-		_increment_pairs[j].push_back(interface_test_points[j]);
+		_increment_pairs[j].push_back(interface_test_points[j + 1]);
 	}
 	// 2) lithostratigraphic inequalities
 	_n_sequenced_inequality_pairs = 0;
+	int idx = 0;
 	for (const auto &inequality : constraints.inequality) {
 		std::vector<std::vector<Point> > strati_seq_ine_pairs =
 			_get_lithostratigraphic_increment_pairs_for_inequality_point(inequality);
@@ -71,6 +72,7 @@ bool Stratigraphic_Surfaces::_get_increment_pairs() {
 		}
 		int j_size = (int)strati_seq_ine_pairs.size();
 		_n_sequenced_inequality_pairs += j_size;
+		idx++;
 	}
 	// 3) the interface increment pairs
 	_n_interface_pairs = 0;
@@ -93,14 +95,13 @@ _get_lithostratigraphic_increment_pairs_for_inequality_point(const Inequality &i
 {
 	std::vector<std::vector<Point> > strati_incr_p;
 	// if horizon is above current pt (ie_pt)
-	// strati_incr_p[0][0] = above_horizon_pt
+	// strati_incr_p[0][0] = above_horizon_pt (interface)
 	// strati_incr_p[0][1] = ie_pt
 	// if horizon is below current pt
 	// strati_incr_p[1][0] = ie_pt
-	// strati_incr_p[1][1] = below_horizon_pt
+	// strati_incr_p[1][1] = below_horizon_pt (interface)
 	// the above structure is needed to ensure the inequality constraint is
-	// s(p1)
-	// > s (p2) e.g. p1 = strati_incr_p[1][0] p2 = strati_incr_p[1][1]
+	// s(p1) > s (p2) e.g. where p1 = strati_incr_p[1][0] p2 = strati_incr_p[1][1]
 	int n_pair = 0;
 
 	std::vector<double> horizon_levels;
@@ -108,8 +109,8 @@ _get_lithostratigraphic_increment_pairs_for_inequality_point(const Inequality &i
 		horizon_levels.push_back(test_point.level());
 
 	// are there horizons above ie_pt ?
-	double level_above = _get_closest_horizon_level_above_given_level(ie_pt.level(), horizon_levels);
-	if (level_above != NULL) {
+	double level_above = 0;
+	if (_get_closest_horizon_level_above_given_level(ie_pt.level(), horizon_levels, level_above)) {
 		strati_incr_p.resize(n_pair + 1);
 		for (const auto &test_point : interface_test_points) {
 			if (test_point.level() == level_above) {
@@ -121,8 +122,8 @@ _get_lithostratigraphic_increment_pairs_for_inequality_point(const Inequality &i
 		n_pair++;
 	}
 	// are there horizons below ie_pt ?
-	double level_below = _get_closest_horizon_level_below_given_level(ie_pt.level(), horizon_levels);
-	if (level_below != NULL) {
+	double level_below = 0;
+	if (_get_closest_horizon_level_below_given_level(ie_pt.level(), horizon_levels, level_below)) {
 		strati_incr_p.resize(n_pair + 1);
 		for (const auto &test_point : interface_test_points) {
 			if (test_point.level() == level_below) {
@@ -137,8 +138,8 @@ _get_lithostratigraphic_increment_pairs_for_inequality_point(const Inequality &i
 	return strati_incr_p;
 }
 
-double Stratigraphic_Surfaces::_get_closest_horizon_level_above_given_level(
-	const double &given_level, const std::vector<double> &horizon_levels)
+bool Stratigraphic_Surfaces::_get_closest_horizon_level_above_given_level(
+	const double &given_level, const std::vector<double> &horizon_levels, double &above_level)
 {
 	if (horizon_levels.empty()) return NULL;
 	std::vector<double> diff;
@@ -148,15 +149,22 @@ double Stratigraphic_Surfaces::_get_closest_horizon_level_above_given_level(
 		diff.push_back(horizon_levels[j] - given_level);
 		indx.push_back(j);
 	}
+	// sort these level differences so that we can find/determine which horizon/interface 
+	// is ABOVE the given inequality level
 	Math_methods::sort_vector_w_index(diff, indx);
-	if (diff[0] > 0)
-		return horizon_levels[indx[0]];
-	else
-		return NULL;
+	for (int j = 0; j < diff.size(); j++) {
+		if (diff[j] > 0) {
+			above_level = horizon_levels[indx[j]];
+			return true;
+		}
+	}
+	// if we got here than there are no horizons/interfaces ABOVE the current
+	// inequality level (given_level)
+	return false;
 }
 
-double Stratigraphic_Surfaces::_get_closest_horizon_level_below_given_level(
-	const double &given_level, const std::vector<double> &horizon_levels)
+bool Stratigraphic_Surfaces::_get_closest_horizon_level_below_given_level(
+	const double &given_level, const std::vector<double> &horizon_levels, double &below_level)
 {
 	if (horizon_levels.empty()) return NULL;
 	std::vector<double> diff;
@@ -166,11 +174,18 @@ double Stratigraphic_Surfaces::_get_closest_horizon_level_below_given_level(
 		diff.push_back(given_level - horizon_levels[j]);
 		indx.push_back(j);
 	}
+	// sort these level differences so that we can find/determine which horizon/interface 
+	// is BELOW the given inequality level
 	Math_methods::sort_vector_w_index(diff, indx);
-	if (diff[0] > 0)
-		return horizon_levels[indx[0]];
-	else
-		return NULL;
+	for (int j = 0; j < diff.size(); j++) {
+		if (diff[j] > 0) {
+			below_level = horizon_levels[indx[j]];
+			return true;
+		}
+	}
+	// if we got here than there are no horizons/interfaces BELOW the current
+	// inequality level (given_level)
+	return false;
 }
 
 bool Stratigraphic_Surfaces::_get_polynomial_matrix_block(
