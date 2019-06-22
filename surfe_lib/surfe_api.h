@@ -10,44 +10,11 @@
 #include <stratigraphic_surfaces.h>
 #include <vector_field.h>
 
-#include <inputImpl.h>
-
-#include <vtkSmartPointer.h>
-#include <vtkPoints.h>
-#include <vtkPointSet.h>
-#include <vtkPolyData.h>
-#include <vtkStructuredGrid.h>
-#include <vtkImageData.h>
-#include <vtkDoubleArray.h>
-#include <vtkPointData.h>
-#include <vtkCellArray.h>
-#include <vtkVertex.h>
-#include <vtkMarchingCubes.h>
-#include <vtkNew.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkDataSetMapper.h>
-#include <vtkPointGaussianMapper.h>
-#include <vtkPolyDataMapper.h>
-#include <vtkImageSliceMapper.h>
-#include <vtkImageSlice.h>
-#include <vtkImageMapToColors.h>
-#include <vtkImageProperty.h>
-#include <vtkImageActor.h>
-#include <vtkLookupTable.h>
-#include <vtkArrowSource.h>
-#include <vtkAssignAttribute.h>
-#include <vtkGlyph3D.h>
-#include <vtkActor.h>
-#include <vtkProperty.h>
-
 class SURFE_LIB_EXPORT Surfe_API {
 private:
 	// members
 	GRBF_Modelling_Methods *method_;
 	InputParameters input_;
-	vtkSmartPointer<vtkImageData> grid_;
 
 	bool have_interpolant_;
 	bool evaluation_completed_;
@@ -56,23 +23,12 @@ private:
 	bool constraint_files_changed_;
 	bool constraints_changed_;
 
-	// vtk geometry strings for export to python interpreter
-	std::string vtk_grid_string_;
-	std::string vtk_interface_string_;
-	std::string vtk_planar_string_;
-	std::string vtk_tangent_string_;
-	std::string vtk_inequality_string_;
-	std::string vtk_isosurfaces_string_;
-
 	// methods
 	GRBF_Modelling_Methods* get_method(const Parameters& params);
 	void build_constraints_from_input_files();
-	SpatialParameters compute_constraint_bounds_and_resolution();
-	void progress(const float &progress_value);
 public:
 	Surfe_API();
 	Surfe_API(const Parameters& params);
-	void GetParametersAndConstraints();
 	void LoadConstraintsFromFiles();
 	void AddInterfaceConstraint(
 		const double &x, const double &y, const double &z,
@@ -120,36 +76,10 @@ public:
 	double *EvaluateVectorInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	); // client responsible for deleting dynamically allocated array vector[3]
-	void BuildRegularGrid(const double &resolution, const double &xy_percent_padding = 0);
-	void BuildRegularGrid(const double &xy_percent_padding = 0);
-	void BuildRegularGrid(
-		const double &zmin, const double &zmax,
-		const double &resolution, const double &xy_percent_padding = 0
-	);
-	void BuildRegularGrid(
-		const double &xmin, const double &xmax,
-		const double &ymin, const double &ymax,
-		const double &zmin, const double &zmax,
-		const double &resolution);
-	vtkSmartPointer<vtkImageData> GetEvaluatedGrid();
-	vtkSmartPointer<vtkPolyData> GetIsoSurfaces();
-	vtkSmartPointer<vtkPolyData> GetInterfaceConstraints();
-	vtkSmartPointer<vtkPolyData> GetPlanarConstraints();
-	vtkSmartPointer<vtkPolyData> GetTangentConstraints();
-	vtkSmartPointer<vtkPolyData> GetInequalityConstraints();
-	const char *GetEvaluatedVTKGridString();
-	const char *GetVTKIsosurfacesString();
-	const char *GetVTKInterfaceConstraintsString();
-	const char *GetVTKPlanarConstraintsString();
-	const char *GetVTKTangentConstraintsString();
-	const char *GetVTKInequalityConstraintString();
-	void WriteVTKInterfaceConstraints(const char *filename);
-	void WriteVTKPlanarConstraints(const char *filename);
-	void WriteVTKTangentConstraints(const char *filename);
-	void WriteVTKInequalityConstraints(const char *filename);
-	void WriteVTKEvaluationGrid(const char *filename);
-	void WriteVTKIsoSurfaces(const char *filename);
-	void VisualizeVTKData();
+	SpatialParameters GetDataBoundsAndResolution();
+	int GetNumberOfInterfaces();
+	double GetScalarFieldValueAtInterfaceX(const int &i);
+	GRBF_Modelling_Methods *GetMethod() { return method_; }
 };
 
 #endif // SURFE_API
