@@ -107,30 +107,6 @@ class errorcomputinginterpolant : public exception {
 	}
 };
 
-class nosgridexists : public exception {
-	const char* what() const throw() override {
-		return "vtkStructureGrid is nullptr";
-	}
-};
-
-class missingcoordsinfile : public exception {
-	const char* what() const throw() override {
-		return "There are no x,y,z coordinates in the file";
-	}
-};
-
-class missingpropertyinfoinfile : public exception {
-	const char* what() const throw() override {
-		return "Property information missing in file";
-	}
-};
-
-class grbfmethodisnull : public exception {
-	const char* what() const throw() override {
-		return "GRBF modelling method is null";
-	}
-};
-
 class missinginterpolant : public exception {
 	const char* what() const throw() override {
 		return "Interpolant has not yet been computed";
@@ -149,27 +125,9 @@ class interpolantneedsupdate : public exception {
 	}
 };
 
-class inputfileproblem : public exception {
-	const char* what() const throw() override {
-		return "Error loading input constraint file";
-	}
-};
-
-class unsupportedfile : public exception {
-	const char* what() const throw() override {
-		return "Input file format is unsupported";
-	}
-};
-
 class unknownmodellingmode : public exception {
 	const char* what() const throw() override {
 		return "Modelling mode code unknown; choose 1 - 5";
-	}
-};
-
-class errorparsingcsvheader : public exception {
-	const char* what() const throw() override {
-		return "Error parsing CSV header";
 	}
 };
 
@@ -179,12 +137,11 @@ class problemcomputingspatialparameters : public exception {
 	}
 };
 
-class problemcomputinggrid : public exception{
+class arrayhasincorrectdimensions : public exception {
 	const char* what() const throw() override {
-		return "Problem computing grid { resolution or bounds are issues}";
+		return "Input array has incorrect dimensions!";
 	}
 };
-
 
 class SurfeExceptions : public exception {
 private:
@@ -236,19 +193,12 @@ namespace GRBF_Exceptions {
 	const errorcomputinginequalityvector error_computing_inequality_vector;
 	const errorupdatinginterfaceisovalues error_updating_interface_iso_values;
 	const errorcomputinginterpolant error_computing_interpolant;
-	const nosgridexists no_sgrid_exists;
-	const missingcoordsinfile missing_coords_in_file;
-	const missingpropertyinfoinfile missing_property_info_in_file;
-	const grbfmethodisnull grbf_method_is_null;
 	const missinginterpolant missing_interpolant;
 	const unknownrbf unknown_rbf;
 	const interpolantneedsupdate interpolant_needs_update;
-	const inputfileproblem input_file_problem;
-	const unsupportedfile unsupported_file;
 	const unknownmodellingmode unknown_modelling_mode;
-	const errorparsingcsvheader error_parsing_csv_header;
 	const problemcomputingspatialparameters problem_computing_spatial_parameters;
-	const problemcomputinggrid problem_computing_grid;
+	const arrayhasincorrectdimensions array_has_incorrect_dimensions;
 }
 
 #endif //

@@ -137,6 +137,16 @@ Continuous_Property::Continuous_Property(const Parameters& mparams)
 	_iteration = 0;
 }
 
+Continuous_Property::Continuous_Property()
+{
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
+	_iteration = 0;
+}
+
 Continuous_Property::~Continuous_Property() {
 	std::cout << "dest" << std::endl;
 }

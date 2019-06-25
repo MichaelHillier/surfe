@@ -45,16 +45,8 @@
 class Vector_Field : public GRBF_Modelling_Methods {
 public:
 	// Constructor/Destructor
-	Vector_Field(const Parameters &m_params)
-	{
-		solver = nullptr;
-		kernel = nullptr;
-		rbf_kernel = nullptr;
-
-		ui_parameters = m_params;
-
-		_iteration = 0;
-	}
+	Vector_Field();
+	Vector_Field(const Parameters &m_params);
 	~Vector_Field() {};
 	// Methods
 	bool get_interpolation_matrix(MatrixXd &interpolation_matrix) override;

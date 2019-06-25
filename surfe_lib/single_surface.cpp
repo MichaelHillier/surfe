@@ -139,6 +139,16 @@ Single_Surface::Single_Surface(const Parameters& mparams)
 	_iteration = 0;
 }
 
+Single_Surface::Single_Surface()
+{
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
+	_iteration = 0;
+}
+
 Polynomial_Basis *Single_Surface::create_polynomial_basis(
 	const int &poly_order) {
 	if (poly_order == 0)

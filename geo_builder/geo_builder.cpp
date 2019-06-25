@@ -20,26 +20,135 @@ void Geo_Builder::progress(const float &progress_value)
 	std::cout.flush();
 }
 
+void Geo_Builder::build_constraints_from_input_files()
+{
+	try
+	{
+		if (!input_.interface_file.empty()) {
+			std::string extension = get_file_extension(input_.interface_file.c_str());
+			if (extension == "csv")
+			{
+				CSVInterfaceConstraintFileReader reader =
+					CSVInterfaceConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.interface_file.c_str());
+				reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKInterfaceConstraintFileReader reader =
+					VTKInterfaceConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.interface_file.c_str());
+				reader.GetConstraints();
+			}
+		}
+		if (!input_.inequality_file.empty()) {
+			std::vector<Inequality> inequality_constraints;
+			std::string extension = get_file_extension(input_.inequality_file.c_str());
+			if (extension == "csv")
+			{
+				CSVInequalityConstraintFileReader reader =
+					CSVInequalityConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.inequality_file.c_str());
+				reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKInequalityConstraintFileReader reader =
+					VTKInequalityConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.inequality_file.c_str());
+				reader.GetConstraints();
+			}
+		}
+
+		if (!input_.planar_file.empty()) {
+			std::vector<Planar> planar_constraints;
+			std::string extension = get_file_extension(input_.planar_file.c_str());
+			if (extension == "csv")
+			{
+				CSVPlanarConstraintFileReader reader =
+					CSVPlanarConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.planar_file.c_str());
+				reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKPlanarConstraintFileReader reader =
+					VTKPlanarConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.planar_file.c_str());
+				reader.GetConstraints();
+			}
+		}
+		if (!input_.tangent_file.empty()) {
+			std::vector<Tangent> tangent_constraints;
+			std::string extension = get_file_extension(input_.planar_file.c_str());
+			if (extension == "csv")
+			{
+				CSVTangentConstraintFileReader reader =
+					CSVTangentConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.tangent_file.c_str());
+				reader.GetConstraints();
+			}
+			else if (extension == "vtp" || extension == "vtk")
+			{
+				VTKTangentConstraintFileReader reader =
+					VTKTangentConstraintFileReader::CreateUsingDefaultPropertyNames(surfe, input_.tangent_file.c_str());
+				reader.GetConstraints();
+			}
+		}
+	}
+	catch (const std::exception&e)
+	{
+		std::rethrow_if_nested(e);
+	}
+}
+
 void Geo_Builder::CreateGRBFInterpolantFromGUIParameters()
 {
-	InputParameters input = getGUIParameters();
+	input_ = getGUIParameters();
 
-	surfe_ = Surfe_API(input.parameters);
-	if (!input.inequality_file.empty())
-		surfe_.SetInterfaceDataFile(input.inequality_file.c_str());
-	if (!input.interface_file.empty())
-		surfe_.SetInterfaceDataFile(input.interface_file.c_str());
-	if (!input.planar_file.empty())
-		surfe_.SetInterfaceDataFile(input.planar_file.c_str());
-	if (!input.tangent_file.empty())
-		surfe_.SetInterfaceDataFile(input.tangent_file.c_str());
+	surfe = new Surfe_API(input_.parameters);
 
-	surfe_.LoadConstraintsFromFiles();
+	LoadConstraintsFromFiles();
+}
+
+void Geo_Builder::LoadConstraintsFromFiles()
+{
+	try
+	{
+		build_constraints_from_input_files();
+	}
+	catch (const std::exception&e)
+	{
+		SurfeExceptions exceptions(e);
+		throw exceptions;
+	}
+}
+
+void Geo_Builder::SetInterfaceDataFile(const char *interfaceFile)
+{
+	input_.interface_file = interfaceFile;
+
+	evaluation_completed_ = false;
+}
+
+void Geo_Builder::SetPlanarDataFile(const char *planarFile)
+{
+	input_.planar_file = planarFile;
+
+	evaluation_completed_ = false;
+
+}
+
+void Geo_Builder::SetTangentDataFile(const char *tangentFile)
+{
+	input_.tangent_file = tangentFile;
+
+	evaluation_completed_ = false;
+}
+
+void Geo_Builder::SetInequalityDataFile(const char *inequalityFile)
+{
+	input_.inequality_file = inequalityFile;
+
+	evaluation_completed_ = false;
 }
 
 void Geo_Builder::BuildRegularGrid(const double &zmin, const double &zmax, const double &resolution, const double &xy_percent_padding /*= 0*/)
 {
-	SpatialParameters spatial = surfe_.GetDataBoundsAndResolution();
+	SpatialParameters spatial = surfe->GetDataBoundsAndResolution();
 	double xmin = spatial.xmin;
 	double xmax = spatial.xmax;
 	double ymin = spatial.ymin;
@@ -95,7 +204,7 @@ void Geo_Builder::BuildRegularGrid(const double &xy_percent_padding /*= 0*/)
 	try
 	{
 		// get spatial parameters
-		SpatialParameters spatial = surfe_.GetDataBoundsAndResolution();
+		SpatialParameters spatial = surfe->GetDataBoundsAndResolution();
 
 		double bounds[6];
 		bounds[0] = spatial.xmin;
@@ -117,14 +226,14 @@ void Geo_Builder::BuildRegularGrid(const double &xy_percent_padding /*= 0*/)
 			bounds[5] += dy * (xy_percent_padding / 100.0);
 		}
 		if (spatial.resolution == 0)
-			throw GRBF_Exceptions::problem_computing_grid;
+			throw "problem_computing_grid";
 
 		int nx = (bounds[1] - bounds[0]) / spatial.resolution;
 		int ny = (bounds[3] - bounds[2]) / spatial.resolution;
 		int nz = (bounds[5] - bounds[4]) / spatial.resolution;
 
 		if (nx == 0 || ny == 0 || nz == 0)
-			throw GRBF_Exceptions::problem_computing_grid;
+			throw "problem_computing_grid";
 
 		double origin[3] = { bounds[0],bounds[2], bounds[4] };
 
@@ -147,7 +256,7 @@ void Geo_Builder::BuildRegularGrid(const double &resolution, const double &xy_pe
 	try
 	{
 		// get spatial parameters
-		SpatialParameters spatial = surfe_.GetDataBoundsAndResolution();
+		SpatialParameters spatial = surfe->GetDataBoundsAndResolution();
 
 		double bounds[6];
 		bounds[0] = spatial.xmin;
@@ -169,14 +278,14 @@ void Geo_Builder::BuildRegularGrid(const double &resolution, const double &xy_pe
 			bounds[5] += dy * (xy_percent_padding / 100.0);
 		}
 		if (spatial.resolution == 0)
-			throw GRBF_Exceptions::problem_computing_grid;
+			throw "problem_computing_grid";
 
 		int nx = (bounds[1] - bounds[0]) / resolution;
 		int ny = (bounds[3] - bounds[2]) / resolution;
 		int nz = (bounds[5] - bounds[4]) / resolution;
 
 		if (nx == 0 || ny == 0 || nz == 0)
-			throw GRBF_Exceptions::problem_computing_grid;
+			throw "problem_computing_grid";
 
 		double origin[3] = { bounds[0],bounds[2], bounds[4] };
 
@@ -197,14 +306,14 @@ void Geo_Builder::BuildRegularGrid(const double &resolution, const double &xy_pe
 vtkSmartPointer<vtkImageData> Geo_Builder::GetEvaluatedGrid()
 {
 	if (!grid_)
-		throw GRBF_Exceptions::no_sgrid_exists;
+		throw "No vtkImageData grid exists";
 
 	if (evaluation_completed_)
 		return grid_;
 
 	try
 	{
-		surfe_.ComputeInterpolant();
+		surfe->ComputeInterpolant();
 	}
 	catch (std::exception& e)
 	{
@@ -234,7 +343,7 @@ vtkSmartPointer<vtkImageData> Geo_Builder::GetEvaluatedGrid()
 		double point[3];
 		grid_->GetPoint(j, point);
 		// evaluate scalar field at point
-		double scalar_field = surfe_.EvaluateInterpolantAtPoint(point[0], point[1], point[2]);
+		double scalar_field = surfe->EvaluateInterpolantAtPoint(point[0], point[1], point[2]);
 
 		sfield->SetTuple1(j, scalar_field);
 		// 		method_->eval_vector_interpolant_at_point(pt);
@@ -271,7 +380,7 @@ vtkSmartPointer<vtkImageData> Geo_Builder::GetEvaluatedGrid()
 vtkSmartPointer<vtkPolyData> Geo_Builder::GetIsoSurfaces()
 {
 	if (!grid_)
-		throw GRBF_Exceptions::no_sgrid_exists;
+		throw "No vtkImageData grid exists";
 
 	try
 	{
@@ -286,10 +395,10 @@ vtkSmartPointer<vtkPolyData> Geo_Builder::GetIsoSurfaces()
 	mcube->SetInputData(grid_);
 	mcube->ComputeScalarsOn();
 
-	for (int j = 0; j < surfe_.GetMethod()->interface_test_points.size(); j++) {
-		Interface interface_pt = surfe_.GetMethod()->interface_test_points[j];
-		// evaluate interpolant at this point
-		double iso_value = surfe_.EvaluateInterpolantAtPoint(interface_pt.x(), interface_pt.y(), interface_pt.z());
+	MatrixXd interface_ref_points = surfe->GetInterfaceReferencePoints();
+	for (int j = 0; j < interface_ref_points.rows(); j++) {
+		// evaluate interpolant at point found in row j
+		double iso_value = surfe->EvaluateInterpolantAtPoint(interface_ref_points(j,0), interface_ref_points(j, 1), interface_ref_points(j, 2));
 		mcube->SetValue(j, iso_value);
 	}
 	mcube->Update();
@@ -304,29 +413,27 @@ vtkSmartPointer<vtkPolyData> Geo_Builder::GetIsoSurfaces()
 
 vtkSmartPointer<vtkPolyData> Geo_Builder::GetInterfaceConstraints()
 {
-	if (!surfe_.GetMethod())
-		throw GRBF_Exceptions::grbf_method_is_null;
+	MatrixXd interface = surfe->GetInterfaceConstraints();
 
-	if (!surfe_.GetMethod()->constraints.itrface.empty())
+	if (interface.rows() != 0)
 	{
 		// interface
 		vtkSmartPointer<vtkPolyData> interface_constraints = vtkSmartPointer<vtkPolyData>::New();
 		vtkSmartPointer<vtkPoints> interface_points = vtkSmartPointer<vtkPoints>::New();
-		vtkSmartPointer<vtkDoubleArray> interface_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
-		interface_scalar_field->SetName("level");
-		interface_scalar_field->SetNumberOfComponents(1);
-		interface_scalar_field->SetNumberOfTuples(grid_->GetNumberOfPoints());
-		for (int j = 0; j < (int)surfe_.GetMethod()->constraints.itrface.size(); j++) {
-			Interface *interface_pt = &surfe_.GetMethod()->constraints.itrface[j];
-			interface_points->InsertNextPoint(interface_pt->x(), interface_pt->y(), interface_pt->z());
-			interface_scalar_field->SetTuple1(j, interface_pt->scalar_field());
+		vtkSmartPointer<vtkDoubleArray> interface_levels_array = vtkSmartPointer<vtkDoubleArray>::New();
+		interface_levels_array->SetName("level");
+		interface_levels_array->SetNumberOfComponents(1);
+		interface_levels_array->SetNumberOfTuples(interface.rows());
+		for (int j = 0; j < interface.rows(); j++) {
+			interface_points->InsertNextPoint(interface(j, 0), interface(j, 1), interface(j, 2));
+			interface_levels_array->SetTuple1(j, interface(j, 3));
 			// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
 			// 			vertex->GetPointIds()->SetId(0, j);
 			// 			interface_constraints->Allocate(1, 1);
 			// 			interface_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
 		}
 		interface_constraints->SetPoints(interface_points);
-		interface_constraints->GetPointData()->AddArray(interface_scalar_field);
+		interface_constraints->GetPointData()->AddArray(interface_levels_array);
 		return interface_constraints;
 	}
 	else
@@ -335,39 +442,37 @@ vtkSmartPointer<vtkPolyData> Geo_Builder::GetInterfaceConstraints()
 
 vtkSmartPointer<vtkPolyData> Geo_Builder::GetPlanarConstraints()
 {
-	if (!surfe_.GetMethod())
-		throw GRBF_Exceptions::grbf_method_is_null;
+	MatrixXd planar = surfe->GetPlanarConstraints();
 
-	if (!surfe_.GetMethod()->constraints.planar.empty())
+	if (planar.rows() != 0)
 	{
 		// planar
 		vtkSmartPointer<vtkPolyData> planar_constraints = vtkSmartPointer<vtkPolyData>::New();
 		vtkSmartPointer<vtkPoints> planar_points = vtkSmartPointer<vtkPoints>::New();
-		vtkSmartPointer<vtkDoubleArray> planar_gradient_field = vtkSmartPointer<vtkDoubleArray>::New();
-		int n_tuples = (int)surfe_.GetMethod()->constraints.planar.size();
-		planar_gradient_field->SetName("normal");
-		planar_gradient_field->SetNumberOfTuples(n_tuples);
-		planar_gradient_field->SetNumberOfComponents(3);
-		planar_gradient_field->SetComponentName(0, "nx");
-		planar_gradient_field->SetComponentName(1, "ny");
-		planar_gradient_field->SetComponentName(2, "nz");
+		vtkSmartPointer<vtkDoubleArray> planar_normal_array = vtkSmartPointer<vtkDoubleArray>::New();
+		int n_tuples = planar.rows();
+		planar_normal_array->SetName("normal");
+		planar_normal_array->SetNumberOfTuples(n_tuples);
+		planar_normal_array->SetNumberOfComponents(3);
+		planar_normal_array->SetComponentName(0, "nx");
+		planar_normal_array->SetComponentName(1, "ny");
+		planar_normal_array->SetComponentName(2, "nz");
 		// initalization for vector data
 		for (int k = 0; k < n_tuples; k++) {
 			for (int l = 0; l < 3; l++)
-				planar_gradient_field->InsertComponent(k, l, 0.0);
+				planar_normal_array->InsertComponent(k, l, 0.0);
 		}
-		for (int j = 0; j < (int)surfe_.GetMethod()->constraints.planar.size(); j++) {
-			Planar *planar_pt = &surfe_.GetMethod()->constraints.planar[j];
-			planar_points->InsertNextPoint(planar_pt->x(), planar_pt->y(), planar_pt->z());
-			double gradient[3] = { planar_pt->nx(),planar_pt->ny(),planar_pt->nz() };
-			planar_gradient_field->SetTuple(j, gradient);
+		for (int j = 0; j < n_tuples; j++) {
+			planar_points->InsertNextPoint(planar(j, 0), planar(j, 1), planar(j, 2));
+			double normal[3] = { planar(j, 3), planar(j, 4), planar(j, 5) };
+			planar_normal_array->SetTuple(j, normal);
 			// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
 			// 			vertex->GetPointIds()->SetId(0, j);
 			// 			planar_constraints->Allocate(1, 1);
 			// 			planar_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
 		}
 		planar_constraints->SetPoints(planar_points);
-		planar_constraints->GetPointData()->AddArray(planar_gradient_field);
+		planar_constraints->GetPointData()->AddArray(planar_normal_array);
 		return planar_constraints;
 	}
 	else
@@ -376,32 +481,36 @@ vtkSmartPointer<vtkPolyData> Geo_Builder::GetPlanarConstraints()
 
 vtkSmartPointer<vtkPolyData> Geo_Builder::GetTangentConstraints()
 {
-	if (!surfe_.GetMethod())
-		throw GRBF_Exceptions::grbf_method_is_null;
+	MatrixXd tangent = surfe->GetTangentConstraints();
 
-	if (!surfe_.GetMethod()->constraints.tangent.empty())
+	if (tangent.rows() != 0)
 	{
 		// tangent
 		vtkSmartPointer<vtkPolyData> tangent_constraints = vtkSmartPointer<vtkPolyData>::New();
 		vtkSmartPointer<vtkPoints> tangent_points = vtkSmartPointer<vtkPoints>::New();
-		vtkSmartPointer<vtkDoubleArray> tangent_vector = vtkSmartPointer<vtkDoubleArray>::New();
-		tangent_vector->SetName("tangent");
-		tangent_vector->SetNumberOfComponents(3);
-		tangent_vector->SetComponentName(0, "tx");
-		tangent_vector->SetComponentName(1, "ty");
-		tangent_vector->SetComponentName(2, "tz");
-		for (int j = 0; j < (int)surfe_.GetMethod()->constraints.tangent.size(); j++) {
-			Tangent*tangent_pt = &surfe_.GetMethod()->constraints.tangent[j];
-			tangent_points->InsertNextPoint(tangent_pt->x(), tangent_pt->y(), tangent_pt->z());
-			double tangent[3] = { tangent_pt->tx(),tangent_pt->ty(),tangent_pt->tz() };
-			tangent_vector->SetTuple(j, tangent);
+		vtkSmartPointer<vtkDoubleArray> vector_array = vtkSmartPointer<vtkDoubleArray>::New();
+		int n_tuples = tangent.rows();
+		vector_array->SetName("tangent");
+		vector_array->SetNumberOfComponents(3);
+		vector_array->SetComponentName(0, "tx");
+		vector_array->SetComponentName(1, "ty");
+		vector_array->SetComponentName(2, "tz");
+		// initalization for vector data
+		for (int k = 0; k < n_tuples; k++) {
+			for (int l = 0; l < 3; l++)
+				vector_array->InsertComponent(k, l, 0.0);
+		}
+		for (int j = 0; j < n_tuples; j++) {
+			tangent_points->InsertNextPoint(tangent(j, 0), tangent(j, 1), tangent(j, 2));
+			double vector[3] = { tangent(j, 3), tangent(j, 4), tangent(j, 5) };
+			vector_array->SetTuple(j, vector);
 			// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
 			// 			vertex->GetPointIds()->SetId(0, j);
 			// 			tangent_constraints->Allocate(1, 1);
 			// 			tangent_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
 		}
 		tangent_constraints->SetPoints(tangent_points);
-		tangent_constraints->GetPointData()->AddArray(tangent_vector);
+		tangent_constraints->GetPointData()->AddArray(vector_array);
 		return tangent_constraints;
 	}
 	else
@@ -410,29 +519,27 @@ vtkSmartPointer<vtkPolyData> Geo_Builder::GetTangentConstraints()
 
 vtkSmartPointer<vtkPolyData> Geo_Builder::GetInequalityConstraints()
 {
-	if (!surfe_.GetMethod())
-		throw GRBF_Exceptions::grbf_method_is_null;
+	MatrixXd inequality = surfe->GetInequalityConstraints();
 
-	if (!surfe_.GetMethod()->constraints.inequality.empty())
+	if (inequality.rows() != 0)
 	{
 		// inequality
 		vtkSmartPointer<vtkPolyData> inequality_constraints = vtkSmartPointer<vtkPolyData>::New();
 		vtkSmartPointer<vtkPoints> inequality_points = vtkSmartPointer<vtkPoints>::New();
-		vtkSmartPointer<vtkDoubleArray> inequality_scalar_field = vtkSmartPointer<vtkDoubleArray>::New();
-		inequality_scalar_field->SetName("level");
-		inequality_scalar_field->SetNumberOfComponents(1);
-		inequality_scalar_field->SetNumberOfTuples(grid_->GetNumberOfPoints());
-		for (int j = 0; j < (int)surfe_.GetMethod()->constraints.inequality.size(); j++) {
-			Inequality *inequality_pt = &surfe_.GetMethod()->constraints.inequality[j];
-			inequality_points->InsertNextPoint(inequality_pt->x(), inequality_pt->y(), inequality_pt->z());
-			inequality_scalar_field->SetTuple1(j, inequality_pt->scalar_field());
+		vtkSmartPointer<vtkDoubleArray> inequality_level_array = vtkSmartPointer<vtkDoubleArray>::New();
+		inequality_level_array->SetName("level");
+		inequality_level_array->SetNumberOfComponents(1);
+		inequality_level_array->SetNumberOfTuples(inequality.rows());
+		for (int j = 0; j < inequality.rows(); j++) {
+			inequality_points->InsertNextPoint(inequality(j, 0), inequality(j, 1), inequality(j, 2));
+			inequality_level_array->SetTuple1(j, inequality(j, 3));
 			// 			vtkSmartPointer<vtkVertex> vertex = vtkSmartPointer<vtkVertex>::New();
 			// 			vertex->GetPointIds()->SetId(0, j);
 			// 			inequality_constraints->Allocate(1, 1);
 			// 			inequality_constraints->InsertNextCell(vertex->GetCellType(), vertex->GetPointIds());
 		}
 		inequality_constraints->SetPoints(inequality_points);
-		inequality_constraints->GetPointData()->AddArray(inequality_scalar_field);
+		inequality_constraints->GetPointData()->AddArray(inequality_level_array);
 		return inequality_constraints;
 	}
 	else
@@ -491,7 +598,7 @@ void Geo_Builder::WriteVTKEvaluationGrid(const char *filename)
 {
 
 	if (!grid_)
-		throw GRBF_Exceptions::no_sgrid_exists;
+		throw "No vtkImageData grid exists";
 
 	if (!evaluation_completed_) {
 		try

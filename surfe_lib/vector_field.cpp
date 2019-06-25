@@ -82,6 +82,26 @@ bool Vector_Field::get_equality_values(VectorXd &equality_values) {
 	return true;
 }
 
+Vector_Field::Vector_Field()
+{
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+
+	_iteration = 0;
+}
+
+Vector_Field::Vector_Field(const Parameters &m_params)
+{
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+
+	ui_parameters = m_params;
+
+	_iteration = 0;
+}
+
 bool Vector_Field::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 	int n_p = b_parameters.n_planar;
 

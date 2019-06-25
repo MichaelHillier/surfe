@@ -167,6 +167,16 @@ Lajaunie_Approach::Lajaunie_Approach(const Parameters& m_p)
 	_iteration = 0;
 }
 
+Lajaunie_Approach::Lajaunie_Approach()
+{
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
+	_iteration = 0;
+}
+
 void  Lajaunie_Approach::get_method_parameters() {
 	// # of constraints for each constraint type ...
 	b_parameters.n_interface = (int)constraints.itrface.size();

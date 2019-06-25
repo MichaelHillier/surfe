@@ -1,13 +1,10 @@
-#include <surfe_api.h>
+#include <geo_builder.h>
 #include <iostream>
-
-#include <vtkSmartPointer.h>
-#include <vtkPolyData.h>
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
-	Surfe_API surfe;
+	Geo_Builder model;
 
 // 	try
 // 	{
@@ -43,10 +40,10 @@ int main(int argc, char* argv[]) {
 // 	surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/strat_interface25.vtp");
 // 	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/strat_normal25.vtp");
 
-	surfe.SetModellingMode(1);
-	surfe.SetInequalityDataFile("C:/Development/surfe_lib/data/conic_ie10.vtp");
-	surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/conic_itr10.vtp");
-	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/conic_normal10.vtp");
+	model.InitializeGRBFInterpolantObject(1);
+	model.SetInequalityDataFile("C:/Development/surfe_lib/data/conic_ie10.vtp");
+	model.SetInterfaceDataFile("C:/Development/surfe_lib/data/conic_itr10.vtp");
+	model.SetPlanarDataFile("C:/Development/surfe_lib/data/conic_normal10.vtp");
 
 
 	//surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/disconnection_interface.csv");
@@ -56,7 +53,7 @@ int main(int argc, char* argv[]) {
 	//surfe.SetPlanarDataFile("G:/Development/surfe_lib/data/OverturnNormals.vtp");
 	try
 	{
-		surfe.LoadConstraintsFromFiles();
+		model.LoadConstraintsFromFiles();
 	}
 	catch (const std::exception &e)
 	{
@@ -66,7 +63,7 @@ int main(int argc, char* argv[]) {
 
 	try
 	{
-		surfe.ComputeInterpolant();
+		model.surfe->ComputeInterpolant();
 	}
 	catch (const std::exception&e)
 	{
@@ -74,7 +71,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	surfe.BuildRegularGrid(25,25);
+	model.BuildRegularGrid(25,25);
 	//surfe.BuildRegularGrid(-10, 200, -20, 75, -100, 20, 1);
 	//surfe.BuildRegularGrid(10,25);
 	//surfe.BuildRegularGrid(5,25);
@@ -85,26 +82,10 @@ int main(int argc, char* argv[]) {
 	//surfe.WriteVTKPlanarConstraints("C:/Research/SurfeOutput/a_test_planar_pts.vtp");
 // 	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/strat_r3.vtp");
 // 	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/strat_r3.vti");
-	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/conic_r3.vtp");
-	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/conic_r3.vti");
+	model.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/conic_r3.vtp");
+	model.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/conic_r3.vti");
 
-	surfe.VisualizeVTKData();
-
-	const char *geo_string = surfe.GetEvaluatedVTKGridString();
-
-	vtkSmartPointer<vtkPolyData> iso_surfaces = vtkSmartPointer<vtkPolyData>::New();
-	try
-	{
-		iso_surfaces = surfe.GetIsoSurfaces();
-	}
-	catch (const std::exception&e)
-	{
-		cout << "Exception: " << e.what() << endl;
-		return EXIT_FAILURE;
-	}
-
-	surfe.WriteVTKEvaluationGrid("D:/evaluated_sgrid.vti");
-	surfe.WriteVTKIsoSurfaces("D:/iso_surface.vtp");
+	model.VisualizeVTKData();
 
 	return 0;
 }

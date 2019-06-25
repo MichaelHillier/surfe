@@ -38,7 +38,6 @@ pybind11_add_module(surfepy surfe_pybindings/pybindings.cpp)
 target_link_libraries(surfepy surfe_lib math_lib)
 
 option(GEO_BUILDER FALSE)
-MESSAGE(STATUS "vis support: ${VIS_SUPPORT}")
 if (GEO_BUILDER)
 	find_package(VTK REQUIRED)
 	if (NOT VTK_FOUND)

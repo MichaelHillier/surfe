@@ -296,6 +296,21 @@ Stratigraphic_Surfaces::Stratigraphic_Surfaces(const Parameters& m_params)
 	_iteration = 0;
 }
 
+Stratigraphic_Surfaces::Stratigraphic_Surfaces()
+{
+	solver = nullptr;
+	kernel = nullptr;
+	rbf_kernel = nullptr;
+	p_basis = nullptr;
+
+	_n_increment_pairs = 0;
+	_n_sequenced_interface_pairs = 0;
+	_n_sequenced_inequality_pairs = 0;
+	_n_interface_pairs = 0;
+
+	_iteration = 0;
+}
+
 void Stratigraphic_Surfaces::get_method_parameters() {
 	// # of constraints for each constraint type ...
 	b_parameters.n_interface = (int)constraints.itrface.size();

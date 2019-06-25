@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
 #include <pybind11/stl.h>       //auto conversion b/w stl and python types
 #include <pybind11/iostream.h>  //auto conversion b/w stl and python types
 
@@ -17,10 +18,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(surfepy, m) {
 	// setup bindings for Surfe_API
 	py::class_<Surfe_API>(m, "Surfe_API")
-		.def(py::init<>())
+		.def(py::init<const int>())
 		.def(py::init<const Parameters &>())
-		.def("GetParametersAndConstraints", &Surfe_API::GetParametersAndConstraints)
-		.def("LoadConstraintsFromFiles", &Surfe_API::LoadConstraintsFromFiles)
 		.def("AddInterfaceConstraint",
 		(void (Surfe_API::*)(const double&, const double&, const double&, const double&))
 			&Surfe_API::AddInterfaceConstraint, "Add an interface constraint")
@@ -34,7 +33,6 @@ PYBIND11_MODULE(surfepy, m) {
 		(void (Surfe_API::*)(const double&, const double&, const double&, const double&))
 			&Surfe_API::AddInequalityConstraint, "Add an inequality constraint")
 		.def("ComputeInterpolant", &Surfe_API::ComputeInterpolant)
-		.def("SetModellingMode", &Surfe_API::SetModellingMode)
 		.def("SetRegressionSmoothing", &Surfe_API::SetRegressionSmoothing)
 		.def("SetGreedyAlgorithm", &Surfe_API::SetGreedyAlgorithm)
 		.def("SetRestrictedRange", &Surfe_API::SetRestrictedRange)
@@ -46,31 +44,17 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("SetGlobalAnisotropy", &Surfe_API::SetGlobalAnisotropy)
 		.def("SetInterfaceUncertainty", &Surfe_API::SetInterfaceUncertainty)
 		.def("SetAngularUncertainty", &Surfe_API::SetAngularUncertainty)
-		.def("SetInterfaceDataFile", &Surfe_API::SetInterfaceDataFile)
-		.def("SetPlanarDataFile", &Surfe_API::SetPlanarDataFile)
-		.def("SetTangentDataFile", &Surfe_API::SetTangentDataFile)
-		.def("SetInequalityDataFile", &Surfe_API::SetInequalityDataFile)
 		.def("EvaluateInterpolantAtPoint", &Surfe_API::EvaluateInterpolantAtPoint)
-		.def("EvaluateVectorInterpolantAtPoint",
-			&Surfe_API::EvaluateVectorInterpolantAtPoint,
-			py::return_value_policy::copy)
-		.def("BuildRegularGrid",
-		(void (Surfe_API::*)(const double&, const double &, const double &, const double &))
-			&Surfe_API::BuildRegularGrid, "Build vtkImageData grid from zmin/zmax and resolution")
-		.def("BuildRegularGrid",
-		(void (Surfe_API::*)(const double&, const double &, const double &, const double &, const double &, const double&, const double &))
-			&Surfe_API::BuildRegularGrid, "Build tkImageData grid from bounds and resolution")
-		.def("GetEvaluatedVTKGridString", &Surfe_API::GetEvaluatedVTKGridString)
-		.def("GetVTKIsosurfacesString", &Surfe_API::GetVTKIsosurfacesString)
-		.def("GetVTKInterfaceConstraintsString", &Surfe_API::GetVTKInterfaceConstraintsString)
-		.def("GetVTKTangentConstraintsString", &Surfe_API::GetVTKTangentConstraintsString)
-		.def("GetVTKPlanarConstraintsString", &Surfe_API::GetVTKPlanarConstraintsString)
-		.def("GetVTKInequalityConstraintString", &Surfe_API::GetVTKInequalityConstraintString)
-		.def("WriteVTKInterfaceConstraints", &Surfe_API::WriteVTKInterfaceConstraints)
-		.def("WriteVTKPlanarConstraints", &Surfe_API::WriteVTKPlanarConstraints)
-		.def("WriteVTKTangentConstraints", &Surfe_API::WriteVTKTangentConstraints)
-		.def("WriteVTKInequalityConstraints", &Surfe_API::WriteVTKInequalityConstraints)
-		.def("WriteVTKEvaluationGrid", &Surfe_API::WriteVTKEvaluationGrid)
-		.def("WriteVTKIsoSurfaces", &Surfe_API::WriteVTKIsoSurfaces)
-		.def("VisualizeVTKData", &Surfe_API::VisualizeVTKData);
+		.def("EvaluateVectorInterpolantAtPoint", &Surfe_API::EvaluateVectorInterpolantAtPoint)
+		.def("GetDataBoundsAndResolution", &Surfe_API::GetDataBoundsAndResolution)
+		.def("GetInterfaceReferencePoints", &Surfe_API::GetInterfaceReferencePoints)
+		.def("GetInterfaceConstraints", &Surfe_API::GetInterfaceConstraints)
+		.def("SetInterfaceConstraints", &Surfe_API::SetInequalityConstraints)
+		.def("GetPlanarConstraints", &Surfe_API::GetPlanarConstraints)
+		.def("SetPlanarConstraints", &Surfe_API::SetPlanarConstraints)
+		.def("GetTangentConstraints", &Surfe_API::GetTangentConstraints)
+		.def("SetTangentConstraints", &Surfe_API::SetTangentConstraints)
+		.def("GetInequalityConstraints", &Surfe_API::GetInequalityConstraints)
+		.def("SetInequalityConstraints", &Surfe_API::SetInequalityConstraints);
+		
 }

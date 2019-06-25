@@ -2,6 +2,7 @@
 #define GEO_BUILDER_H
 
 #include <surfe_api.h>
+#include <read_input_files.h>
 #include <modelling_parameters.h>
 
 #include <inputImpl.h>
@@ -42,18 +43,25 @@
 
 class Geo_Builder {
 private:
-	Surfe_API surfe_;
 	InputParameters input_;
 	vtkSmartPointer<vtkImageData> grid_;
 	InputParameters getGUIParameters();
 	void progress(const float &progress_value);
 	bool evaluation_completed_;
+	void build_constraints_from_input_files();
 public:
 	Geo_Builder() {
+		surfe = nullptr;
 		evaluation_completed_ = false;
 	}
+	Surfe_API *surfe;
 	void CreateGRBFInterpolantFromGUIParameters();
-	void InitializeGRBFInterpolantObject() { surfe_ = Surfe_API(); }
+	void InitializeGRBFInterpolantObject(const int &mode) { surfe = new Surfe_API(mode); }
+	void LoadConstraintsFromFiles();
+	void SetInterfaceDataFile(const char *interfaceFile);
+	void SetPlanarDataFile(const char *planarFile);
+	void SetTangentDataFile(const char *tangentFile);
+	void SetInequalityDataFile(const char *inequalityFile);
 	void BuildRegularGrid(const double &resolution, const double &xy_percent_padding = 0);
 	void BuildRegularGrid(const double &xy_percent_padding = 0);
 	void BuildRegularGrid(

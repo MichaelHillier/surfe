@@ -53,7 +53,7 @@ std::vector<std::string> ReadPropertyNamesFromCSV(const char *filename)
 	}
 	else
 	{
-		std::throw_with_nested(GRBF_Exceptions::error_parsing_csv_header);
+		throw "Error parsing csv header";
 	}
 
 	return property_names;
@@ -85,30 +85,26 @@ void ConstraintFileReader::SetFilenameAndExtension(const char *filename)
 	extension_ = get_file_extension(filename);
 }
 
-std::vector<Interface> CSVInterfaceConstraintFileReader::GetConstraints()
+void CSVInterfaceConstraintFileReader::GetConstraints()
 {
-	std::vector<Interface> interface_constraints;
-
 	std::string xname = GetXName();
 	std::string yname = GetYName();
 	std::string zname = GetZName();
 
 	if (xname.empty() && yname.empty() && zname.empty())
-		std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+		throw "Missing coordinates in the file";
 
 	if (GetLevelPropertyName().empty())
 	{
 		io::CSVReader<3> in(filename_);
 		in.read_header(io::ignore_missing_column, xname, yname, zname);
 		if (!in.has_column(xname) || !in.has_column(yname) || !in.has_column(zname))
-			std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+			throw "Missing coordinates in the file";
 		double x;
 		double y;
 		double z;
-		while (in.read_row(x, y, z)) {
-			interface_constraints.emplace_back(Interface(x, y, z, 0));
-		}
-		return interface_constraints;
+		while (in.read_row(x, y, z))
+			surfe->AddInterfaceConstraint(x, y, z, 0);
 	}
 	else
 	{
@@ -117,24 +113,20 @@ std::vector<Interface> CSVInterfaceConstraintFileReader::GetConstraints()
 		io::CSVReader<4> in(filename_);
 		in.read_header(io::ignore_missing_column, xname, yname, zname,levelname);
 		if (!in.has_column(xname) || !in.has_column(yname) || !in.has_column(zname))
-			std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+			throw "Missing coordinates in the file";
 		if (!in.has_column(levelname))
-			std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+			throw "Missing property info in file";
 		double x;
 		double y;
 		double z;
 		double level;
-		while (in.read_row(x, y, z,level)) {
-			interface_constraints.emplace_back(Interface(x, y, z, level));
-		}
-		return interface_constraints;
+		while (in.read_row(x, y, z,level))
+			surfe->AddInterfaceConstraint(x, y, z, level);
 	}
 }
 
-std::vector<Interface> VTKInterfaceConstraintFileReader::GetConstraints()
+void VTKInterfaceConstraintFileReader::GetConstraints()
 {
-	std::vector<Interface> interface_constraints;
-
 	vtkSmartPointer<vtkPolyData> poly = GetvtkPolyDataGeometryFromFile(filename_.c_str());
 	vtkPointData *point_data = poly->GetPointData();
 	vtkDoubleArray *level = nullptr;
@@ -146,12 +138,10 @@ std::vector<Interface> VTKInterfaceConstraintFileReader::GetConstraints()
 		double location[3];
 		poly->GetPoint(j, location);
 		if (level)
-			interface_constraints.emplace_back(Interface(location[0], location[1], location[2], level->GetTuple1(j)));
+			surfe->AddInterfaceConstraint(location[0], location[1], location[2], level->GetTuple1(j));
 		else
-			interface_constraints.emplace_back(Interface(location[0], location[1], location[2], 0));
+			surfe->AddInterfaceConstraint(location[0], location[1], location[2], 0);
 	}
-
-	return interface_constraints;
 }
 
 void InterfaceConstraintFileReader::SearchForDefaultPropertyNames()
@@ -294,16 +284,14 @@ void InequalityConstraintFileReader::SearchForDefaultPropertyNames()
 	}
 }
 
-std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
+void CSVPlanarConstraintFileReader::GetConstraints()
 {
-	std::vector<Planar> planar_constraints;
-
 	std::string xname = GetXName();
 	std::string yname = GetYName();
 	std::string zname = GetZName();
 
 	if (xname.empty() && yname.empty() && zname.empty())
-		std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+		throw "Missing coordinates in the file";
 
 	if (have_normal_components)
 	{
@@ -315,9 +303,9 @@ std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
 			io::CSVReader<6> in(filename_);
 			in.read_header(io::ignore_missing_column, xname, yname, zname, nx, ny, nz);
 			if (!in.has_column(xname) || !in.has_column(yname) || !in.has_column(zname))
-				std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+				throw "Missing coordinates in the file";
 			if (!in.has_column(nx) || !in.has_column(ny) || !in.has_column(nz))
-				std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+				throw "Missing property info in file";
 
 			double x;
 			double y;
@@ -325,9 +313,8 @@ std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
 			double n_x;
 			double n_y;
 			double n_z;
-			while (in.read_row(x, y, z, n_x, n_y, n_z)) {
-				planar_constraints.emplace_back(Planar(x, y, z, n_x, n_y, n_z));
-			}
+			while (in.read_row(x, y, z, n_x, n_y, n_z))
+				surfe->AddPlanarConstraintwNormal(x, y, z, n_x, n_y, n_z);
 		}
 		catch (std::exception &e)
 		{
@@ -344,9 +331,9 @@ std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
 			io::CSVReader<6> in(filename_);
 			in.read_header(io::ignore_missing_column, xname, yname, zname, dipname, strikename, polarityname);
 			if (!in.has_column(xname) || !in.has_column(yname) || !in.has_column(zname))
-				std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+				throw "Missing coordinates in the file";
 			if (!in.has_column(dipname) || !in.has_column(strikename) || !in.has_column(polarityname))
-				std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+				throw "Missing property info in file";
 
 			double x;
 			double y;
@@ -354,9 +341,8 @@ std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
 			double dip;
 			double strike;
 			int polariy;
-			while (in.read_row(x, y, z, dip, strike, polariy)) {
-				planar_constraints.emplace_back(Planar(x, y, z, dip, strike, polariy));
-			}
+			while (in.read_row(x, y, z, dip, strike, polariy))
+				surfe->AddPlanarConstraintwStrikeDipPolarity(x, y, z, strike, dip, polariy);
 		}
 		catch (std::exception &e)
 		{
@@ -373,9 +359,9 @@ std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
 			io::CSVReader<6> in(filename_);
 			in.read_header(io::ignore_missing_column, xname, yname, zname, dipname, azimuthname, polarityname);
 			if (!in.has_column(xname) || !in.has_column(yname) || !in.has_column(zname))
-				std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+				throw "Missing coordinates in the file";
 			if (!in.has_column(dipname) || !in.has_column(azimuthname) || !in.has_column(polarityname))
-				std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+				throw "Missing property info in file";
 
 			double x;
 			double y;
@@ -389,7 +375,7 @@ std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
 					strike = azimuth - 90.0;
 				else
 					strike = azimuth + 270.0;
-				planar_constraints.emplace_back(Planar(x, y, z, dip, strike, polarity));
+				surfe->AddPlanarConstraintwStrikeDipPolarity(x, y, z, strike, dip, polarity);
 			}
 		}
 		catch (std::exception &e)
@@ -397,14 +383,10 @@ std::vector<Planar> CSVPlanarConstraintFileReader::GetConstraints()
 			std::throw_with_nested(e);
 		}
 	}
-
-	return planar_constraints;
 }
 
-std::vector<Planar> VTKPlanarConstraintFileReader::GetConstraints()
+void VTKPlanarConstraintFileReader::GetConstraints()
 {
-	std::vector<Planar> planar_constraints;
-
 	// search the geometry for level data
 	vtkSmartPointer<vtkPolyData> poly = GetvtkPolyDataGeometryFromFile(filename_.c_str());
 
@@ -441,7 +423,7 @@ std::vector<Planar> VTKPlanarConstraintFileReader::GetConstraints()
 	if (normal)
 	{
 		if (normal->GetNumberOfComponents() != 3)
-			std::throw_with_nested(GRBF_Exceptions::input_file_problem);
+			throw "Input file problem";
 		else {
 			for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
 				double location[3];
@@ -449,10 +431,9 @@ std::vector<Planar> VTKPlanarConstraintFileReader::GetConstraints()
 				double n_x = normal->GetComponent(j, 0);
 				double n_y = normal->GetComponent(j, 1);
 				double n_z = normal->GetComponent(j, 2);
-				planar_constraints.emplace_back(Planar(location[0], location[1], location[2], n_x, n_y, n_z));
+				surfe->AddPlanarConstraintwNormal(location[0], location[1], location[2], n_x, n_y, n_z);
 			}
 		}
-		return planar_constraints;
 	}
 	else if (nx && ny && nz) {
 		for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
@@ -461,9 +442,8 @@ std::vector<Planar> VTKPlanarConstraintFileReader::GetConstraints()
 			double n_x = nx->GetTuple1(j);
 			double n_y = ny->GetTuple1(j);
 			double n_z = nz->GetTuple1(j);
-			planar_constraints.emplace_back(Planar(location[0], location[1], location[2], n_x, n_y, n_z));
+			surfe->AddPlanarConstraintwNormal(location[0], location[1], location[2], n_x, n_y, n_z);
 		}
-		return planar_constraints;
 	}
 	else if (dip && strike && polarity) {
 		for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
@@ -472,9 +452,8 @@ std::vector<Planar> VTKPlanarConstraintFileReader::GetConstraints()
 			double d = dip->GetTuple1(j);
 			double s = strike->GetTuple1(j);
 			int p = (int)polarity->GetTuple1(j);
-			planar_constraints.emplace_back(Planar(location[0], location[1], location[2], d, s, p));
+			surfe->AddPlanarConstraintwStrikeDipPolarity(location[0], location[1], location[2], s, d, p);
 		}
-		return planar_constraints;
 	}
 	else if (dip && azimuth && polarity) {
 		for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
@@ -488,23 +467,20 @@ std::vector<Planar> VTKPlanarConstraintFileReader::GetConstraints()
 			else
 				s = a + 270.0;
 			int p = (int)polarity->GetTuple1(j);
-			planar_constraints.emplace_back(Planar(location[0], location[1], location[2], d, s, p));
+			surfe->AddPlanarConstraintwStrikeDipPolarity(location[0], location[1], location[2], s, d, p);
 		}
-		return planar_constraints;
 	}
-	std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+	throw "Missing property info in file";
 }
 
-std::vector<Tangent> CSVTangentConstraintFileReader::GetConstraints()
+void CSVTangentConstraintFileReader::GetConstraints()
 {
-	std::vector<Tangent> tangent_constraints;
-
 	std::string xname = GetXName();
 	std::string yname = GetYName();
 	std::string zname = GetZName();
 
 	if (xname.empty() && yname.empty() && zname.empty())
-		std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+		throw "Missing coordinates in the file";
 
 	if (have_vector_components)
 	{
@@ -516,9 +492,9 @@ std::vector<Tangent> CSVTangentConstraintFileReader::GetConstraints()
 			io::CSVReader<6> in(filename_);
 			in.read_header(io::ignore_missing_column, xname, yname, zname, vx_name, vy_name, vz_name);
 			if (!in.has_column(xname) || !in.has_column(yname) || !in.has_column(zname))
-				std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+				throw "Missing coordinates in the file";
 			if (!in.has_column(vx_name) || !in.has_column(vy_name) || !in.has_column(vz_name))
-				std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+				throw "Missing property info in file";
 
 			double x;
 			double y;
@@ -526,23 +502,18 @@ std::vector<Tangent> CSVTangentConstraintFileReader::GetConstraints()
 			double vx;
 			double vy;
 			double vz;
-			while (in.read_row(x, y, z, vx, vy, vz)) {
-				tangent_constraints.emplace_back(Tangent(x, y, z, vx, vy, vz));
-			}
+			while (in.read_row(x, y, z, vx, vy, vz)) 
+				surfe->AddTangentConstraint(x, y, z, vx, vy, vz);
 		}
 		catch (std::exception &e)
 		{
 			std::throw_with_nested(e);
 		}
 	}
-
-	return tangent_constraints;
 }
 
-std::vector<Tangent> VTKTangentConstraintFileReader::GetConstraints()
+void VTKTangentConstraintFileReader::GetConstraints()
 {
-	std::vector<Tangent> tangent_constraints;
-
 	// search the geometry for level data
 	vtkSmartPointer<vtkPolyData> poly = GetvtkPolyDataGeometryFromFile(filename_.c_str());
 
@@ -555,7 +526,7 @@ std::vector<Tangent> VTKTangentConstraintFileReader::GetConstraints()
 	{
 		tangent = vtkDoubleArray::SafeDownCast(point_data->GetAbstractArray(GetVectorPropertyName().c_str()));
 		if (tangent->GetNumberOfComponents() != 3)
-			std::throw_with_nested(GRBF_Exceptions::input_file_problem);
+			throw "Input file problem";
 		else {
 			for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
 				double location[3];
@@ -563,10 +534,9 @@ std::vector<Tangent> VTKTangentConstraintFileReader::GetConstraints()
 				double t_x = tangent->GetComponent(j, 0);
 				double t_y = tangent->GetComponent(j, 1);
 				double t_z = tangent->GetComponent(j, 2);
-				tangent_constraints.emplace_back(Tangent(location[0], location[1], location[2], t_x, t_y, t_z));
+				surfe->AddTangentConstraint(location[0], location[1], location[2], t_x, t_y, t_z);
 			}
 		}
-		return tangent_constraints;
 	}
 	else if (have_vector_components)
 	{
@@ -576,25 +546,20 @@ std::vector<Tangent> VTKTangentConstraintFileReader::GetConstraints()
 		for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
 			double location[3];
 			poly->GetPoint(j, location);
-			tangent_constraints.emplace_back(Tangent(location[0], location[1], location[2], tx->GetTuple1(j), ty->GetTuple1(j), tz->GetTuple1(j)));
+			surfe->AddTangentConstraint(location[0], location[1], location[2], tx->GetTuple1(j), ty->GetTuple1(j), tz->GetTuple1(j));
 		}
-		return tangent_constraints;
 	}	
-
-	return tangent_constraints;
 }
 
-std::vector<Inequality> CSVInequalityConstraintFileReader::GetConstraints()
+void CSVInequalityConstraintFileReader::GetConstraints()
 {
-	std::vector<Inequality> inequality_constraints;
-
 	std::string xname = GetXName();
 	std::string yname = GetYName();
 	std::string zname = GetZName();
 	std::string levelname = GetLevelPropertyName();
 
 	if (xname.empty() && yname.empty() && zname.empty())
-		std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+		throw "Missing coordinates in the file";
 
 	try
 	{
@@ -602,44 +567,38 @@ std::vector<Inequality> CSVInequalityConstraintFileReader::GetConstraints()
 		io::CSVReader<4> in(filename_);
 		in.read_header(io::ignore_missing_column, xname, yname, zname, levelname);
 		if (!in.has_column(xname) || !in.has_column(yname) || !in.has_column(zname))
-			std::throw_with_nested(GRBF_Exceptions::missing_coords_in_file);
+			throw "Missing coordinates in the file";
 		if (!in.has_column(levelname))
-			std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+			throw "Missing property info in file";
 		double x;
 		double y;
 		double z;
 		double level;
-		while (in.read_row(x, y, z, level)) {
-			inequality_constraints.emplace_back(Inequality(x, y, z, level));
-		}
+		while (in.read_row(x, y, z, level))
+			surfe->AddInequalityConstraint(x, y, z, level);
 	}
 	catch (std::exception &e)
 	{
 		std::throw_with_nested(e);
 	}
-
-	return  inequality_constraints;
 }
 
-std::vector<Inequality> VTKInequalityConstraintFileReader::GetConstraints()
+void VTKInequalityConstraintFileReader::GetConstraints()
 {
-	std::vector<Inequality> inequality_constraints;
-
 	// search the geometry for level data
 	vtkSmartPointer<vtkPolyData> poly = GetvtkPolyDataGeometryFromFile(filename_.c_str());
 
 	if (!poly)
-		std::throw_with_nested(GRBF_Exceptions::input_file_problem);
+		throw "Input file problem";
 
 	vtkPointData *point_data = poly->GetPointData();
 	vtkDoubleArray *level = vtkDoubleArray::SafeDownCast(point_data->GetAbstractArray(GetLevelPropertyName().c_str()));
 	if (!level)
-		std::throw_with_nested(GRBF_Exceptions::missing_property_info_in_file);
+		throw "Missing property info in file";
 
 	for (int j = 0; j < poly->GetNumberOfPoints(); j++) {
 		double location[3];
 		poly->GetPoint(j, location);
-		inequality_constraints.emplace_back(Inequality(location[0], location[1], location[2], level->GetTuple1(j)));
+		surfe->AddInequalityConstraint(location[0], location[1], location[2], level->GetTuple1(j));
 	}
-	return inequality_constraints;
 }
