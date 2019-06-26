@@ -4,6 +4,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
+
 	Geo_Builder model;
 
 // 	try
@@ -41,9 +42,9 @@ int main(int argc, char* argv[]) {
 // 	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/strat_normal25.vtp");
 
 	model.InitializeGRBFInterpolantObject(1);
-	model.SetInequalityDataFile("C:/Development/surfe_lib/data/conic_ie10.vtp");
-	model.SetInterfaceDataFile("C:/Development/surfe_lib/data/conic_itr10.vtp");
-	model.SetPlanarDataFile("C:/Development/surfe_lib/data/conic_normal10.vtp");
+	//model.SetInequalityDataFile("C:/Development/surfe_lib/data/conic_ie10.vtp");
+	model.SetInterfaceDataFile("D:/Development/surfe_lib/data/conic_itr10.vtp");
+	model.SetPlanarDataFile("D:/Development/surfe_lib/data/conic_normal10.vtp");
 
 
 	//surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/disconnection_interface.csv");
@@ -82,8 +83,8 @@ int main(int argc, char* argv[]) {
 	//surfe.WriteVTKPlanarConstraints("C:/Research/SurfeOutput/a_test_planar_pts.vtp");
 // 	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/strat_r3.vtp");
 // 	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/strat_r3.vti");
-	model.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/conic_r3.vtp");
-	model.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/conic_r3.vti");
+	model.WriteVTKIsoSurfaces("D:/Development/SurfeOutput/conic_r3.vtp");
+	model.WriteVTKEvaluationGrid("D:/Development/SurfeOutput/conic_r3.vti");
 
 	model.VisualizeVTKData();
 

@@ -41,7 +41,7 @@
 #include <vtkCellPicker.h>
 #include <vtkImagePlaneWidget.h>
 
-class Geo_Builder {
+class __declspec(dllexport) Geo_Builder {
 private:
 	InputParameters input_;
 	vtkSmartPointer<vtkImageData> grid_;

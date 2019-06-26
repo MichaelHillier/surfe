@@ -311,14 +311,17 @@ vtkSmartPointer<vtkImageData> Geo_Builder::GetEvaluatedGrid()
 	if (evaluation_completed_)
 		return grid_;
 
-	try
+	if (!surfe->InterpolantComputed())
 	{
-		surfe->ComputeInterpolant();
-	}
-	catch (std::exception& e)
-	{
-		std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
-		throw;
+		try
+		{
+			surfe->ComputeInterpolant();
+		}
+		catch (std::exception& e)
+		{
+			std::cout << "Exception: " << e.what() << " occurred. " << std::endl;
+			throw;
+		}
 	}
 
 	vtkSmartPointer<vtkDoubleArray> sfield = vtkSmartPointer<vtkDoubleArray>::New();

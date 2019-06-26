@@ -69,8 +69,9 @@ MatrixXd Surfe_API::GetInterfaceConstraints()
 		interface_constraints(j, 0) = interface[j].x();
 		interface_constraints(j, 1) = interface[j].y();
 		interface_constraints(j, 2) = interface[j].z();
-		interface_constraints(j, 4) = interface[j].level();
+		interface_constraints(j, 3) = interface[j].level();
 	}
+	//std::cout << " Interface Constraints Array:\n" << interface_constraints << std::endl;
 	return interface_constraints;
 }
 
@@ -224,17 +225,17 @@ Surfe_API::Surfe_API(const Parameters& params)
 	method_ = get_method_from_parameters(params);
 }
 
-Surfe_API::Surfe_API(const int &mode)
+Surfe_API::Surfe_API(const int &modelling_method)
 {
-	if (mode == 1) // Parameter_Types::Single_surface;
+	if (modelling_method == 1) // Parameter_Types::Single_surface;
 		method_ = new Single_Surface();
-	else if (mode == 2) // Parameter_Types::Lajaunie_approach
+	else if (modelling_method == 2) // Parameter_Types::Lajaunie_approach
 		method_ = new Lajaunie_Approach();
-	else if (mode == 3) // Parameter_Types::Vector_field
+	else if (modelling_method == 3) // Parameter_Types::Vector_field
 		method_ = new Vector_Field();
-	else if (mode == 4) // Parameter_Types::Stratigraphic_horizons
+	else if (modelling_method == 4) // Parameter_Types::Stratigraphic_horizons
 		method_ = new Stratigraphic_Surfaces();
-	else if (mode == 5) // Parameter_Types::Continuous_property
+	else if (modelling_method == 5) // Parameter_Types::Continuous_property
 		method_ = new Continuous_Property();
 	else
 		throw GRBF_Exceptions::unknown_modelling_mode;
@@ -260,7 +261,7 @@ void Surfe_API::AddPlanarConstraintwNormal(const double &x, const double &y, con
 	constraints_changed_ = true;
 }
 
-void Surfe_API::AddPlanarConstraintwStrikeDipPolarity(const double &x, const double &y, const double &z, const double &strike, const double &dip, const double &polarity)
+void Surfe_API::AddPlanarConstraintwStrikeDipPolarity(const double &x, const double &y, const double &z, const double &strike, const double &dip, const int &polarity)
 {
 	Planar planar_constraint(x, y, z, dip, strike, polarity);
 	method_->constraints.planar.push_back(planar_constraint);
@@ -269,7 +270,7 @@ void Surfe_API::AddPlanarConstraintwStrikeDipPolarity(const double &x, const dou
 	constraints_changed_ = true;
 }
 
-void Surfe_API::AddPlanarConstraintwAzimuthDipPolarity(const double &x, const double &y, const double &z, const double &azimuth, const double &dip, const double &polarity)
+void Surfe_API::AddPlanarConstraintwAzimuthDipPolarity(const double &x, const double &y, const double &z, const double &azimuth, const double &dip, const int &polarity)
 {
 	double strike = 0.0;
 	// convert azimuth to strike
@@ -419,20 +420,6 @@ void Surfe_API::SetRestrictedRange(const bool &use_restricted_range, const doubl
 {
 	method_->ui_parameters.use_regression_smoothing = use_restricted_range;
 	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
-	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
-
-	parameters_changed_ = true;
-}
-
-void Surfe_API::SetInterfaceUncertainty(const double &interface_uncertainty)
-{
-	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
-
-	parameters_changed_ = true;
-}
-
-void Surfe_API::SetAngularUncertainty(const double &angular_uncertainty)
-{
 	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
 
 	parameters_changed_ = true;

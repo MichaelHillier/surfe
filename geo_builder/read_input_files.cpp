@@ -419,6 +419,8 @@ void VTKPlanarConstraintFileReader::GetConstraints()
 		azimuth = vtkDoubleArray::SafeDownCast(point_data->GetAbstractArray(GetAzimuthPropertyName().c_str()));
 		polarity = vtkDoubleArray::SafeDownCast(point_data->GetAbstractArray(GetPolarityPropertyName().c_str()));
 	}
+	else
+		throw "Missing property info in file";
 
 	if (normal)
 	{
@@ -470,7 +472,6 @@ void VTKPlanarConstraintFileReader::GetConstraints()
 			surfe->AddPlanarConstraintwStrikeDipPolarity(location[0], location[1], location[2], s, d, p);
 		}
 	}
-	throw "Missing property info in file";
 }
 
 void CSVTangentConstraintFileReader::GetConstraints()
@@ -510,6 +511,8 @@ void CSVTangentConstraintFileReader::GetConstraints()
 			std::throw_with_nested(e);
 		}
 	}
+	else
+		throw "Missing property info in file";
 }
 
 void VTKTangentConstraintFileReader::GetConstraints()
@@ -549,6 +552,8 @@ void VTKTangentConstraintFileReader::GetConstraints()
 			surfe->AddTangentConstraint(location[0], location[1], location[2], tx->GetTuple1(j), ty->GetTuple1(j), tz->GetTuple1(j));
 		}
 	}	
+	else
+		throw "Missing property info in file";
 }
 
 void CSVInequalityConstraintFileReader::GetConstraints()

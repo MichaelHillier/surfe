@@ -42,8 +42,6 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("SetRBFShapeParameter", &Surfe_API::SetRBFShapeParameter)
 		.def("SetPolynomialOrder", &Surfe_API::SetPolynomialOrder)
 		.def("SetGlobalAnisotropy", &Surfe_API::SetGlobalAnisotropy)
-		.def("SetInterfaceUncertainty", &Surfe_API::SetInterfaceUncertainty)
-		.def("SetAngularUncertainty", &Surfe_API::SetAngularUncertainty)
 		.def("EvaluateInterpolantAtPoint", &Surfe_API::EvaluateInterpolantAtPoint)
 		.def("EvaluateVectorInterpolantAtPoint", &Surfe_API::EvaluateVectorInterpolantAtPoint)
 		.def("GetDataBoundsAndResolution", &Surfe_API::GetDataBoundsAndResolution)

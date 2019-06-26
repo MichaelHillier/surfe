@@ -23,7 +23,7 @@ private:
 	GRBF_Modelling_Methods* get_method_from_parameters(const Parameters& params);
 
 public:
-	Surfe_API(const int &mode);
+	Surfe_API(const int &modelling_method);
 	Surfe_API(const Parameters& params);
 	
 	// Manually (no input files) adding constraints to interpolant methods
@@ -37,11 +37,11 @@ public:
 	);
 	void AddPlanarConstraintwStrikeDipPolarity(
 		const double &x, const double &y, const double &z,
-		const double &strike, const double &dip, const double &polarity
+		const double &strike, const double &dip, const int &polarity
 	);
 	void AddPlanarConstraintwAzimuthDipPolarity(
 		const double &x, const double &y, const double &z,
-		const double &azimuth, const double &dip, const double &polarity
+		const double &azimuth, const double &dip, const int &polarity
 	);
 	void AddTangentConstraint(
 		const double &x, const double &y, const double &z,
@@ -52,16 +52,14 @@ public:
 		const double &level
 	);
 	void ComputeInterpolant();
-	void SetRegressionSmoothing(const bool &use_regression_smoothing, const double &amount = 0);
-	void SetGreedyAlgorithm(const bool &use_greedy, const double &interface_uncertainty = 0, const double &angular_uncertainty = 0);
+	void SetRegressionSmoothing(const bool &use_regression_smoothing, const double &amount);
+	void SetGreedyAlgorithm(const bool &use_greedy, const double &interface_uncertainty, const double &angular_uncertainty);
 	void SetRestrictedRange(const bool &use_restricted_range, const double &interface_uncertainty = 0, const double &angular_uncertainty = 0);
 	void SetRBFKernel(const Parameter_Types::RBF &rbf);
 	void SetRBFKernel(const char *rbf_name);
 	void SetRBFShapeParameter(const double &shape_param);
 	void SetPolynomialOrder(const int &poly_order);
 	void SetGlobalAnisotropy(const bool &g_anisotropy);
-	void SetInterfaceUncertainty(const double &interface_uncertainty);
-	void SetAngularUncertainty(const double &angular_uncertainty);
 	double EvaluateInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	);
@@ -104,6 +102,8 @@ public:
 	void SetInequalityConstraints(const MatrixXd &inequality_constraints);
 
 	int GetNumberOfInterfaces();
+
+	bool InterpolantComputed() const { return have_interpolant_; }
 
 };
 
