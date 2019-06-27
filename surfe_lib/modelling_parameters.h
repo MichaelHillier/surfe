@@ -144,7 +144,7 @@ struct Parameters {
 	{}
 };
 
-struct basic_parameters {
+struct InternalParameters {
 	// number of constraints, for each basic constraint type
 	unsigned int n_interface;
 	unsigned int n_planar;
@@ -163,7 +163,7 @@ struct basic_parameters {
 	bool restricted_range;  // restricted range constraints - bounded
 							// inequalities
 	// initialization
-	basic_parameters()
+	InternalParameters()
 		: n_interface(0),
 		n_planar(0),
 		n_inequality(0),

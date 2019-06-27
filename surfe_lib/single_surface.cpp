@@ -49,21 +49,21 @@
 #include <iostream>
 
 bool Single_Surface::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	int nl = n_i + n_ie;  // n_ie should always be zero.
 
-	p_basis = create_polynomial_basis(ui_parameters.polynomial_order);
+	p_basis = create_polynomial_basis(parameters.polynomial_order);
 
-	if ((int)poly_matrix.rows() != b_parameters.n_poly_terms) return false;
+	if ((int)poly_matrix.rows() != intern_params.n_poly_terms) return false;
 	// for interface points ...
 	for (int j = 0; j < nl; j++) {
 		p_basis->set_point(constraints.itrface[j]);
 		VectorXd b = p_basis->basis();
-		if ((int)b.rows() != b_parameters.n_poly_terms) return false;
+		if ((int)b.rows() != intern_params.n_poly_terms) return false;
 		for (int k = 0; k < (int)b.rows(); k++) poly_matrix(k, j) = b(k);
 	}
 	// for planar points ...
@@ -72,7 +72,7 @@ bool Single_Surface::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms) return false;
+		if ((int)bx.rows() != intern_params.n_poly_terms) return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, nl + 3 * j) = bx(k);
 			poly_matrix(k, nl + 3 * j + 1) = by(k);
@@ -85,7 +85,7 @@ bool Single_Surface::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms) return false;
+		if ((int)bx.rows() != intern_params.n_poly_terms) return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, nl + 3 * n_p + j) =
 				constraints.tangent[j].tx() * bx(k) +
@@ -99,10 +99,10 @@ bool Single_Surface::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 
 bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 	const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// build polynomial blocks
 	// | A PT |
@@ -129,7 +129,7 @@ bool Single_Surface::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 Single_Surface::Single_Surface(const Parameters& mparams)
 {
 	// set GUI parameters
-	ui_parameters = mparams;
+	parameters = mparams;
 
 	solver = nullptr;
 	kernel = nullptr;
@@ -161,37 +161,37 @@ Polynomial_Basis *Single_Surface::create_polynomial_basis(
 
 void Single_Surface::get_method_parameters() {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = (int)constraints.itrface.size();
-	b_parameters.n_inequality = (int)constraints.inequality.size();
-	b_parameters.n_planar = (int)constraints.planar.size();
-	b_parameters.n_tangent = (int)constraints.tangent.size();
+	intern_params.n_interface = (int)constraints.itrface.size();
+	intern_params.n_inequality = (int)constraints.inequality.size();
+	intern_params.n_planar = (int)constraints.planar.size();
+	intern_params.n_tangent = (int)constraints.tangent.size();
 	// Total number of constraints ...
-	b_parameters.n_constraints =
-		b_parameters.n_interface + b_parameters.n_inequality +
-		3 * b_parameters.n_planar + b_parameters.n_tangent;
+	intern_params.n_constraints =
+		intern_params.n_interface + intern_params.n_inequality +
+		3 * intern_params.n_planar + intern_params.n_tangent;
 	// Total number of equality constraints
-	if (ui_parameters.use_restricted_range)
-		b_parameters.restricted_range = true;
+	if (parameters.use_restricted_range)
+		intern_params.restricted_range = true;
 	else
-		b_parameters.n_equality = b_parameters.n_interface +
-		3 * b_parameters.n_planar +
-		b_parameters.n_tangent;
+		intern_params.n_equality = intern_params.n_interface +
+		3 * intern_params.n_planar +
+		intern_params.n_tangent;
 
 	// polynomial parameters ...
-	if (b_parameters.n_inequality != 0 ||
-		ui_parameters.use_restricted_range != 0) {
-		b_parameters.poly_term = false;
-		b_parameters.modified_basis = true;
-		b_parameters.problem_type = Parameter_Types::Quadratic;
+	if (intern_params.n_inequality != 0 ||
+		parameters.use_restricted_range != 0) {
+		intern_params.poly_term = false;
+		intern_params.modified_basis = true;
+		intern_params.problem_type = Parameter_Types::Quadratic;
 	}
 	else {
-		b_parameters.poly_term = true;  // NOTE: May want to have this as an option when using SPD functions
-		b_parameters.modified_basis = false;
-		b_parameters.problem_type = Parameter_Types::Linear;
+		intern_params.poly_term = true;  // NOTE: May want to have this as an option when using SPD functions
+		intern_params.modified_basis = false;
+		intern_params.problem_type = Parameter_Types::Linear;
 	}
 
-	int m = ui_parameters.polynomial_order + 1;
-	b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);  // for 3D only...
+	int m = parameters.polynomial_order + 1;
+	intern_params.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);  // for 3D only...
 }
 
 void Single_Surface::setup_system_solver() {
@@ -201,11 +201,11 @@ void Single_Surface::setup_system_solver() {
 	// 3) Smoothing -> maybe use least squares / right now we are doing matrix
 	// smoothing
 
-	int n_ie = b_parameters.n_inequality;
-	int n_e = b_parameters.n_equality;
-	int n_c = b_parameters.n_constraints;
-	if (b_parameters.problem_type == Parameter_Types::Quadratic) {
-		if (b_parameters.restricted_range) {
+	int n_ie = intern_params.n_inequality;
+	int n_e = intern_params.n_equality;
+	int n_c = intern_params.n_constraints;
+	if (intern_params.problem_type == Parameter_Types::Quadratic) {
+		if (intern_params.restricted_range) {
 			VectorXd b(n_c);
 			VectorXd r(n_c);
 			get_inequality_values(b, r);
@@ -253,7 +253,7 @@ void Single_Surface::setup_system_solver() {
 	}
 	else  // Linear
 	{
-		int n_p = b_parameters.n_poly_terms;
+		int n_p = intern_params.n_poly_terms;
 		VectorXd equality_values(n_e + n_p);
 		get_equality_values(equality_values);
 
@@ -282,7 +282,7 @@ bool Single_Surface::get_minimial_and_excluded_input(Constraints &greedy_input, 
 	std::vector<int> interface_indices =
 		get_extremal_point_data_indices_from_points(pts);
 	int num_extremal_itr_pts = 4;
-	if (ui_parameters.polynomial_order == 2) num_extremal_itr_pts = 6;
+	if (parameters.polynomial_order == 2) num_extremal_itr_pts = 6;
 	if ((int)interface_indices.size() < num_extremal_itr_pts) return false;
 	for (const auto& inequality_pt : constraints.inequality)
 		excluded_input.inequality.push_back(inequality_pt);
@@ -397,7 +397,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
 	if (_iteration == 0)
 		planar_indices_to_include =
 		Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-			input.planar, ui_parameters.angular_uncertainty,
+			input.planar, parameters.angular_uncertainty,
 			constraints.GetPlanarAvgNNDist());
 	else {
 #pragma omp parallel sections
@@ -407,7 +407,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
 				// PLANAR Observations
 				planar_indices_to_include =
 					Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-						input.planar, ui_parameters.angular_uncertainty,
+						input.planar, parameters.angular_uncertainty,
 						constraints.GetPlanarAvgNNDist());
 			}
 #pragma omp section
@@ -415,7 +415,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
 				// TANGENT Observations
 				tangent_indices_to_include =
 					Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
-						input.tangent, ui_parameters.angular_uncertainty,
+						input.tangent, parameters.angular_uncertainty,
 						constraints.GetPlanarAvgNNDist());
 			}
 #pragma omp section
@@ -423,7 +423,7 @@ bool Single_Surface::append_greedy_input(Constraints &input) {
 				// INTERFACE Observations
 				interface_indices_to_include =
 					Get_Interface_STL_Vector_Indices_With_Large_Residuals(
-						input.itrface, ui_parameters.interface_uncertainty,
+						input.itrface, parameters.interface_uncertainty,
 						constraints.GetInterfaceAvgNNDist());
 			}
 #pragma omp section
@@ -548,18 +548,18 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel() {
 	constraints.itrface.clear();
 	constraints.itrface = temp_itr;
 
-	int n_p = b_parameters.n_poly_terms;
-	if (ui_parameters.use_restricted_range)
-		b_parameters.restricted_range = false;
-	b_parameters.n_interface = (int)constraints.itrface.size();
-	b_parameters.n_inequality = (int)constraints.inequality.size();
-	b_parameters.n_equality = b_parameters.n_interface +
-		3 * b_parameters.n_planar +
-		b_parameters.n_tangent;
-	b_parameters.poly_term = true;
-	b_parameters.modified_basis = false;
-	b_parameters.problem_type = Parameter_Types::Linear;
-	int n_e = b_parameters.n_equality;
+	int n_p = intern_params.n_poly_terms;
+	if (parameters.use_restricted_range)
+		intern_params.restricted_range = false;
+	intern_params.n_interface = (int)constraints.itrface.size();
+	intern_params.n_inequality = (int)constraints.inequality.size();
+	intern_params.n_equality = intern_params.n_interface +
+		3 * intern_params.n_planar +
+		intern_params.n_tangent;
+	intern_params.poly_term = true;
+	intern_params.modified_basis = false;
+	intern_params.problem_type = Parameter_Types::Linear;
+	int n_e = intern_params.n_equality;
 	VectorXd equality_values(n_e + n_p);
 	get_equality_values(equality_values);
 
@@ -575,10 +575,10 @@ bool Single_Surface::convert_modified_kernel_to_rbf_kernel() {
 }
 
 void Single_Surface::eval_scalar_interpolant_at_point(Point &p) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1 = 0.0;
@@ -604,7 +604,7 @@ void Single_Surface::eval_scalar_interpolant_at_point(Point &p) {
 		kernel_j->set_points(p, constraints.tangent[k]);
 		elemsum_4 += solver->weights[n_ie + n_i + 3 * n_p + k] * kernel_j->basis_pt_tangent();
 	}
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd b = p_basis_j->basis();
@@ -617,10 +617,10 @@ void Single_Surface::eval_scalar_interpolant_at_point(Point &p) {
 }
 
 void Single_Surface::eval_vector_interpolant_at_point(Point &p) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1_x = 0.0;
@@ -681,7 +681,7 @@ void Single_Surface::eval_vector_interpolant_at_point(Point &p) {
 		elemsum_3_z += solver->weights[n_ie + n_i + 3 * n_p + k] *
 			kernel->basis_planar_tangent(Parameter_Types::DZ);
 	}
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd bx = p_basis_j->dx();
@@ -716,8 +716,8 @@ bool Single_Surface::get_equality_values(VectorXd &equality_values) {
 	}
 	for (l = 0; l < (int)constraints.tangent.size(); l++)
 		equality_values(l + 3 * k + j) = constraints.tangent[l].inner_product_constraint();
-	if (b_parameters.poly_term)
-		for (m = 0; m < (int)b_parameters.n_poly_terms; m++)
+	if (intern_params.poly_term)
+		for (m = 0; m < (int)intern_params.n_poly_terms; m++)
 			equality_values(m + l + 3 * k + j) = 0.0;
 
 	return true;
@@ -732,7 +732,7 @@ bool Single_Surface::get_inequality_matrix(const MatrixXd &interpolation_matrix,
 	// below inequality constraints have to be put in terms of s(x) >= level
 	// so if s(x) <= level => -1.0*s(x) >= -1.0*level
 	// for single surface level is always 0. so, -1.0*s(x) > 0
-	int n_ie = b_parameters.n_inequality;
+	int n_ie = intern_params.n_inequality;
 	if (n_ie != 0) {
 		for (int j = 0; j < inequality_matrix.rows(); j++) {
 			for (int k = 0; k < inequality_matrix.cols(); k++) {
@@ -744,10 +744,10 @@ bool Single_Surface::get_inequality_matrix(const MatrixXd &interpolation_matrix,
 		}
 	}
 
-	if (b_parameters.restricted_range) {
-		int n_i = b_parameters.n_interface;
-		int n_p = b_parameters.n_planar;
-		int n_t = b_parameters.n_tangent;
+	if (intern_params.restricted_range) {
+		int n_i = intern_params.n_interface;
+		int n_p = intern_params.n_planar;
+		int n_t = intern_params.n_tangent;
 		for (int j = 0; j < n_i; j++) {
 			for (int k = 0; k < inequality_matrix.cols(); k++) {
 				inequality_matrix(n_ie + 2 * j + 0, k) = interpolation_matrix(n_ie + j, k);  // lower bound constraint Ax >= lower_bound
@@ -784,13 +784,13 @@ bool Single_Surface::get_inequality_matrix(const MatrixXd &interpolation_matrix,
 }
 
 bool Single_Surface::get_inequality_values(VectorXd &inequality_values) {
-	int n_ie = b_parameters.n_inequality;
+	int n_ie = intern_params.n_inequality;
 	for (int j = 0; j < n_ie; j++) inequality_values(j) = 0.0;
 
-	if (b_parameters.restricted_range) {
-		int n_i = b_parameters.n_interface;
-		int n_p = b_parameters.n_planar;
-		int n_t = b_parameters.n_tangent;
+	if (intern_params.restricted_range) {
+		int n_i = intern_params.n_interface;
+		int n_p = intern_params.n_planar;
+		int n_t = intern_params.n_tangent;
 		for (int j = 0; j < n_i; j++) {
 			inequality_values(n_ie + 2 * j + 0) =
 				constraints.itrface[j].level_lower_bound();  //  Ax >=  lower_bound
@@ -822,10 +822,10 @@ bool Single_Surface::get_inequality_values(VectorXd &inequality_values) {
 }
 
 bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// REF:
 	// minimize f = 1/2 xT H x
@@ -888,16 +888,16 @@ void Single_Surface::process_input_data() {
 	if (!get_interface_data())
 		throw GRBF_Exceptions::no_iterface_data;
 
-	if (ui_parameters.use_restricted_range) {
+	if (parameters.use_restricted_range) {
 		for (auto &interface_pt : constraints.itrface) {
-			interface_pt.setLevelBounds(ui_parameters.interface_uncertainty);
+			interface_pt.setLevelBounds(parameters.interface_uncertainty);
 			std::cout << " Oncontact Bounds: " << std::endl;
 			std::cout << "	" << interface_pt.level_lower_bound()
 				<< " <= 0 <= " << interface_pt.level_upper_bound()
 				<< std::endl;
 		}
 		for (auto &planar_pt : constraints.planar) {
-			planar_pt.setNormalBounds(ui_parameters.angular_uncertainty, ui_parameters.angular_uncertainty / 2);  // Need more ROBUST
+			planar_pt.setNormalBounds(parameters.angular_uncertainty, parameters.angular_uncertainty / 2);  // Need more ROBUST
 			// METHOD. Try large statistical sampling from von Mises spherical distribution
 			std::cout << " Planar[] Bounds: " << std::endl;
 			std::cout << "	nx: " << planar_pt.nx_lower_bound()
@@ -911,7 +911,7 @@ void Single_Surface::process_input_data() {
 				<< " <= " << planar_pt.nz_upper_bound() << std::endl;
 		}
 		for (auto &tangent_pt : constraints.tangent) {
-			tangent_pt.setAngleBounds(ui_parameters.angular_uncertainty);
+			tangent_pt.setAngleBounds(parameters.angular_uncertainty);
 			std::cout << " Tangent Bounds: " << std::endl;
 			std::cout << "	" << tangent_pt.angle_lower_bound()
 				<< " <= " << tangent_pt.inner_product_constraint()
@@ -922,10 +922,10 @@ void Single_Surface::process_input_data() {
 }
 
 bool Single_Surface::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// Row and Column constraint order : inequality (ine) -> interface (itr) ->
 	// planar (p_x,p_y,p_z) -> tangent (t)
@@ -1070,8 +1070,8 @@ bool Single_Surface::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 	// build polynomial blocks if required
 	// | A PT |
 	// | P 0  |
-	if (b_parameters.poly_term) {
-		MatrixXd poly_matrix(b_parameters.n_poly_terms, b_parameters.n_constraints);
+	if (intern_params.poly_term) {
+		MatrixXd poly_matrix(intern_params.n_poly_terms, intern_params.n_constraints);
 		if (!_get_polynomial_matrix_block(poly_matrix)) return false;
 		// fill remaining matrix blocks (P, PT, 0)
 		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(

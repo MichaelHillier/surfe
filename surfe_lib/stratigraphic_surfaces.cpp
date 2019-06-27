@@ -191,12 +191,12 @@ bool Stratigraphic_Surfaces::_get_closest_horizon_level_below_given_level(
 bool Stratigraphic_Surfaces::_get_polynomial_matrix_block(
 	MatrixXd &poly_matrix) {
 	int n_ip = _n_increment_pairs;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	p_basis = create_polynomial_basis(1);
 
-	if ((int)poly_matrix.rows() != b_parameters.n_poly_terms) return false;
+	if ((int)poly_matrix.rows() != intern_params.n_poly_terms) return false;
 
 	// for Interface Increment Pair Constraints:
 	for (int j = 0; j < (int)_increment_pairs.size(); j++) {
@@ -204,8 +204,8 @@ bool Stratigraphic_Surfaces::_get_polynomial_matrix_block(
 		VectorXd b1 = p_basis->basis();
 		p_basis->set_point(_increment_pairs[j][1]);
 		VectorXd b2 = p_basis->basis();
-		if ((int)b1.rows() != b_parameters.n_poly_terms ||
-			(int)b2.rows() != b_parameters.n_poly_terms)
+		if ((int)b1.rows() != intern_params.n_poly_terms ||
+			(int)b2.rows() != intern_params.n_poly_terms)
 			return false;
 		for (int k = 0; k < (int)b1.rows(); k++)
 			poly_matrix(k, j) = b1(k) - b2(k);
@@ -216,9 +216,9 @@ bool Stratigraphic_Surfaces::_get_polynomial_matrix_block(
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms ||
-			(int)by.rows() != b_parameters.n_poly_terms ||
-			(int)bz.rows() != b_parameters.n_poly_terms)
+		if ((int)bx.rows() != intern_params.n_poly_terms ||
+			(int)by.rows() != intern_params.n_poly_terms ||
+			(int)bz.rows() != intern_params.n_poly_terms)
 			return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, n_ip + 3 * j) = bx(k);
@@ -232,9 +232,9 @@ bool Stratigraphic_Surfaces::_get_polynomial_matrix_block(
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms ||
-			(int)by.rows() != b_parameters.n_poly_terms ||
-			(int)bz.rows() != b_parameters.n_poly_terms)
+		if ((int)bx.rows() != intern_params.n_poly_terms ||
+			(int)by.rows() != intern_params.n_poly_terms ||
+			(int)bz.rows() != intern_params.n_poly_terms)
 			return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, n_ip + 3 * n_p + j) =
@@ -251,8 +251,8 @@ bool Stratigraphic_Surfaces::_insert_polynomial_matrix_blocks_in_interpolation_m
 	const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix)
 {
 	int n_ip = _n_increment_pairs;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	if ((n_ip + 3 * n_p + n_t + poly_matrix.rows()) > interpolation_matrix.rows() ||
 		(n_ip + 3 * n_p + n_t + poly_matrix.rows()) > interpolation_matrix.cols())
@@ -286,7 +286,7 @@ Stratigraphic_Surfaces::Stratigraphic_Surfaces(const Parameters& m_params)
 	p_basis = nullptr;
 
 	// set GUI parameters
-	ui_parameters = m_params;
+	parameters = m_params;
 
 	_n_increment_pairs = 0;
 	_n_sequenced_interface_pairs = 0;
@@ -313,31 +313,31 @@ Stratigraphic_Surfaces::Stratigraphic_Surfaces()
 
 void Stratigraphic_Surfaces::get_method_parameters() {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = (int)constraints.itrface.size();
-	b_parameters.n_inequality = (int)constraints.inequality.size();
-	b_parameters.n_planar = (int)constraints.planar.size();
-	b_parameters.n_tangent = (int)constraints.tangent.size();
+	intern_params.n_interface = (int)constraints.itrface.size();
+	intern_params.n_inequality = (int)constraints.inequality.size();
+	intern_params.n_planar = (int)constraints.planar.size();
+	intern_params.n_tangent = (int)constraints.tangent.size();
 	// Total number of constraints ...
-	b_parameters.n_constraints =
-		_n_increment_pairs + 3 * b_parameters.n_planar + b_parameters.n_tangent;
+	intern_params.n_constraints =
+		_n_increment_pairs + 3 * intern_params.n_planar + intern_params.n_tangent;
 	// Total number of equality constraints
-	if (ui_parameters.use_restricted_range)
-		b_parameters.restricted_range = true;
+	if (parameters.use_restricted_range)
+		intern_params.restricted_range = true;
 	else {
-		b_parameters.n_equality = _n_interface_pairs +
-			3 * b_parameters.n_planar +
-			b_parameters.n_tangent;
-		b_parameters.n_inequality =
+		intern_params.n_equality = _n_interface_pairs +
+			3 * intern_params.n_planar +
+			intern_params.n_tangent;
+		intern_params.n_inequality =
 			_n_sequenced_interface_pairs + _n_sequenced_inequality_pairs;
 	}
 
 	// polynomial parameters ...
-	b_parameters.poly_term = false;
-	b_parameters.modified_basis = true;
-	b_parameters.problem_type = Parameter_Types::Quadratic;
+	intern_params.poly_term = false;
+	intern_params.modified_basis = true;
+	intern_params.problem_type = Parameter_Types::Quadratic;
 
-	int m = ui_parameters.polynomial_order + 1;
-	b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);
+	int m = parameters.polynomial_order + 1;
+	intern_params.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6);
 }
 
 void Stratigraphic_Surfaces::process_input_data() {
@@ -348,11 +348,11 @@ void Stratigraphic_Surfaces::process_input_data() {
 	if (!check_input_data())
 		throw GRBF_Exceptions::invalid_input_data;
 
-	if (ui_parameters.use_restricted_range) {
+	if (parameters.use_restricted_range) {
 		for (int j = 0; j < (int)constraints.planar.size(); j++) {
 			constraints.planar[j].setNormalBounds(
-				ui_parameters.angular_uncertainty,
-				ui_parameters.angular_uncertainty / 2);
+				parameters.angular_uncertainty,
+				parameters.angular_uncertainty / 2);
 			// Need more ROBUST METHOD. Try large statistical sampling
 			// from von Mises spherical distribution
 			std::cout << " Planar[" << j << "] Bounds: " << std::endl;
@@ -367,7 +367,7 @@ void Stratigraphic_Surfaces::process_input_data() {
 				<< " <= " << constraints.planar[j].nz_upper_bound() << std::endl;
 		}
 		for (int j = 0; j < (int)constraints.tangent.size(); j++) {
-			constraints.tangent[j].setAngleBounds(ui_parameters.angular_uncertainty);
+			constraints.tangent[j].setAngleBounds(parameters.angular_uncertainty);
 			std::cout << " Tangent[" << j << "] Bounds: " << std::endl;
 			std::cout << "	" << constraints.tangent[j].angle_lower_bound()
 				<< " <= " << constraints.tangent[j].inner_product_constraint()
@@ -399,8 +399,8 @@ bool Stratigraphic_Surfaces::get_equality_values(VectorXd &equality_values) {
 	}
 	for (l = 0; l < (int)constraints.tangent.size(); l++)
 		equality_values(l + 3 * k + j) = constraints.tangent[l].inner_product_constraint();
-	if (b_parameters.poly_term)
-		for (m = 0; m < (int)b_parameters.n_poly_terms; m++)
+	if (intern_params.poly_term)
+		for (m = 0; m < (int)intern_params.n_poly_terms; m++)
 			equality_values(m + l + 3 * k + j) = 0.0;
 
 	return true;
@@ -410,7 +410,7 @@ bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &inequality_values) 
 	int j = 0;
 	int k = 0;
 	for (j = 0; j < _n_sequenced_interface_pairs; j++)
-		inequality_values(j) = ui_parameters.min_stratigraphic_thickness;
+		inequality_values(j) = parameters.min_stratigraphic_thickness;
 	for (k = 0; k < _n_sequenced_inequality_pairs; k++)
 		inequality_values(k + j) = 0.0;
 
@@ -431,23 +431,23 @@ bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &b, VectorXd &r) {
 	int k = 0;
 	// Sequenced Interface Points 1st
 	for (j = 0; j < _n_sequenced_interface_pairs; j++) {
-		b(j) = ui_parameters.min_stratigraphic_thickness;
-		r(j) = distance - ui_parameters.min_stratigraphic_thickness;
+		b(j) = parameters.min_stratigraphic_thickness;
+		r(j) = distance - parameters.min_stratigraphic_thickness;
 	}
 	// Sequenced Inequality Points 2nd
 	for (k = 0; k < _n_sequenced_inequality_pairs; k++) {
 		b(k + j) = 0.0;
-		r(k + j) = ui_parameters.min_stratigraphic_thickness;
+		r(k + j) = parameters.min_stratigraphic_thickness;
 	}
 	// Interface increment pairs
 	for (int l = 0; l < _n_interface_pairs; l++) {
-		b(k + j + l) = -ui_parameters.interface_uncertainty;
-		r(k + j + l) = 2 * ui_parameters.interface_uncertainty;
+		b(k + j + l) = -parameters.interface_uncertainty;
+		r(k + j + l) = 2 * parameters.interface_uncertainty;
 	}
 
 	int n_ip = _n_increment_pairs;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// planar data
 	for (int j = 0; j < n_p; j++) {
@@ -481,8 +481,8 @@ Polynomial_Basis *Stratigraphic_Surfaces::create_polynomial_basis(const int &pol
 
 bool Stratigraphic_Surfaces::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 	int n_ip = _n_increment_pairs;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// Row and Column constraint order : increment pair (ip) -> planar
 	// (p_x,p_y,p_z) -> tangent (t) Note ip encapsulates 3 types of increment
@@ -616,8 +616,8 @@ bool Stratigraphic_Surfaces::get_interpolation_matrix(MatrixXd &interpolation_ma
 	// build polynomial blocks if required
 	// | A PT |
 	// | P 0  |
-	if (b_parameters.poly_term) {
-		MatrixXd poly_matrix(b_parameters.n_poly_terms, b_parameters.n_constraints);
+	if (intern_params.poly_term) {
+		MatrixXd poly_matrix(intern_params.n_poly_terms, intern_params.n_constraints);
 		if (!_get_polynomial_matrix_block(poly_matrix)) return false;
 		// fill remaining matrix blocks (P, PT, 0)
 		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(
@@ -647,11 +647,11 @@ bool Stratigraphic_Surfaces::get_inequality_matrix(
 
 void Stratigraphic_Surfaces::setup_system_solver() {
 	// only way to solve this problem is via a quadratic optimization problem
-	int n_ie = b_parameters.n_inequality;
-	int n_e = b_parameters.n_equality;
-	int n_c = b_parameters.n_constraints;
+	int n_ie = intern_params.n_inequality;
+	int n_e = intern_params.n_equality;
+	int n_c = intern_params.n_constraints;
 
-	if (b_parameters.restricted_range) {
+	if (intern_params.restricted_range) {
 		VectorXd b(n_c);
 		VectorXd r(n_c);
 		get_inequality_values(b, r);
@@ -734,20 +734,20 @@ bool Stratigraphic_Surfaces::convert_modified_kernel_to_rbf_kernel() {
 	// switch from modified kernel to normal rbf kernel
 	kernel = rbf_kernel;
 
-	if (ui_parameters.use_restricted_range)
-		b_parameters.restricted_range = false;
-	b_parameters.n_equality =
-		_n_increment_pairs + 3 * b_parameters.n_planar + b_parameters.n_tangent;
+	if (parameters.use_restricted_range)
+		intern_params.restricted_range = false;
+	intern_params.n_equality =
+		_n_increment_pairs + 3 * intern_params.n_planar + intern_params.n_tangent;
 	_n_interface_pairs = _n_increment_pairs;  // hack b/c defn of
 	// Stratigraphic_Surfaces::get_equality_values()
 	_n_sequenced_interface_pairs = 0;
 	_n_sequenced_inequality_pairs = 0;
-	b_parameters.poly_term = true;
-	b_parameters.n_poly_terms = 3;
-	b_parameters.modified_basis = false;
-	b_parameters.problem_type = Parameter_Types::Linear;
-	int n_e = b_parameters.n_equality;
-	int n_p = b_parameters.n_poly_terms;
+	intern_params.poly_term = true;
+	intern_params.n_poly_terms = 3;
+	intern_params.modified_basis = false;
+	intern_params.problem_type = Parameter_Types::Linear;
+	int n_e = intern_params.n_equality;
+	int n_p = intern_params.n_poly_terms;
 	VectorXd equality_values(n_e + n_p);
 	get_equality_values(equality_values);
 
@@ -766,8 +766,8 @@ bool Stratigraphic_Surfaces::convert_modified_kernel_to_rbf_kernel() {
 
 void Stratigraphic_Surfaces::eval_scalar_interpolant_at_point(Point &p) {
 	int n_ip = _n_increment_pairs;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1 = 0.0;
@@ -795,7 +795,7 @@ void Stratigraphic_Surfaces::eval_scalar_interpolant_at_point(Point &p) {
 		elemsum_3 +=
 			solver->weights[n_ip + 3 * n_p + k] * kernel_j->basis_pt_tangent();
 	}
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd b = p_basis_j->basis();
@@ -809,8 +809,8 @@ void Stratigraphic_Surfaces::eval_scalar_interpolant_at_point(Point &p) {
 
 void Stratigraphic_Surfaces::eval_vector_interpolant_at_point(Point &p) {
 	int n_ip = _n_increment_pairs;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1_x = 0.0;
@@ -871,7 +871,7 @@ void Stratigraphic_Surfaces::eval_vector_interpolant_at_point(Point &p) {
 		elemsum_3_z += solver->weights[n_ip + 3 * n_p + k] *
 			kernel->basis_planar_tangent(Parameter_Types::DZ);
 	}
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd bx = p_basis_j->dx();

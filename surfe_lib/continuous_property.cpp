@@ -49,21 +49,21 @@
 #include <iostream>
 
 bool Continuous_Property::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	int nl = n_i + n_ie;  // n_ie should always be zero.
 
-	p_basis = create_polynomial_basis(ui_parameters.polynomial_order);
+	p_basis = create_polynomial_basis(parameters.polynomial_order);
 
-	if ((int)poly_matrix.size() != b_parameters.n_poly_terms) return false;
+	if ((int)poly_matrix.size() != intern_params.n_poly_terms) return false;
 	// for interface points ...
 	for (int j = 0; j < nl; j++) {
 		p_basis->set_point(constraints.itrface[j]);
 		VectorXd b = p_basis->basis();
-		if ((int)b.rows() != b_parameters.n_poly_terms) return false;
+		if ((int)b.rows() != intern_params.n_poly_terms) return false;
 		for (int k = 0; k < (int)b.rows(); k++) poly_matrix(k, j) = b(k);
 	}
 	// for planar points ...
@@ -72,7 +72,7 @@ bool Continuous_Property::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms) return false;
+		if ((int)bx.rows() != intern_params.n_poly_terms) return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, nl + 3 * j) = bx(k);
 			poly_matrix(k, nl + 3 * j + 1) = by(k);
@@ -85,7 +85,7 @@ bool Continuous_Property::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms) return false;
+		if ((int)bx.rows() != intern_params.n_poly_terms) return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, nl + 3 * n_p + j) =
 				constraints.tangent[j].tx() * bx(k) +
@@ -99,10 +99,10 @@ bool Continuous_Property::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 
 bool Continuous_Property::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 	const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix) {
-	int n_ie = b_parameters.n_inequality;
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_ie = intern_params.n_inequality;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// build polynomial blocks
 	// | A PT |
@@ -132,7 +132,7 @@ Continuous_Property::Continuous_Property(const Parameters& mparams)
 	p_basis = nullptr;
 
 	// set GUI parameters
-	ui_parameters = mparams;
+	parameters = mparams;
 
 	_iteration = 0;
 }
@@ -162,36 +162,36 @@ Polynomial_Basis *Continuous_Property::create_polynomial_basis(
 
 void Continuous_Property::get_method_parameters() {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = (int)constraints.itrface.size();
-	b_parameters.n_inequality = 0;
-	b_parameters.n_planar = 0;
-	b_parameters.n_tangent = 0;
+	intern_params.n_interface = (int)constraints.itrface.size();
+	intern_params.n_inequality = 0;
+	intern_params.n_planar = 0;
+	intern_params.n_tangent = 0;
 	// Total number of constraints ...
-	b_parameters.n_constraints = b_parameters.n_interface + b_parameters.n_inequality +
-		3 * b_parameters.n_planar + b_parameters.n_tangent;
+	intern_params.n_constraints = intern_params.n_interface + intern_params.n_inequality +
+		3 * intern_params.n_planar + intern_params.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface + 3 * b_parameters.n_planar + b_parameters.n_tangent;
+	intern_params.n_equality = intern_params.n_interface + 3 * intern_params.n_planar + intern_params.n_tangent;
 
 	// polynomial parameters ...
-	if (b_parameters.n_inequality == 0)
+	if (intern_params.n_inequality == 0)
 	{
-		b_parameters.poly_term = false;  // NOTE: May want to have this as an option when using SPD functions
-		b_parameters.modified_basis = false;
-		b_parameters.problem_type = Parameter_Types::Linear;
+		intern_params.poly_term = false;  // NOTE: May want to have this as an option when using SPD functions
+		intern_params.modified_basis = false;
+		intern_params.problem_type = Parameter_Types::Linear;
 	}
 	else
 	{
-		b_parameters.poly_term = false;
-		b_parameters.modified_basis = true;
-		b_parameters.problem_type = Parameter_Types::Quadratic;
+		intern_params.poly_term = false;
+		intern_params.modified_basis = true;
+		intern_params.problem_type = Parameter_Types::Quadratic;
 	}
 
-	int m = ui_parameters.polynomial_order + 1;
-	b_parameters.n_poly_terms = 0;  // for 3D only...
+	int m = parameters.polynomial_order + 1;
+	intern_params.n_poly_terms = 0;  // for 3D only...
 }
 
 void Continuous_Property::setup_system_solver() {
-	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
+	int n = intern_params.n_equality + intern_params.n_poly_terms;
 
 	VectorXd equality_values(n);
 	get_equality_values(equality_values);
@@ -298,7 +298,7 @@ bool Continuous_Property::append_greedy_input(Constraints &input) {
 	std::vector<int> large_planar_residuals_indices;
 	for (int j = 0; j < (int)input.planar.size(); j++) {
 		double grad_err = input.planar[j].residual() * r2d;
-		if (grad_err > ui_parameters.angular_uncertainty) {
+		if (grad_err > parameters.angular_uncertainty) {
 			large_planar_residuals.push_back(grad_err);
 			large_planar_residuals_indices.push_back(j);
 		}
@@ -310,7 +310,7 @@ bool Continuous_Property::append_greedy_input(Constraints &input) {
 	}
 	// TANGENT Observations
 	for (auto &tangent_pt : input.tangent) {
-		if (tangent_pt.residual() * r2d > ui_parameters.angular_uncertainty) {
+		if (tangent_pt.residual() * r2d > parameters.angular_uncertainty) {
 			this->constraints.tangent.emplace_back(tangent_pt);
 			return true;
 		}
@@ -320,7 +320,7 @@ bool Continuous_Property::append_greedy_input(Constraints &input) {
 	std::vector<int> large_interface_residuals_indices;
 	for (int j = 0; j < (int)input.itrface.size(); j++) {
 		double interface_err = input.itrface.at(j).residual();
-		if (interface_err > ui_parameters.interface_uncertainty) {
+		if (interface_err > parameters.interface_uncertainty) {
 			large_interface_residuals.push_back(interface_err);
 			large_interface_residuals_indices.push_back(j);
 		}
@@ -342,9 +342,9 @@ bool Continuous_Property::append_greedy_input(Constraints &input) {
 }
 
 void Continuous_Property::eval_scalar_interpolant_at_point(Point &p) {
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1 = 0.0;
@@ -369,7 +369,7 @@ void Continuous_Property::eval_scalar_interpolant_at_point(Point &p) {
 		elemsum_4 += solver->weights[n_i + 3 * n_p + k] * kernel_j->basis_pt_tangent();
 	}
 
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd b = p_basis_j->basis();
@@ -382,9 +382,9 @@ void Continuous_Property::eval_scalar_interpolant_at_point(Point &p) {
 }
 
 void Continuous_Property::eval_vector_interpolant_at_point(Point &p) {
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1_x = 0.0;
@@ -426,7 +426,7 @@ void Continuous_Property::eval_vector_interpolant_at_point(Point &p) {
 		elemsum_3_y += solver->weights[n_i + 3 * n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DY);
 		elemsum_3_z += solver->weights[n_i + 3 * n_p + k] * kernel->basis_planar_tangent(Parameter_Types::DZ);
 	}
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd bx = p_basis_j->dx();
@@ -460,8 +460,8 @@ bool Continuous_Property::get_equality_values(VectorXd &equality_values) {
 	}
 	for (l = 0; l < (int)constraints.tangent.size(); l++)
 		equality_values(l + 3 * k + j) = 0.0;
-	if (b_parameters.poly_term)
-		for (m = 0; m < (int)b_parameters.n_poly_terms; m++)
+	if (intern_params.poly_term)
+		for (m = 0; m < (int)intern_params.n_poly_terms; m++)
 			equality_values(m + l + 3 * k + j) = 0.0;
 
 	return true;
@@ -474,9 +474,9 @@ void Continuous_Property::process_input_data() {
 
 bool Continuous_Property::get_interpolation_matrix(
 	MatrixXd &interpolation_matrix) {
-	int n_i = b_parameters.n_interface;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_i = intern_params.n_interface;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// Row and Column constraint order : interface (itr) -> planar (p_x,p_y,p_z)
 	// -> tangent (t)
@@ -562,8 +562,8 @@ bool Continuous_Property::get_interpolation_matrix(
 	// build polynomial blocks if required
 	// | A PT |
 	// | P 0  |
-	if (b_parameters.poly_term) {
-		MatrixXd poly_matrix(b_parameters.n_poly_terms, b_parameters.n_constraints);
+	if (intern_params.poly_term) {
+		MatrixXd poly_matrix(intern_params.n_poly_terms, intern_params.n_constraints);
 		if (!_get_polynomial_matrix_block(poly_matrix))
 			return false;
 		// fill remaining matrix blocks (P, PT, 0)

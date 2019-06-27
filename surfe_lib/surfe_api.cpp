@@ -248,7 +248,7 @@ void Surfe_API::AddInterfaceConstraint(const double &x, const double &y, const d
 	Interface interface_constraint(x, y, z, level);
 	method_->constraints.itrface.push_back(interface_constraint);
 
-	method_->ui_parameters.use_interface = true;
+	method_->parameters.use_interface = true;
 	constraints_changed_ = true;
 }
 
@@ -257,7 +257,7 @@ void Surfe_API::AddPlanarConstraintwNormal(const double &x, const double &y, con
 	Planar planar_constraint(x, y, z, nx, ny, nz);
 	method_->constraints.planar.push_back(planar_constraint);
 
-	method_->ui_parameters.use_planar = true;
+	method_->parameters.use_planar = true;
 	constraints_changed_ = true;
 }
 
@@ -266,7 +266,7 @@ void Surfe_API::AddPlanarConstraintwStrikeDipPolarity(const double &x, const dou
 	Planar planar_constraint(x, y, z, dip, strike, polarity);
 	method_->constraints.planar.push_back(planar_constraint);
 
-	method_->ui_parameters.use_planar = true;
+	method_->parameters.use_planar = true;
 	constraints_changed_ = true;
 }
 
@@ -281,7 +281,7 @@ void Surfe_API::AddPlanarConstraintwAzimuthDipPolarity(const double &x, const do
 	Planar planar_constraint(x, y, z, dip, strike, polarity);
 	method_->constraints.planar.push_back(planar_constraint);
 
-	method_->ui_parameters.use_planar = true;
+	method_->parameters.use_planar = true;
 	constraints_changed_ = true;
 }
 
@@ -290,7 +290,7 @@ void Surfe_API::AddTangentConstraint(const double &x, const double &y, const dou
 	Tangent tangent_constraint(x, y, z, tx, ty, tz);
 	method_->constraints.tangent.push_back(tangent_constraint);
 
-	method_->ui_parameters.use_tangent = true;
+	method_->parameters.use_tangent = true;
 	constraints_changed_ = true;
 }
 
@@ -299,7 +299,7 @@ void Surfe_API::AddInequalityConstraint(const double &x, const double &y, const 
 	Inequality inequality_constraint(x, y, z, level);
 	method_->constraints.inequality.push_back(inequality_constraint);
 
-	method_->ui_parameters.use_inequality = true;
+	method_->parameters.use_inequality = true;
 	constraints_changed_ = true;
 }
 
@@ -348,24 +348,24 @@ void Surfe_API::ComputeInterpolant()
 
 void Surfe_API::SetRegressionSmoothing(const bool &use_regression_smoothing, const double &amount /*= 0*/)
 {
-	method_->ui_parameters.use_regression_smoothing = true;
-	method_->ui_parameters.smoothing_amount = amount;
+	method_->parameters.use_regression_smoothing = true;
+	method_->parameters.smoothing_amount = amount;
 
 	parameters_changed_ = true;
 }
 
 void Surfe_API::SetGreedyAlgorithm(const bool &use_greedy, const double &interface_uncertainty /*= 0*/, const double &angular_uncertainty /*= 0*/)
 {
-	method_->ui_parameters.use_greedy = true;
-	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
-	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
+	method_->parameters.use_greedy = true;
+	method_->parameters.interface_uncertainty = interface_uncertainty;
+	method_->parameters.angular_uncertainty = angular_uncertainty;
 
 	parameters_changed_ = true;
 }
 
 void Surfe_API::SetRBFKernel(const Parameter_Types::RBF &rbf)
 {
-	method_->ui_parameters.basis_type = rbf;
+	method_->parameters.basis_type = rbf;
 
 	parameters_changed_ = true;
 }
@@ -373,21 +373,21 @@ void Surfe_API::SetRBFKernel(const Parameter_Types::RBF &rbf)
 void Surfe_API::SetRBFKernel(const char *rbf_name)
 {
 	if (strcmp(rbf_name, "r3") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::Cubic;
+		method_->parameters.basis_type = Parameter_Types::RBF::Cubic;
 	else if (strcmp(rbf_name, "WendlandC2") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::WendlandC2;
+		method_->parameters.basis_type = Parameter_Types::RBF::WendlandC2;
 	else if (strcmp(rbf_name, "r") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::R;
+		method_->parameters.basis_type = Parameter_Types::RBF::R;
 	else if (strcmp(rbf_name, "Gaussian") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::Gaussian;
+		method_->parameters.basis_type = Parameter_Types::RBF::Gaussian;
 	else if (strcmp(rbf_name, "Multiquadratics") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::MQ;
+		method_->parameters.basis_type = Parameter_Types::RBF::MQ;
 	else if (strcmp(rbf_name, "Thin Plate Spline") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::TPS;
+		method_->parameters.basis_type = Parameter_Types::RBF::TPS;
 	else if (strcmp(rbf_name, "Inverse Multiquadratics") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::RBF::IMQ;
+		method_->parameters.basis_type = Parameter_Types::RBF::IMQ;
 	else if (strcmp(rbf_name, "MaternC4") == 0)
-		method_->ui_parameters.basis_type = Parameter_Types::MaternC4;
+		method_->parameters.basis_type = Parameter_Types::MaternC4;
 	else
 		throw GRBF_Exceptions::unknown_rbf;
 
@@ -396,21 +396,21 @@ void Surfe_API::SetRBFKernel(const char *rbf_name)
 
 void Surfe_API::SetRBFShapeParameter(const double &shape_param)
 {
-	method_->ui_parameters.shape_parameter = shape_param;
+	method_->parameters.shape_parameter = shape_param;
 
 	parameters_changed_ = true;
 }
 
 void Surfe_API::SetPolynomialOrder(const int &poly_order)
 {
-	method_->ui_parameters.polynomial_order = poly_order;
+	method_->parameters.polynomial_order = poly_order;
 
 	parameters_changed_ = true;
 }
 
 void Surfe_API::SetGlobalAnisotropy(const bool &g_anisotropy)
 {
-	method_->ui_parameters.model_global_anisotropy = g_anisotropy;
+	method_->parameters.model_global_anisotropy = g_anisotropy;
 
 	parameters_changed_ = true;
 }
@@ -418,9 +418,9 @@ void Surfe_API::SetGlobalAnisotropy(const bool &g_anisotropy)
 
 void Surfe_API::SetRestrictedRange(const bool &use_restricted_range, const double &interface_uncertainty /*= 0*/, const double &angular_uncertainty /*= 0*/)
 {
-	method_->ui_parameters.use_regression_smoothing = use_restricted_range;
-	method_->ui_parameters.interface_uncertainty = interface_uncertainty;
-	method_->ui_parameters.angular_uncertainty = angular_uncertainty;
+	method_->parameters.use_regression_smoothing = use_restricted_range;
+	method_->parameters.interface_uncertainty = interface_uncertainty;
+	method_->parameters.angular_uncertainty = angular_uncertainty;
 
 	parameters_changed_ = true;
 }

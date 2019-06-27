@@ -50,26 +50,26 @@
 
 void Vector_Field::get_method_parameters() {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = 0;
-	b_parameters.n_inequality = 0;
-	b_parameters.n_planar = (int)constraints.planar.size();
-	b_parameters.n_tangent = 0;
+	intern_params.n_interface = 0;
+	intern_params.n_inequality = 0;
+	intern_params.n_planar = (int)constraints.planar.size();
+	intern_params.n_tangent = 0;
 	// Total number of constraints ...
-	b_parameters.n_constraints =
-		b_parameters.n_interface + b_parameters.n_inequality +
-		3 * b_parameters.n_planar + b_parameters.n_tangent;
+	intern_params.n_constraints =
+		intern_params.n_interface + intern_params.n_inequality +
+		3 * intern_params.n_planar + intern_params.n_tangent;
 	// Total number of equality constraints
-	b_parameters.n_equality = b_parameters.n_interface +
-		3 * b_parameters.n_planar +
-		b_parameters.n_tangent;
+	intern_params.n_equality = intern_params.n_interface +
+		3 * intern_params.n_planar +
+		intern_params.n_tangent;
 
 	// polynomial parameters ...
 
-	b_parameters.poly_term = false;
-	b_parameters.modified_basis = false;
-	b_parameters.problem_type = Parameter_Types::Linear;
+	intern_params.poly_term = false;
+	intern_params.modified_basis = false;
+	intern_params.problem_type = Parameter_Types::Linear;
 
-	b_parameters.n_poly_terms = 0;
+	intern_params.n_poly_terms = 0;
 }
 
 bool Vector_Field::get_equality_values(VectorXd &equality_values) {
@@ -97,13 +97,13 @@ Vector_Field::Vector_Field(const Parameters &m_params)
 	kernel = nullptr;
 	rbf_kernel = nullptr;
 
-	ui_parameters = m_params;
+	parameters = m_params;
 
 	_iteration = 0;
 }
 
 bool Vector_Field::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
-	int n_p = b_parameters.n_planar;
+	int n_p = intern_params.n_planar;
 
 	// Base Matrix Structure
 	// | p_x/p_x p_x/p_y p_x/p_z |
@@ -140,7 +140,7 @@ bool Vector_Field::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 }
 
 void Vector_Field::setup_system_solver() {
-	int n = b_parameters.n_equality + b_parameters.n_poly_terms;
+	int n = intern_params.n_equality + intern_params.n_poly_terms;
 
 	VectorXd equality_values(n);
 	get_equality_values(equality_values);
@@ -161,7 +161,7 @@ void Vector_Field::setup_system_solver() {
 }
 
 void Vector_Field::eval_scalar_interpolant_at_point(Point &p) {
-	int n_p = b_parameters.n_planar;
+	int n_p = intern_params.n_planar;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum = 0.0;
@@ -180,7 +180,7 @@ void Vector_Field::eval_vector_interpolant_at_point(Point &p) {
 	// TO DO: Fix eval_scalar_interpolant_at_points() method to actually
 	// computer
 	// the scalar field and not the vector field.
-	int n_p = b_parameters.n_planar;
+	int n_p = intern_params.n_planar;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_x = 0.0;

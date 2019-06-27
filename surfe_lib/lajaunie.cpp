@@ -48,12 +48,12 @@
 
 bool Lajaunie_Approach::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 	int n_ip = _n_increment_pair;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
-	p_basis = create_polynomial_basis(ui_parameters.polynomial_order);
+	p_basis = create_polynomial_basis(parameters.polynomial_order);
 
-	if ((int)poly_matrix.rows() != b_parameters.n_poly_terms) return false;
+	if ((int)poly_matrix.rows() != intern_params.n_poly_terms) return false;
 
 	// for Interface Increment Pair Constraints:
 	for (int j = 0; j < (int)_increment_pairs.size(); j++) {
@@ -61,8 +61,8 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 		VectorXd b1 = p_basis->basis();
 		p_basis->set_point(_increment_pairs[j][1]);
 		VectorXd b2 = p_basis->basis();
-		if ((int)b1.rows() != b_parameters.n_poly_terms ||
-			(int)b2.rows() != b_parameters.n_poly_terms)
+		if ((int)b1.rows() != intern_params.n_poly_terms ||
+			(int)b2.rows() != intern_params.n_poly_terms)
 			return false;
 		for (int k = 0; k < (int)b1.rows(); k++)
 			poly_matrix(k, j) = b1(k) - b2(k);
@@ -73,9 +73,9 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms ||
-			(int)by.rows() != b_parameters.n_poly_terms ||
-			(int)bz.rows() != b_parameters.n_poly_terms)
+		if ((int)bx.rows() != intern_params.n_poly_terms ||
+			(int)by.rows() != intern_params.n_poly_terms ||
+			(int)bz.rows() != intern_params.n_poly_terms)
 			return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, n_ip + 3 * j) = bx(k);
@@ -89,9 +89,9 @@ bool Lajaunie_Approach::_get_polynomial_matrix_block(MatrixXd &poly_matrix) {
 		VectorXd bx = p_basis->dx();
 		VectorXd by = p_basis->dy();
 		VectorXd bz = p_basis->dz();
-		if ((int)bx.rows() != b_parameters.n_poly_terms ||
-			(int)by.rows() != b_parameters.n_poly_terms ||
-			(int)bz.rows() != b_parameters.n_poly_terms)
+		if ((int)bx.rows() != intern_params.n_poly_terms ||
+			(int)by.rows() != intern_params.n_poly_terms ||
+			(int)bz.rows() != intern_params.n_poly_terms)
 			return false;
 		for (int k = 0; k < (int)bx.rows(); k++) {
 			poly_matrix(k, n_ip + 3 * n_p + j) =
@@ -108,8 +108,8 @@ bool
 Lajaunie_Approach::_insert_polynomial_matrix_blocks_in_interpolation_matrix(
 	const MatrixXd &poly_matrix, MatrixXd &interpolation_matrix) {
 	int n_ip = _n_increment_pair;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	if ((n_ip + 3 * n_p + n_t + poly_matrix.rows()) > interpolation_matrix.rows() ||
 		(n_ip + 3 * n_p + n_t + poly_matrix.rows()) > interpolation_matrix.cols())
@@ -162,7 +162,7 @@ Lajaunie_Approach::Lajaunie_Approach(const Parameters& m_p)
 	p_basis = nullptr;
 
 	// set GUI parameters
-	ui_parameters = m_p;
+	parameters = m_p;
 
 	_iteration = 0;
 }
@@ -179,31 +179,31 @@ Lajaunie_Approach::Lajaunie_Approach()
 
 void  Lajaunie_Approach::get_method_parameters() {
 	// # of constraints for each constraint type ...
-	b_parameters.n_interface = (int)constraints.itrface.size();
-	b_parameters.n_inequality = 0;  // no support for inequality. if there is inequalities use the stratigraphic horizon method
-	b_parameters.n_planar = (int)constraints.planar.size();
-	b_parameters.n_tangent = (int)constraints.tangent.size();
+	intern_params.n_interface = (int)constraints.itrface.size();
+	intern_params.n_inequality = 0;  // no support for inequality. if there is inequalities use the stratigraphic horizon method
+	intern_params.n_planar = (int)constraints.planar.size();
+	intern_params.n_tangent = (int)constraints.tangent.size();
 	// Total number of constraints ...
-	b_parameters.n_constraints = _n_increment_pair + 3 * b_parameters.n_planar + b_parameters.n_tangent;
+	intern_params.n_constraints = _n_increment_pair + 3 * intern_params.n_planar + intern_params.n_tangent;
 	// Total number of equality constraints
-	if (ui_parameters.use_restricted_range)
-		b_parameters.restricted_range = true;
+	if (parameters.use_restricted_range)
+		intern_params.restricted_range = true;
 	else
-		b_parameters.n_equality = _n_increment_pair + 3 * b_parameters.n_planar + b_parameters.n_tangent;
+		intern_params.n_equality = _n_increment_pair + 3 * intern_params.n_planar + intern_params.n_tangent;
 
 	// polynomial parameters ...
-	if (!b_parameters.restricted_range) {
-		b_parameters.poly_term = true;  // NOTE: May want to have this as an option when using SPD functions
-		b_parameters.modified_basis = false;
-		b_parameters.problem_type = Parameter_Types::Linear;
+	if (!intern_params.restricted_range) {
+		intern_params.poly_term = true;  // NOTE: May want to have this as an option when using SPD functions
+		intern_params.modified_basis = false;
+		intern_params.problem_type = Parameter_Types::Linear;
 	}
 	else {
-		b_parameters.poly_term = false;
-		b_parameters.modified_basis = true;
-		b_parameters.problem_type = Parameter_Types::Quadratic;
+		intern_params.poly_term = false;
+		intern_params.modified_basis = true;
+		intern_params.problem_type = Parameter_Types::Quadratic;
 	}
-	int m = ui_parameters.polynomial_order + 1;
-	b_parameters.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6) - 1;
+	int m = parameters.polynomial_order + 1;
+	intern_params.n_poly_terms = (int)(m * (m + 1) * (m + 2) / 6) - 1;
 	// minus 1 due to the nature of the independent pair constraints and
 	// the vanishing of the constant term in the polynomial
 }
@@ -220,21 +220,21 @@ void Lajaunie_Approach::process_input_data() {
 	if (!_get_increment_pairs())
 		throw GRBF_Exceptions::no_interface_increment_pairs;
 
-	if (ui_parameters.use_restricted_range) {
+	if (parameters.use_restricted_range) {
 		for (auto &planar_pt : constraints.planar) {
-			planar_pt.setNormalBounds(ui_parameters.angular_uncertainty, ui_parameters.angular_uncertainty / 2);
+			planar_pt.setNormalBounds(parameters.angular_uncertainty, parameters.angular_uncertainty / 2);
 			// Need more ROBUST METHOD. Try large statistical sampling
 			// from von Mises spherical distribution
 		}
 		for (auto &tangent_pt : constraints.tangent) {
-			tangent_pt.setAngleBounds(ui_parameters.angular_uncertainty);
+			tangent_pt.setAngleBounds(parameters.angular_uncertainty);
 		}
 	}
 }
 
 void Lajaunie_Approach::setup_system_solver() {
-	if (b_parameters.restricted_range) {
-		int n_c = b_parameters.n_constraints;
+	if (intern_params.restricted_range) {
+		int n_c = intern_params.n_constraints;
 
 		VectorXd b(n_c);
 		VectorXd r(n_c);
@@ -254,7 +254,7 @@ void Lajaunie_Approach::setup_system_solver() {
 		solver = qpc;
 	}
 	else {
-		int n = b_parameters.n_equality + b_parameters.n_poly_terms;
+		int n = intern_params.n_equality + intern_params.n_poly_terms;
 		VectorXd equality_values(n);
 		get_equality_values(equality_values);
 		MatrixXd interpolation_matrix(n, n);
@@ -465,7 +465,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
 	if (_iteration == 0)
 		planar_indices_to_include =
 		Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-			input.planar, ui_parameters.angular_uncertainty,
+			input.planar, parameters.angular_uncertainty,
 			constraints.GetPlanarAvgNNDist());
 	else {
 #pragma omp parallel sections
@@ -475,7 +475,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
 				// PLANAR Observations
 				planar_indices_to_include =
 					Get_Planar_STL_Vector_Indices_With_Large_Residuals(
-						input.planar, ui_parameters.angular_uncertainty,
+						input.planar, parameters.angular_uncertainty,
 						constraints.GetPlanarAvgNNDist());
 			}
 #pragma omp section
@@ -483,7 +483,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
 				// TANGENT Observations
 				tangent_indices_to_include =
 					Get_Tangent_STL_Vector_Indices_With_Large_Residuals(
-						input.tangent, ui_parameters.angular_uncertainty,
+						input.tangent, parameters.angular_uncertainty,
 						constraints.GetTangentAvgNNDist());
 			}
 #pragma omp section
@@ -491,7 +491,7 @@ bool Lajaunie_Approach::append_greedy_input(Constraints &input) {
 				// INTERFACE Observations
 				interface_indices_to_include =
 					Get_Interface_STL_Vector_Indices_With_Large_Residuals(
-						input.itrface, ui_parameters.interface_uncertainty,
+						input.itrface, parameters.interface_uncertainty,
 						constraints.GetInterfaceAvgNNDist());
 			}
 #pragma omp section
@@ -587,16 +587,16 @@ bool Lajaunie_Approach::convert_modified_kernel_to_rbf_kernel() {
 	// switch from modified kernel to normal rbf kernel
 	kernel = rbf_kernel;
 
-	if (ui_parameters.use_restricted_range)
-		b_parameters.restricted_range = false;
-	b_parameters.n_equality =
-		_n_increment_pair + 3 * b_parameters.n_planar + b_parameters.n_tangent;
-	b_parameters.poly_term = true;
-	b_parameters.n_poly_terms = 3;
-	b_parameters.modified_basis = false;
-	b_parameters.problem_type = Parameter_Types::Linear;
-	int n_e = b_parameters.n_equality;
-	int n_p = b_parameters.n_poly_terms;
+	if (parameters.use_restricted_range)
+		intern_params.restricted_range = false;
+	intern_params.n_equality =
+		_n_increment_pair + 3 * intern_params.n_planar + intern_params.n_tangent;
+	intern_params.poly_term = true;
+	intern_params.n_poly_terms = 3;
+	intern_params.modified_basis = false;
+	intern_params.problem_type = Parameter_Types::Linear;
+	int n_e = intern_params.n_equality;
+	int n_p = intern_params.n_poly_terms;
 	VectorXd equality_values(n_e + n_p);
 	get_equality_values(equality_values);
 
@@ -629,8 +629,8 @@ bool Lajaunie_Approach::get_equality_values(VectorXd &equality_values) {
 	}
 	for (l = 0; l < (int)constraints.tangent.size(); l++)
 		equality_values(l + 3 * k + j) = 0.0;
-	if (b_parameters.poly_term)
-		for (m = 0; m < (int)b_parameters.n_poly_terms; m++)
+	if (intern_params.poly_term)
+		for (m = 0; m < (int)intern_params.n_poly_terms; m++)
 			equality_values(m + l + 3 * k + j) = 0.0;
 
 	return true;
@@ -638,13 +638,13 @@ bool Lajaunie_Approach::get_equality_values(VectorXd &equality_values) {
 
 bool Lajaunie_Approach::get_inequality_values(VectorXd &b, VectorXd &r) {
 	int n_ip = _n_increment_pair;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// interface data
 	for (int j = 0; j < n_ip; j++) {
-		b(j) = -ui_parameters.interface_uncertainty;
-		r(j) = 2 * ui_parameters.interface_uncertainty;
+		b(j) = -parameters.interface_uncertainty;
+		r(j) = 2 * parameters.interface_uncertainty;
 	}
 
 	// planar data
@@ -671,8 +671,8 @@ bool Lajaunie_Approach::get_inequality_values(VectorXd &b, VectorXd &r) {
 
 bool Lajaunie_Approach::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 	int n_ip = _n_increment_pair;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	// Row and Column constraint order : interface increment pair (iip) ->
 	// planar
@@ -814,9 +814,9 @@ bool Lajaunie_Approach::get_interpolation_matrix(MatrixXd &interpolation_matrix)
 	// build polynomial blocks if required
 	// | A PT |
 	// | P 0  |
-	if (b_parameters.poly_term) {
-		MatrixXd poly_matrix(b_parameters.n_poly_terms,
-			b_parameters.n_constraints);
+	if (intern_params.poly_term) {
+		MatrixXd poly_matrix(intern_params.n_poly_terms,
+			intern_params.n_constraints);
 		if (!_get_polynomial_matrix_block(poly_matrix)) return false;
 		// fill remaining matrix blocks (P, PT, 0)
 		if (!_insert_polynomial_matrix_blocks_in_interpolation_matrix(
@@ -838,8 +838,8 @@ Polynomial_Basis *Lajaunie_Approach::create_polynomial_basis(const int &poly_ord
 
 void Lajaunie_Approach::eval_scalar_interpolant_at_point(Point &p) {
 	int n_ip = _n_increment_pair;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1 = 0.0;
@@ -863,7 +863,7 @@ void Lajaunie_Approach::eval_scalar_interpolant_at_point(Point &p) {
 		kernel_j->set_points(p, constraints.tangent[k]);
 		elemsum_3 += solver->weights[n_ip + 3 * n_p + k] * kernel_j->basis_pt_tangent();
 	}
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd b = p_basis_j->basis();
@@ -877,8 +877,8 @@ void Lajaunie_Approach::eval_scalar_interpolant_at_point(Point &p) {
 
 void Lajaunie_Approach::eval_vector_interpolant_at_point(Point &p) {
 	int n_ip = _n_increment_pair;
-	int n_p = b_parameters.n_planar;
-	int n_t = b_parameters.n_tangent;
+	int n_p = intern_params.n_planar;
+	int n_t = intern_params.n_tangent;
 
 	Kernel *kernel_j = kernel->clone();
 	double elemsum_1_x = 0.0;
@@ -939,7 +939,7 @@ void Lajaunie_Approach::eval_vector_interpolant_at_point(Point &p) {
 		elemsum_3_z += solver->weights[n_ip + 3 * n_p + k] *
 			kernel->basis_planar_tangent(Parameter_Types::DZ);
 	}
-	if (b_parameters.poly_term) {
+	if (intern_params.poly_term) {
 		Polynomial_Basis *p_basis_j = p_basis->clone();
 		p_basis_j->set_point(p);
 		VectorXd bx = p_basis_j->dx();
