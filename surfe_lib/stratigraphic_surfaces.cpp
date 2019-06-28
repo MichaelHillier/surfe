@@ -369,9 +369,9 @@ void Stratigraphic_Surfaces::process_input_data() {
 		for (int j = 0; j < (int)constraints.tangent.size(); j++) {
 			constraints.tangent[j].setAngleBounds(parameters.angular_uncertainty);
 			std::cout << " Tangent[" << j << "] Bounds: " << std::endl;
-			std::cout << "	" << constraints.tangent[j].angle_lower_bound()
+			std::cout << "	" << constraints.tangent[j].angular_constraint_lower_bound()
 				<< " <= " << constraints.tangent[j].inner_product_constraint()
-				<< " <= " << constraints.tangent[j].angle_upper_bound()
+				<< " <= " << constraints.tangent[j].angular_constraint_upper_bound()
 				<< std::endl;
 		}
 	}
@@ -467,9 +467,9 @@ bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &b, VectorXd &r) {
 
 	// tangent data
 	for (int j = 0; j < n_t; j++) {
-		b(n_ip + 3 * n_p + j) = constraints.tangent[j].angle_lower_bound();
-		r(n_ip + 3 * n_p + j) = constraints.tangent[j].angle_upper_bound() -
-			constraints.tangent[j].angle_lower_bound();
+		b(n_ip + 3 * n_p + j) = constraints.tangent[j].angular_constraint_lower_bound();
+		r(n_ip + 3 * n_p + j) = constraints.tangent[j].angular_constraint_upper_bound() -
+			constraints.tangent[j].angular_constraint_lower_bound();
 	}
 
 	return true;

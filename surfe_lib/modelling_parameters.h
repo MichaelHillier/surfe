@@ -103,11 +103,7 @@ struct Parameters {
 	// model type
 	Parameter_Types::ModelType model_type;
 	double min_stratigraphic_thickness;
-	// interface input
-	bool use_interface;
-	bool use_planar;
-	bool use_tangent;
-	bool use_inequality;
+
 	// basis parameters
 	Parameter_Types::RBF basis_type;
 	double shape_parameter;
@@ -126,10 +122,6 @@ struct Parameters {
 	Parameters() :
 		model_type(Parameter_Types::Single_surface),
 		min_stratigraphic_thickness(0),
-		use_interface(false),
-		use_planar(false),
-		use_tangent(false),
-		use_inequality(false),
 		basis_type(Parameter_Types::Cubic),
 		shape_parameter(100),
 		polynomial_order(1),

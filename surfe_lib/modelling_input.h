@@ -214,9 +214,9 @@ class Tangent : public Point {
 private:
 	double _tangent[3];
 	double _residual;
-	double _angle_bound[2];
+	double _angular_constraints[2];
 	double _inner_product_constraint;
-
+	double _norm_est;
 public:
 	Tangent() {}
 	Tangent(const double &x_coord, const double &y_coord, const double &z_coord,
@@ -227,6 +227,7 @@ public:
 		_tangent[1] = ty;
 		_tangent[2] = tz;
 		_residual = 0.0;
+		_norm_est = 0.0;
 		_inner_product_constraint = 0.0;  // default value 0.0 means that the
 										  // angle b/t the gradient of the
 		// scalar field and tangent vector is 90 degrees.
@@ -235,24 +236,47 @@ public:
 	double ty() const { return _tangent[1]; }
 	double tz() const { return _tangent[2]; }
 	double residual() const { return _residual; }
-	double angle_lower_bound() const { return _angle_bound[0]; }
-	double angle_upper_bound() const { return _angle_bound[1]; }
+	double estimated_gradient_norm() const { return _norm_est; }
+	double angular_constraint_lower_bound() const { return _angular_constraints[0]; }
+	double angular_constraint_upper_bound() const { return _angular_constraints[1]; }
 	double inner_product_constraint() const {
 		return _inner_product_constraint;
 	}
 	void setResidual(const double &res) { _residual = res; }
+	void setLowerAngularConstraintBound(const double &angle, const double &norm_est) {
+		// Cos(ϴ) = ( ∇s * t) / (|| ∇s || * || t ||)
+		// LHS == RHS (Below)
+		// ( ∇s * t)  == Cos(ϴ)*||∇s||*||t||
+		// Lower Angular Constraint Bound: Cos(ϴ_lower)*||∇s||*||t||
+		// Upper Angular Constraint Bound: Cos(ϴ_upper)*||∇s||*||t||
+		// Cos(ϴ_lower)*||∇s||*||t|| <= ∇s * t <= Cos(ϴ_upper)*||∇s||*||t||
+		// here norm_est == ||∇s||
+		_norm_est = norm_est;
+		_angular_constraints[0] = cos(90.0*D2R) *sqrt(_tangent[0]*_tangent[0] + _tangent[1]*_tangent[1] + _tangent[2]*_tangent[2])*norm_est;
+	}
+	void setUpperAngularConstraintBound(const double &angle, const double &norm_est) {
+		// Cos(ϴ) = ( ∇s * t) / (|| ∇s || * || t ||)
+		// LHS == RHS (Below)
+		// ( ∇s * t)  == Cos(ϴ)*||∇s||*||t||
+		// Lower Angular Constraint Bound: Cos(ϴ_lower)*||∇s||*||t||
+		// Upper Angular Constraint Bound: Cos(ϴ_upper)*||∇s||*||t||
+		// Cos(ϴ_lower)*||∇s||*||t|| <= ∇s * t <= Cos(ϴ_upper)*||∇s||*||t||
+		// here norm_est == ||∇s||
+		_norm_est = norm_est;
+		_angular_constraints[1] = cos(90.0*D2R) *sqrt(_tangent[0] * _tangent[0] + _tangent[1] * _tangent[1] + _tangent[2] * _tangent[2])*norm_est;
+	}
 	void setAngleBounds(const double &angle) {
 		// t . del s = Cos(ϴ)*||t||*||del s||
 		// ||t|| = 1
 		// 0 <= ||del s|| <= + inf (but in reality ~ 2)
 		double a = cos((90.0 - angle) * D2R) * 2.0;
 		if (a < 0) {
-			_angle_bound[0] = a;
-			_angle_bound[1] = 0;
+			_angular_constraints[0] = a;
+			_angular_constraints[1] = 0;
 		}
 		else {
-			_angle_bound[0] = 0;
-			_angle_bound[1] = a;
+			_angular_constraints[0] = 0;
+			_angular_constraints[1] = a;
 		}
 	}
 	void setInnerProductConstraint(const double &ip_constraint) {

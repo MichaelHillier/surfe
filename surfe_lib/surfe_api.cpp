@@ -248,7 +248,6 @@ void Surfe_API::AddInterfaceConstraint(const double &x, const double &y, const d
 	Interface interface_constraint(x, y, z, level);
 	method_->constraints.itrface.push_back(interface_constraint);
 
-	method_->parameters.use_interface = true;
 	constraints_changed_ = true;
 }
 
@@ -257,7 +256,6 @@ void Surfe_API::AddPlanarConstraintwNormal(const double &x, const double &y, con
 	Planar planar_constraint(x, y, z, nx, ny, nz);
 	method_->constraints.planar.push_back(planar_constraint);
 
-	method_->parameters.use_planar = true;
 	constraints_changed_ = true;
 }
 
@@ -266,7 +264,6 @@ void Surfe_API::AddPlanarConstraintwStrikeDipPolarity(const double &x, const dou
 	Planar planar_constraint(x, y, z, dip, strike, polarity);
 	method_->constraints.planar.push_back(planar_constraint);
 
-	method_->parameters.use_planar = true;
 	constraints_changed_ = true;
 }
 
@@ -281,7 +278,6 @@ void Surfe_API::AddPlanarConstraintwAzimuthDipPolarity(const double &x, const do
 	Planar planar_constraint(x, y, z, dip, strike, polarity);
 	method_->constraints.planar.push_back(planar_constraint);
 
-	method_->parameters.use_planar = true;
 	constraints_changed_ = true;
 }
 
@@ -290,7 +286,6 @@ void Surfe_API::AddTangentConstraint(const double &x, const double &y, const dou
 	Tangent tangent_constraint(x, y, z, tx, ty, tz);
 	method_->constraints.tangent.push_back(tangent_constraint);
 
-	method_->parameters.use_tangent = true;
 	constraints_changed_ = true;
 }
 
@@ -299,7 +294,6 @@ void Surfe_API::AddInequalityConstraint(const double &x, const double &y, const 
 	Inequality inequality_constraint(x, y, z, level);
 	method_->constraints.inequality.push_back(inequality_constraint);
 
-	method_->parameters.use_inequality = true;
 	constraints_changed_ = true;
 }
 

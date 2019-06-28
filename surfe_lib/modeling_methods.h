@@ -88,7 +88,7 @@ public:
 	GRBF_Modelling_Methods *get_method(const Parameters &m_parameters);  // factory method to get create the appropriate pointer for given problem
 	RBFKernel *create_rbf_kernel(const Parameter_Types::RBF &rbf_type, const bool &anisotropy);
 	std::vector<Interface> get_interface_points_ouput() const { return constraints.itrface; }
-	Constraints constraints;// algorithm input
+	Constraints constraints; // data constraints
 	void remove_collocated_constraints(); // cleaning method to ensure valid interpolation matrix
 	std::vector<double> get_interface_iso_values() const { return interface_iso_values; }
 	void setup_basis_functions();
@@ -108,7 +108,7 @@ public:
 	virtual bool convert_modified_kernel_to_rbf_kernel() = 0;
 	virtual GRBF_Modelling_Methods *clone() = 0;
 	// Attributes
-	Parameters parameters;  // QT GUI parameters
+	Parameters parameters;  // User specified parameters
 	System_Solver *solver;
 	Kernel *kernel;
 	RBFKernel *rbf_kernel;

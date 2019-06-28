@@ -662,8 +662,8 @@ bool Lajaunie_Approach::get_inequality_values(VectorXd &b, VectorXd &r) {
 
 	// tangent data
 	for (int j = 0; j < n_t; j++) {
-		b(n_ip + 3 * n_p + j) = constraints.tangent[j].angle_lower_bound();
-		r(n_ip + 3 * n_p + j) = constraints.tangent[j].angle_upper_bound() - constraints.tangent[j].angle_lower_bound();
+		b(n_ip + 3 * n_p + j) = constraints.tangent[j].angular_constraint_lower_bound();
+		r(n_ip + 3 * n_p + j) = constraints.tangent[j].angular_constraint_upper_bound() - constraints.tangent[j].angular_constraint_lower_bound();
 	}
 
 	return true;

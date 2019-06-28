@@ -1,4 +1,4 @@
-// SURFace Estimator(SURFE) - Terms and Conditions of Use
+﻿// SURFace Estimator(SURFE) - Terms and Conditions of Use
 
 // Unless otherwise noted, computer program source code of the SURFace
 // Estimator(SURFE) is covered under Crown Copyright, Government of Canada, and
@@ -222,6 +222,22 @@ void Single_Surface::setup_system_solver() {
 			if (!qpc->solve())
 				throw GRBF_Exceptions::loqo_quadratic_solver_failure;
 			solver = qpc;
+
+			bool converged = false;
+			double residual_threshold = 1.0; //TODO change
+			double max_iter = 100;
+
+			while (!converged){
+				double residual = 0.0;
+				for (const auto& tangent_pt : constraints.tangent) {
+					Point pt(tangent_pt.x(), tangent_pt.y(), tangent_pt.z());
+					eval_vector_interpolant_at_point(pt);
+					double gradient[3] = { pt.nx_interp(), pt.ny_interp(), pt.nz_interp() };
+					double norm = sqrt(gradient[0] * gradient[0] + gradient[1] * gradient[1] + gradient[2] * gradient[2]);
+					residual += fabs(norm - tangent_pt.estimated_gradient_norm());
+				}
+
+			}
 		}
 		else {
 			VectorXd inequality_values(n_ie);
@@ -813,9 +829,9 @@ bool Single_Surface::get_inequality_values(VectorXd &inequality_values) {
 		}
 		for (int j = 0; j < n_t; j++) {
 			inequality_values(2 * n_i + 6 * n_p + 2 * j + 0) =
-				constraints.tangent[j].angle_lower_bound();  //  Ax >=  angle_lower_bound
+				constraints.tangent[j].angular_constraint_lower_bound();  //  Ax >=  angle_lower_bound
 			inequality_values(2 * n_i + 6 * n_p + 2 * j + 1) =
-				-constraints.tangent[j].angle_upper_bound();  // -Ax >= -angle_upper_bound
+				-constraints.tangent[j].angular_constraint_upper_bound();  // -Ax >= -angle_upper_bound
 		}
 	}
 	return true;
@@ -876,9 +892,9 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 
 	// tangent data
 	for (int j = 0; j < n_t; j++) {
-		b(n_ie + n_i + 3 * n_p + j) = constraints.tangent[j].angle_lower_bound();
+		b(n_ie + n_i + 3 * n_p + j) = constraints.tangent[j].angular_constraint_lower_bound();
 		r(n_ie + n_i + 3 * n_p + j) =
-			constraints.tangent[j].angle_upper_bound() - constraints.tangent[j].angle_lower_bound();
+			constraints.tangent[j].angular_constraint_upper_bound() - constraints.tangent[j].angular_constraint_lower_bound();
 	}
 
 	return true;
@@ -910,14 +926,53 @@ void Single_Surface::process_input_data() {
 				<< " <= " << planar_pt.nz()
 				<< " <= " << planar_pt.nz_upper_bound() << std::endl;
 		}
+		// ∇s ^
+		//     | φ  ^ t`
+		//     |   /
+		//     |  / 
+		//     | / 
+		//     |/  ϴ
+		//     |---------> t
+		//      \  ϴ
+		//       \ 
+		//        \
+		//         \
+		//          >
+		// t = tangent vector with no uncertainty
+		// t` = tangent vector with some non-zero uncertainty
+		// ∇s = gradient of the MODELED scalar field
+		// φ = angle between ∇s & t`
+		// ϴ = angle between t` & t : the uncertainty orthogonality constraint
+		// When tangents have no uncertainty, then ϴ = 0 and φ = 90 : orthogonal
+		// When tangents have uncertainty the angle φ is : 90 - ϴ <= φ <+ 90 + ϴ
 		for (auto &tangent_pt : constraints.tangent) {
+			tangent_pt.setLowerAngularConstraintBound(90 - parameters.angular_uncertainty, 1.0);
+			tangent_pt.setUpperAngularConstraintBound(90 + parameters.angular_uncertainty, 1.0);
 			tangent_pt.setAngleBounds(parameters.angular_uncertainty);
 			std::cout << " Tangent Bounds: " << std::endl;
-			std::cout << "	" << tangent_pt.angle_lower_bound()
-				<< " <= " << tangent_pt.inner_product_constraint()
-				<< " <= " << tangent_pt.angle_upper_bound()
+			std::cout << "	" << tangent_pt.angular_constraint_lower_bound()
+				<< " <= " << tangent_pt.angular_constraint_upper_bound()
 				<< std::endl;
 		}
+		// Convert planar constraints to tangents constraints:
+		//                   ^ n
+		//          ∇s ^    |    ^ ∇s
+		//               \ ϴ | ϴ /
+		//                \  |  / 
+		//                 \ | / 
+		//                  \|/  
+		//    
+		// The modelled gradient of the scalar field can fall anywhere within this uncertainty cone
+		// n = normal vector
+		// ϴ = angle between n & ∇s : uncertainty angular
+		for (auto &planar_pt : constraints.planar) {
+			Tangent tangent_pt(planar_pt.x(), planar_pt.y(), planar_pt.z(), planar_pt.nx(), planar_pt.ny(), planar_pt.nz());
+			tangent_pt.setLowerAngularConstraintBound(0.0, 1.0);
+			tangent_pt.setUpperAngularConstraintBound(parameters.angular_uncertainty, 1.0);
+			constraints.tangent.push_back(tangent_pt);
+		}
+		// delete planar constraints from interpolant
+		constraints.planar.clear();
 	}
 }
 

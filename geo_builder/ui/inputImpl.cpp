@@ -75,10 +75,7 @@ InputParameters InputImpl::get_parameters()
 		params.model_type = Parameter_Types::ModelType::Stratigraphic_horizons;
 	else
 		params.model_type = Parameter_Types::ModelType::Continuous_property;
-	params.use_interface = interface_checkbox->isChecked();
-	params.use_planar = planar_checkbox->isChecked();
-	params.use_tangent = tangent_checkbox->isChecked();
-	params.use_inequality = inequality_checkbox->isChecked();
+
 	QString basis_text = basis_type_combobox->currentText();
 	if (basis_text == "r3")
 		params.basis_type = Parameter_Types::RBF::Cubic;
