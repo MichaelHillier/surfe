@@ -236,14 +236,17 @@ public:
 	double ty() const { return _tangent[1]; }
 	double tz() const { return _tangent[2]; }
 	double residual() const { return _residual; }
-	double estimated_gradient_norm() const { return _norm_est; }
+	double GradientNormEstimate() const { return _norm_est; }
 	double angular_constraint_lower_bound() const { return _angular_constraints[0]; }
 	double angular_constraint_upper_bound() const { return _angular_constraints[1]; }
 	double inner_product_constraint() const {
 		return _inner_product_constraint;
 	}
 	void setResidual(const double &res) { _residual = res; }
+	void setGradientNormEstimate(const double &norm) { _norm_est = norm; }
 	void setLowerAngularConstraintBound(const double &angle, const double &norm_est) {
+		// angle = ϴ 
+		// allowable ϴ range => 0(zero) <= ϴ <= 180 
 		// Cos(ϴ) = ( ∇s * t) / (|| ∇s || * || t ||)
 		// LHS == RHS (Below)
 		// ( ∇s * t)  == Cos(ϴ)*||∇s||*||t||
@@ -252,9 +255,13 @@ public:
 		// Cos(ϴ_lower)*||∇s||*||t|| <= ∇s * t <= Cos(ϴ_upper)*||∇s||*||t||
 		// here norm_est == ||∇s||
 		_norm_est = norm_est;
-		_angular_constraints[0] = cos(90.0*D2R) *sqrt(_tangent[0]*_tangent[0] + _tangent[1]*_tangent[1] + _tangent[2]*_tangent[2])*norm_est;
+		// since angles go from 0 to 180 and correspondingly cos(angle) go from 1 to -1
+		// and since this is the smaller angle, this corresponds to the upper bound for the constraint
+		_angular_constraints[1] = cos(angle*D2R) *sqrt(_tangent[0]*_tangent[0] + _tangent[1]*_tangent[1] + _tangent[2]*_tangent[2])*norm_est;
 	}
 	void setUpperAngularConstraintBound(const double &angle, const double &norm_est) {
+		// angle = ϴ 
+		// allowable ϴ range => 0(zero) <= ϴ <= 180 
 		// Cos(ϴ) = ( ∇s * t) / (|| ∇s || * || t ||)
 		// LHS == RHS (Below)
 		// ( ∇s * t)  == Cos(ϴ)*||∇s||*||t||
@@ -263,7 +270,9 @@ public:
 		// Cos(ϴ_lower)*||∇s||*||t|| <= ∇s * t <= Cos(ϴ_upper)*||∇s||*||t||
 		// here norm_est == ||∇s||
 		_norm_est = norm_est;
-		_angular_constraints[1] = cos(90.0*D2R) *sqrt(_tangent[0] * _tangent[0] + _tangent[1] * _tangent[1] + _tangent[2] * _tangent[2])*norm_est;
+		// since angles go from 0 to 180 and correspondingly cos(angle) go from 1 to -1
+		// and since this is the larger angle, this corresponds to the lower bound for the constraint
+		_angular_constraints[0] = cos(angle*D2R) *sqrt(_tangent[0] * _tangent[0] + _tangent[1] * _tangent[1] + _tangent[2] * _tangent[2])*norm_est;
 	}
 	void setAngleBounds(const double &angle) {
 		// t . del s = Cos(ϴ)*||t||*||del s||

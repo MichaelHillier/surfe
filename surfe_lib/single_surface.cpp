@@ -224,19 +224,86 @@ void Single_Surface::setup_system_solver() {
 			solver = qpc;
 
 			bool converged = false;
-			double residual_threshold = 1.0; //TODO change
-			double max_iter = 100;
+			double residual_threshold = 0.0000001; //TODO change
+			long max_iter = 300;
 
+			long iter = 0;
+			std::vector<double> residuals;
+			std::vector<std::vector<double>> norm_variation;
+			std::vector<std::vector<double>> angle_variation;
+			norm_variation.resize(iter + 1);
+			angle_variation.resize(iter + 1);
 			while (!converged){
-				double residual = 0.0;
-				for (const auto& tangent_pt : constraints.tangent) {
+				double avg_residual = 0.0;
+				for (auto& tangent_pt : constraints.tangent) {
 					Point pt(tangent_pt.x(), tangent_pt.y(), tangent_pt.z());
+					double vector[3] = { tangent_pt.tx(),tangent_pt.ty(),tangent_pt.tz() };
+					double vnorm = sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2]);
 					eval_vector_interpolant_at_point(pt);
 					double gradient[3] = { pt.nx_interp(), pt.ny_interp(), pt.nz_interp() };
 					double norm = sqrt(gradient[0] * gradient[0] + gradient[1] * gradient[1] + gradient[2] * gradient[2]);
-					residual += fabs(norm - tangent_pt.estimated_gradient_norm());
+					double angle = acos((gradient[0]*vector[0] + gradient[1] * vector[1] + gradient[2] * vector[2]) / (vnorm*norm))*R2D;
+					avg_residual += fabs(norm - tangent_pt.GradientNormEstimate());
+					norm_variation[iter].push_back(norm);
+					angle_variation[iter].push_back(angle);
+					// update gradient norm estimate, and constraints
+					tangent_pt.setLowerAngularConstraintBound(0.0, norm);
+					tangent_pt.setUpperAngularConstraintBound(parameters.angular_uncertainty, norm);
 				}
-
+				avg_residual /= constraints.tangent.size();
+				residuals.push_back(avg_residual);
+				// check for convergence
+				if (avg_residual < residual_threshold || iter >= max_iter) {
+					converged = true;
+					break;
+				}
+				// update inequality vectors: this function will use new gradient norm estimates made by the current interpolant
+				get_inequality_values(b, r);
+				// delete old solver point to avoid memory leak
+				delete solver;
+				solver = nullptr;
+				// get new interpolant weights
+				Quadratic_Predictor_Corrector_LOQO *qpc =
+					new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
+				if (!qpc->solve())
+					throw GRBF_Exceptions::loqo_quadratic_solver_failure;
+				solver = qpc;
+				iter++;
+				norm_variation.resize(iter + 1);
+				angle_variation.resize(iter + 1);
+			}
+			VectorXd temp(residuals.size());
+			for (int j = 0; j < residuals.size(); j++)
+				temp(j) = residuals[j];
+			MatrixXd norm_matrix(norm_variation.size(), norm_variation[0].size());
+			for (int j = 0; j < norm_variation.size(); j++) {
+				for (int k = 0; k < norm_variation[0].size(); k++) {
+					norm_matrix(j, k) = norm_variation[j][k];
+				}
+			}
+			MatrixXd angle_matrix(angle_variation.size(), angle_variation[0].size());
+			for (int j = 0; j < angle_variation.size(); j++) {
+				for (int k = 0; k < angle_variation[0].size(); k++) {
+					angle_matrix(j, k) = angle_variation[j][k];
+				}
+			}
+			std::ofstream file1("G:/residualVEC.txt");
+			if (file1)
+			{
+				file1 << temp << "\n";
+				file1.close();
+			}
+			std::ofstream file2("G:/normMAT.txt");
+			if (file2)
+			{
+				file2 <<norm_matrix << "\n";
+				file2.close();
+			}
+			std::ofstream file3("G:/angleMAT.txt");
+			if (file3)
+			{
+				file3 << angle_matrix << "\n";
+				file3.close();
 			}
 		}
 		else {
@@ -847,8 +914,11 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 	// minimize f = 1/2 xT H x
 	// s.t. b <= Ax <= b + r
 
+	cout << " Computing inequality vectors 'b' and 'r'" << endl;
+
 	// inequality/rock type data
 	if (n_ie != 0) {
+		cout << "	For inequality data..." << endl;
 		// compute largest distance between points
 		// this distance will represent the upper
 		// bound for inequality constraints
@@ -868,16 +938,20 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 				b(j) = -distance;
 				r(j) = distance;
 			}
+			cout << "	b(" << j << ") = " << b(j) << " r(" << j << ") = " << r(j) << endl;
 		}
 	}
 
 	// interface data
+	cout << "	For interface data..." << endl;
 	for (int j = 0; j < n_i; j++) {
 		b(n_ie + j) = constraints.itrface[j].level_lower_bound();
 		r(n_ie + j) = constraints.itrface[j].level_upper_bound() - constraints.itrface[j].level_lower_bound();
+		cout << "	b(" << j << ") = " << b(j) << " r(" << j << ") = " << r(j) << endl;
 	}
 
 	// planar data
+	cout << "	For planar data..." << endl;
 	for (int j = 0; j < n_p; j++) {
 		// x-component
 		b(n_ie + n_i + 3 * j + 0) = constraints.planar[j].nx_lower_bound();
@@ -888,13 +962,18 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 		// z-component
 		b(n_ie + n_i + 3 * j + 2) = constraints.planar[j].nz_lower_bound();
 		r(n_ie + n_i + 3 * j + 2) = constraints.planar[j].nz_upper_bound() - constraints.planar[j].nz_lower_bound();
+		cout << "	b(" << n_ie + n_i + 3 * j + 0 << ") = " << b(n_ie + n_i + 3 * j + 0) << " r(" << n_ie + n_i + 3 * j + 0 << ") = " << r(n_ie + n_i + 3 * j + 0) << endl;
+		cout << "	b(" << n_ie + n_i + 3 * j + 1 << ") = " << b(n_ie + n_i + 3 * j + 1) << " r(" << n_ie + n_i + 3 * j + 1 << ") = " << r(n_ie + n_i + 3 * j + 1) << endl;
+		cout << "	b(" << n_ie + n_i + 3 * j + 2 << ") = " << b(n_ie + n_i + 3 * j + 2) << " r(" << n_ie + n_i + 3 * j + 2 << ") = " << r(n_ie + n_i + 3 * j + 2) << endl;
 	}
 
 	// tangent data
+	cout << "	For tangent data..." << endl;
 	for (int j = 0; j < n_t; j++) {
 		b(n_ie + n_i + 3 * n_p + j) = constraints.tangent[j].angular_constraint_lower_bound();
 		r(n_ie + n_i + 3 * n_p + j) =
 			constraints.tangent[j].angular_constraint_upper_bound() - constraints.tangent[j].angular_constraint_lower_bound();
+		cout << "	b(" << n_ie + n_i + 3 * n_p + j << ") = " << b(n_ie + n_i + 3 * n_p + j) << " r(" << n_ie + n_i + 3 * n_p + j << ") = " << r(n_ie + n_i + 3 * n_p + j) << endl;
 	}
 
 	return true;
@@ -911,20 +990,6 @@ void Single_Surface::process_input_data() {
 			std::cout << "	" << interface_pt.level_lower_bound()
 				<< " <= 0 <= " << interface_pt.level_upper_bound()
 				<< std::endl;
-		}
-		for (auto &planar_pt : constraints.planar) {
-			planar_pt.setNormalBounds(parameters.angular_uncertainty, parameters.angular_uncertainty / 2);  // Need more ROBUST
-			// METHOD. Try large statistical sampling from von Mises spherical distribution
-			std::cout << " Planar[] Bounds: " << std::endl;
-			std::cout << "	nx: " << planar_pt.nx_lower_bound()
-				<< " <= " << planar_pt.nx()
-				<< " <= " << planar_pt.nx_upper_bound() << std::endl;
-			std::cout << "	ny: " << planar_pt.ny_lower_bound()
-				<< " <= " << planar_pt.ny()
-				<< " <= " << planar_pt.ny_upper_bound() << std::endl;
-			std::cout << "	nz: " << planar_pt.nz_lower_bound()
-				<< " <= " << planar_pt.nz()
-				<< " <= " << planar_pt.nz_upper_bound() << std::endl;
 		}
 		// ∇s ^
 		//     | φ  ^ t`

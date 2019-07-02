@@ -42,9 +42,10 @@ int main(int argc, char* argv[]) {
 // 	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/strat_normal25.vtp");
 
 	model.InitializeGRBFInterpolantObject(1);
+	model.surfe->SetRestrictedRange(true, 25, 180);
 	//model.SetInequalityDataFile("C:/Development/surfe_lib/data/conic_ie10.vtp");
-	model.SetInterfaceDataFile("D:/Development/surfe_lib/data/conic_itr10.vtp");
-	model.SetPlanarDataFile("D:/Development/surfe_lib/data/conic_normal10.vtp");
+	model.SetInterfaceDataFile("../data/Overturn_FieldData.vtp");
+	model.SetPlanarDataFile("../data/OverturnNormals.vtp");
 
 
 	//surfe.SetInterfaceDataFile("C:/Development/surfe_lib/data/disconnection_interface.csv");
@@ -72,7 +73,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	model.BuildRegularGrid(25,25);
+	model.BuildRegularGrid(10,45);
 	//surfe.BuildRegularGrid(-10, 200, -20, 75, -100, 20, 1);
 	//surfe.BuildRegularGrid(10,25);
 	//surfe.BuildRegularGrid(5,25);
@@ -83,8 +84,8 @@ int main(int argc, char* argv[]) {
 	//surfe.WriteVTKPlanarConstraints("C:/Research/SurfeOutput/a_test_planar_pts.vtp");
 // 	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/strat_r3.vtp");
 // 	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/strat_r3.vti");
-	model.WriteVTKIsoSurfaces("D:/Development/SurfeOutput/conic_r3.vtp");
-	model.WriteVTKEvaluationGrid("D:/Development/SurfeOutput/conic_r3.vti");
+	model.WriteVTKIsoSurfaces("G:/Development/SurfeOutput/overturnAngular180.vtp");
+	model.WriteVTKEvaluationGrid("G:/Development/SurfeOutput/overturnAngulargrid180.vti");
 
 	model.VisualizeVTKData();
 
