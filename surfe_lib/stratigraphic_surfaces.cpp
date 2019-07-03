@@ -350,21 +350,21 @@ void Stratigraphic_Surfaces::process_input_data() {
 
 	if (parameters.use_restricted_range) {
 		for (int j = 0; j < (int)constraints.planar.size(); j++) {
-			constraints.planar[j].setNormalBounds(
-				parameters.angular_uncertainty,
-				parameters.angular_uncertainty / 2);
-			// Need more ROBUST METHOD. Try large statistical sampling
-			// from von Mises spherical distribution
-			std::cout << " Planar[" << j << "] Bounds: " << std::endl;
-			std::cout << "	nx: " << constraints.planar[j].nx_lower_bound()
-				<< " <= " << constraints.planar[j].nx()
-				<< " <= " << constraints.planar[j].nx_upper_bound() << std::endl;
-			std::cout << "	ny: " << constraints.planar[j].ny_lower_bound()
-				<< " <= " << constraints.planar[j].ny()
-				<< " <= " << constraints.planar[j].ny_upper_bound() << std::endl;
-			std::cout << "	nz: " << constraints.planar[j].nz_lower_bound()
-				<< " <= " << constraints.planar[j].nz()
-				<< " <= " << constraints.planar[j].nz_upper_bound() << std::endl;
+// 			constraints.planar[j].setNormalBounds(
+// 				parameters.angular_uncertainty,
+// 				parameters.angular_uncertainty / 2);
+// 			// Need more ROBUST METHOD. Try large statistical sampling
+// 			// from von Mises spherical distribution
+// 			std::cout << " Planar[" << j << "] Bounds: " << std::endl;
+// 			std::cout << "	nx: " << constraints.planar[j].nx_lower_bound()
+// 				<< " <= " << constraints.planar[j].nx()
+// 				<< " <= " << constraints.planar[j].nx_upper_bound() << std::endl;
+// 			std::cout << "	ny: " << constraints.planar[j].ny_lower_bound()
+// 				<< " <= " << constraints.planar[j].ny()
+// 				<< " <= " << constraints.planar[j].ny_upper_bound() << std::endl;
+// 			std::cout << "	nz: " << constraints.planar[j].nz_lower_bound()
+// 				<< " <= " << constraints.planar[j].nz()
+// 				<< " <= " << constraints.planar[j].nz_upper_bound() << std::endl;
 		}
 		for (int j = 0; j < (int)constraints.tangent.size(); j++) {
 			constraints.tangent[j].setAngleBounds(parameters.angular_uncertainty);
@@ -450,20 +450,20 @@ bool Stratigraphic_Surfaces::get_inequality_values(VectorXd &b, VectorXd &r) {
 	int n_t = intern_params.n_tangent;
 
 	// planar data
-	for (int j = 0; j < n_p; j++) {
-		// x-component
-		b(n_ip + 3 * j + 0) = constraints.planar[j].nx_lower_bound();
-		r(n_ip + 3 * j + 0) = constraints.planar[j].nx_upper_bound() -
-			constraints.planar[j].nx_lower_bound();
-		// y-component
-		b(n_ip + 3 * j + 1) = constraints.planar[j].ny_lower_bound();
-		r(n_ip + 3 * j + 1) = constraints.planar[j].ny_upper_bound() -
-			constraints.planar[j].ny_lower_bound();
-		// z-component
-		b(n_ip + 3 * j + 2) = constraints.planar[j].nz_lower_bound();
-		r(n_ip + 3 * j + 2) = constraints.planar[j].nz_upper_bound() -
-			constraints.planar[j].nz_lower_bound();
-	}
+// 	for (int j = 0; j < n_p; j++) {
+// 		// x-component
+// 		b(n_ip + 3 * j + 0) = constraints.planar[j].nx_lower_bound();
+// 		r(n_ip + 3 * j + 0) = constraints.planar[j].nx_upper_bound() -
+// 			constraints.planar[j].nx_lower_bound();
+// 		// y-component
+// 		b(n_ip + 3 * j + 1) = constraints.planar[j].ny_lower_bound();
+// 		r(n_ip + 3 * j + 1) = constraints.planar[j].ny_upper_bound() -
+// 			constraints.planar[j].ny_lower_bound();
+// 		// z-component
+// 		b(n_ip + 3 * j + 2) = constraints.planar[j].nz_lower_bound();
+// 		r(n_ip + 3 * j + 2) = constraints.planar[j].nz_upper_bound() -
+// 			constraints.planar[j].nz_lower_bound();
+// 	}
 
 	// tangent data
 	for (int j = 0; j < n_t; j++) {

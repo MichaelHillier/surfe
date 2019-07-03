@@ -237,7 +237,7 @@ bool Math_methods::quadratic_solver_loqo(
 			fvalues = x; // strong duality gap
 			break;
 		}
-		if (dual_obj > primal_obj || sigfig < last_iterations_sig_fig)
+		if (dual_obj > primal_obj /*|| sigfig < last_iterations_sig_fig*/)
 			return false;
 
 		last_iterations_sig_fig = sigfig;

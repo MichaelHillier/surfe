@@ -126,6 +126,8 @@ public:
 	double level_upper_bound() const { return _level_bound[1]; }
 	void setResidual(const double &res) { _residual = res; }
 	void setLevel(const double &v) { _level = v; }
+	void setLowerBound(const double &lb) { _level_bound[0] = lb; }
+	void setUpperBound(const double &ub) { _level_bound[1] = ub; }
 	void setLevelBounds(const double &level_uncertainty) {
 		_level_bound[0] = -1.0 * level_uncertainty;
 		_level_bound[1] = level_uncertainty;
@@ -157,7 +159,6 @@ private:
 	int _polarity;
 	double _normal[3];
 	double _residual;
-	double _normal_bound[3][2];
 	bool _compute_strike_dip_polarity_from_normal();
 	bool _compute_normal_from_strike_dip_polarity();
 
@@ -194,13 +195,6 @@ public:
 	double nx() const { return _normal[0]; }
 	double ny() const { return _normal[1]; }
 	double nz() const { return _normal[2]; }
-	double nx_lower_bound() const { return _normal_bound[0][0]; }
-	double nx_upper_bound() const { return _normal_bound[0][1]; }
-	double ny_lower_bound() const { return _normal_bound[1][0]; }
-	double ny_upper_bound() const { return _normal_bound[1][1]; }
-	double nz_lower_bound() const { return _normal_bound[2][0]; }
-	double nz_upper_bound() const { return _normal_bound[2][1]; }
-	void setNormalBounds(const double &delta_strike, const double &delta_dip);
 	double residual() const { return _residual; }
 	void setResidual(const double &res) { _residual = res; }
 	void setNormal(const double &nx, const double &ny, const double &nz) {
@@ -208,6 +202,8 @@ public:
 		_normal[1] = ny;
 		_normal[2] = nz;
 	}
+	Point GenerateOutsideOffsetPoint();
+	Point GenerateInsideOffsetPoint();
 };
 
 class Tangent : public Point {
@@ -315,6 +311,8 @@ public:
 	std::vector<Interface> itrface;
 	std::vector<Planar> planar;
 	std::vector<Tangent> tangent;
+
+	std::vector<Planar> ref_planar;
 
 	/////////////
 	// Methods //

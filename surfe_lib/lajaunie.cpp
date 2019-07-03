@@ -222,7 +222,7 @@ void Lajaunie_Approach::process_input_data() {
 
 	if (parameters.use_restricted_range) {
 		for (auto &planar_pt : constraints.planar) {
-			planar_pt.setNormalBounds(parameters.angular_uncertainty, parameters.angular_uncertainty / 2);
+			// planar_pt.setNormalBounds(parameters.angular_uncertainty, parameters.angular_uncertainty / 2);
 			// Need more ROBUST METHOD. Try large statistical sampling
 			// from von Mises spherical distribution
 		}
@@ -649,15 +649,15 @@ bool Lajaunie_Approach::get_inequality_values(VectorXd &b, VectorXd &r) {
 
 	// planar data
 	for (int j = 0; j < n_p; j++) {
-		// x-component
-		b(n_ip + 3 * j + 0) = constraints.planar[j].nx_lower_bound();
-		r(n_ip + 3 * j + 0) = constraints.planar[j].nx_upper_bound() - constraints.planar[j].nx_lower_bound();
-		// y-component
-		b(n_ip + 3 * j + 1) = constraints.planar[j].ny_lower_bound();
-		r(n_ip + 3 * j + 1) = constraints.planar[j].ny_upper_bound() - constraints.planar[j].ny_lower_bound();
-		// z-component
-		b(n_ip + 3 * j + 2) = constraints.planar[j].nz_lower_bound();
-		r(n_ip + 3 * j + 2) = constraints.planar[j].nz_upper_bound() - constraints.planar[j].nz_lower_bound();
+// 		// x-component
+// 		b(n_ip + 3 * j + 0) = constraints.planar[j].nx_lower_bound();
+// 		r(n_ip + 3 * j + 0) = constraints.planar[j].nx_upper_bound() - constraints.planar[j].nx_lower_bound();
+// 		// y-component
+// 		b(n_ip + 3 * j + 1) = constraints.planar[j].ny_lower_bound();
+// 		r(n_ip + 3 * j + 1) = constraints.planar[j].ny_upper_bound() - constraints.planar[j].ny_lower_bound();
+// 		// z-component
+// 		b(n_ip + 3 * j + 2) = constraints.planar[j].nz_lower_bound();
+// 		r(n_ip + 3 * j + 2) = constraints.planar[j].nz_upper_bound() - constraints.planar[j].nz_lower_bound();
 	}
 
 	// tangent data

@@ -189,75 +189,26 @@ bool Planar::getStrikeVector(double(&vector)[3])
 	return true;
 }
 
-void Planar::setNormalBounds(const double &delta_strike, const double &delta_dip)
+Point Planar::GenerateOutsideOffsetPoint()
 {
-	// theta = strike
-	// phi = dip
-	// delta_strike = error on strike measurement
-	// delta_dip    = error on dip measurement
+	// using planar point's normal generate outside offset point
+	double x = Planar::x() + nx();
+	double y = Planar::y() + ny();
+	double z = Planar::z() + nz();
 
-	// given the errors on the strike/dip angles a matrix will be computed to
-	// hold
-	// the lower and upper bounds on the computed normal components: nx_lower <
-	// nx
-	// < nx_upper ny_lower < ny < ny_upper nz_lower < nz < nz_upper
+	Point pt(x, y, z);
+	return pt;
+}
 
-	double theta = _strike * D2R;
-	double phi = _dip * D2R;
-	double dtheta = delta_strike * D2R;
-	double dphi = delta_dip * D2R;
+Point Planar::GenerateInsideOffsetPoint()
+{
+	// using planar point's normal generate inside point
+	double x = Planar::x() - nx();
+	double y = Planar::y() - ny();
+	double z = Planar::z() - nz();
 
-	double eqn1x = cos(dtheta + theta) * sin(dphi + phi);
-	double eqn1y = -1.0 * sin(dtheta + theta) * sin(dphi + phi);
-	double eqn1z = cos(dphi + phi);
-
-	double eqn2x = -1.0 * cos(dtheta - theta) * sin(dphi - phi);
-	double eqn2y = -1.0 * sin(dtheta - theta) * sin(dphi - phi);
-	double eqn2z = cos(dphi - phi);
-
-	double eqn3x = -1.0 * cos(dtheta + theta) * sin(dphi - phi);
-	double eqn3y = sin(dtheta + theta) * sin(dphi - phi);
-	double eqn3z = cos(dphi - phi);
-
-	double eqn4x = cos(dtheta - theta) * sin(dphi + phi);
-	double eqn4y = sin(dtheta - theta) * sin(dphi + phi);
-	double eqn4z = cos(dphi + phi);
-
-	double nx_lower = eqn1x;
-	if (eqn2x < nx_lower) nx_lower = eqn2x;
-	if (eqn3x < nx_lower) nx_lower = eqn3x;
-	if (eqn4x < nx_lower) nx_lower = eqn4x;
-	double ny_lower = eqn1y;
-	if (eqn2y < ny_lower) ny_lower = eqn2y;
-	if (eqn3y < ny_lower) ny_lower = eqn3y;
-	if (eqn4y < ny_lower) ny_lower = eqn4y;
-	double nz_lower = eqn1z;
-	if (eqn2z < nz_lower) nz_lower = eqn2z;
-	if (eqn3z < nz_lower) nz_lower = eqn3z;
-	if (eqn4z < nz_lower) nz_lower = eqn4z;
-
-	double nx_upper = eqn1x;
-	if (eqn2x > nx_upper) nx_upper = eqn2x;
-	if (eqn3x > nx_upper) nx_upper = eqn3x;
-	if (eqn4x > nx_upper) nx_upper = eqn4x;
-	double ny_upper = eqn1y;
-	if (eqn2y > ny_upper) ny_upper = eqn2y;
-	if (eqn3y > ny_upper) ny_upper = eqn3y;
-	if (eqn4y > ny_upper) ny_upper = eqn4y;
-	double nz_upper = eqn1z;
-	if (eqn2z > nz_upper) nz_upper = eqn2z;
-	if (eqn3z > nz_upper) nz_upper = eqn3z;
-	if (eqn4z > nz_upper) nz_upper = eqn4z;
-
-	double l_lower = sqrt(nx_lower * nx_lower + ny_lower * ny_lower + nz_lower * nz_lower);  // length of lower bound vector
-	double l_upper = sqrt(nx_upper * nx_upper + ny_upper * ny_upper + nz_upper * nz_upper);  // length of upper bound vector
-
-	_normal_bound[0][0] = nx_lower;
-	_normal_bound[0][1] = nx_upper;
-	_normal_bound[1][0] = ny_lower;
-	_normal_bound[1][1] = ny_upper;
-	_normal_bound[2][0] = nz_lower;
-	_normal_bound[2][1] = nz_upper;
+	Point pt(x, y, z);
+	return pt;
 }
 
 std::vector<Point> convert_constraints_to_points(const Constraints& constraints)

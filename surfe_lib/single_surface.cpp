@@ -224,17 +224,54 @@ void Single_Surface::setup_system_solver() {
 			solver = qpc;
 
 			bool converged = false;
-			double residual_threshold = 0.0000001; //TODO change
+			double residual_threshold = 0.0001; //TODO change
 			long max_iter = 300;
 
 			long iter = 0;
 			std::vector<double> residuals;
 			std::vector<std::vector<double>> norm_variation;
 			std::vector<std::vector<double>> angle_variation;
+			std::vector<std::vector<double>> scalar_field_interface_variation;
 			norm_variation.resize(iter + 1);
 			angle_variation.resize(iter + 1);
+			scalar_field_interface_variation.resize(iter + 1);
+			double d = parameters.interface_uncertainty;
 			while (!converged){
 				double avg_residual = 0.0;
+				for (auto& interface_pt : constraints.itrface) {
+					Point pt(interface_pt.x(), interface_pt.y(), interface_pt.z());
+					eval_vector_interpolant_at_point(pt);
+					double gradient[3] = { pt.nx_interp(), pt.ny_interp(), pt.nz_interp() };
+					// normalize
+					double norm = sqrt(gradient[0] * gradient[0] + gradient[1] * gradient[1] + gradient[2] * gradient[2]);
+					double ngradient[3] = { gradient[0] / norm,gradient[1] / norm,gradient[2] / norm };
+					// generate offset points
+					Point outside(pt.x() + d * ngradient[0], pt.y() + d * ngradient[1], pt.z() + d * ngradient[2]);
+					Point inside(pt.x() - d * ngradient[0], pt.y() - d * ngradient[1], pt.z() - d * ngradient[2]);
+					double dist_o = distance_btw_pts(pt, outside);
+					double dist_i = distance_btw_pts(pt, inside);
+					eval_scalar_interpolant_at_point(pt);
+					double s = pt.scalar_field();
+					eval_scalar_interpolant_at_point(outside);
+					double s_o = outside.scalar_field();
+					eval_scalar_interpolant_at_point(inside);
+					double s_i = inside.scalar_field();
+					double d_u = s_o - s;
+					double d_l = s - s_i;
+// 					double lb = -d_l * parameters.interface_uncertainty;
+// 					double ub = d_u * parameters.interface_uncertainty;
+					double lb = -d_l;
+					double ub = d_u;
+					double avg = (d_u + d_l) / 2.0;
+					scalar_field_interface_variation[iter].push_back(avg);
+					scalar_field_interface_variation[iter].push_back(lb);
+					scalar_field_interface_variation[iter].push_back(ub);
+					interface_pt.setLowerBound(lb);
+					interface_pt.setUpperBound(ub);
+					double old_correction = parameters.interface_uncertainty * norm;
+					int stop = 0;
+					//interface_pt.setLevelBounds(parameters.interface_uncertainty / norm);
+				}
 				for (auto& tangent_pt : constraints.tangent) {
 					Point pt(tangent_pt.x(), tangent_pt.y(), tangent_pt.z());
 					double vector[3] = { tangent_pt.tx(),tangent_pt.ty(),tangent_pt.tz() };
@@ -271,6 +308,7 @@ void Single_Surface::setup_system_solver() {
 				iter++;
 				norm_variation.resize(iter + 1);
 				angle_variation.resize(iter + 1);
+				scalar_field_interface_variation.resize(iter + 1);
 			}
 			VectorXd temp(residuals.size());
 			for (int j = 0; j < residuals.size(); j++)
@@ -287,19 +325,19 @@ void Single_Surface::setup_system_solver() {
 					angle_matrix(j, k) = angle_variation[j][k];
 				}
 			}
-			std::ofstream file1("G:/residualVEC.txt");
+			std::ofstream file1("D:/residualVEC.txt");
 			if (file1)
 			{
 				file1 << temp << "\n";
 				file1.close();
 			}
-			std::ofstream file2("G:/normMAT.txt");
+			std::ofstream file2("D:/normMAT.txt");
 			if (file2)
 			{
 				file2 <<norm_matrix << "\n";
 				file2.close();
 			}
-			std::ofstream file3("G:/angleMAT.txt");
+			std::ofstream file3("D:/angleMAT.txt");
 			if (file3)
 			{
 				file3 << angle_matrix << "\n";
@@ -881,18 +919,18 @@ bool Single_Surface::get_inequality_values(VectorXd &inequality_values) {
 				-constraints.itrface[j].level_upper_bound();  // -Ax >= -upper_bound
 		}
 		for (int j = 0; j < n_p; j++) {
-			inequality_values(n_ie + 2 * n_i + 6 * j + 0) =
-				constraints.planar[j].nx_lower_bound();  //  Ax >=  lower_bound
-			inequality_values(n_ie + 2 * n_i + 6 * j + 1) =
-				-constraints.planar[j].nx_upper_bound();  // -Ax >= -upper_bound
-			inequality_values(n_ie + 2 * n_i + 6 * j + 2) =
-				constraints.planar[j].ny_lower_bound();  // ...
-			inequality_values(n_ie + 2 * n_i + 6 * j + 3) =
-				-constraints.planar[j].ny_upper_bound();
-			inequality_values(n_ie + 2 * n_i + 6 * j + 4) =
-				constraints.planar[j].nz_lower_bound();
-			inequality_values(n_ie + 2 * n_i + 6 * j + 5) =
-				-constraints.planar[j].nz_upper_bound();
+// 			inequality_values(n_ie + 2 * n_i + 6 * j + 0) =
+// 				constraints.planar[j].nx_lower_bound();  //  Ax >=  lower_bound
+// 			inequality_values(n_ie + 2 * n_i + 6 * j + 1) =
+// 				-constraints.planar[j].nx_upper_bound();  // -Ax >= -upper_bound
+// 			inequality_values(n_ie + 2 * n_i + 6 * j + 2) =
+// 				constraints.planar[j].ny_lower_bound();  // ...
+// 			inequality_values(n_ie + 2 * n_i + 6 * j + 3) =
+// 				-constraints.planar[j].ny_upper_bound();
+// 			inequality_values(n_ie + 2 * n_i + 6 * j + 4) =
+// 				constraints.planar[j].nz_lower_bound();
+// 			inequality_values(n_ie + 2 * n_i + 6 * j + 5) =
+// 				-constraints.planar[j].nz_upper_bound();
 		}
 		for (int j = 0; j < n_t; j++) {
 			inequality_values(2 * n_i + 6 * n_p + 2 * j + 0) =
@@ -952,20 +990,20 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 
 	// planar data
 	cout << "	For planar data..." << endl;
-	for (int j = 0; j < n_p; j++) {
-		// x-component
-		b(n_ie + n_i + 3 * j + 0) = constraints.planar[j].nx_lower_bound();
-		r(n_ie + n_i + 3 * j + 0) = constraints.planar[j].nx_upper_bound() - constraints.planar[j].nx_lower_bound();
-		// y-component
-		b(n_ie + n_i + 3 * j + 1) = constraints.planar[j].ny_lower_bound();
-		r(n_ie + n_i + 3 * j + 1) = constraints.planar[j].ny_upper_bound() - constraints.planar[j].ny_lower_bound();
-		// z-component
-		b(n_ie + n_i + 3 * j + 2) = constraints.planar[j].nz_lower_bound();
-		r(n_ie + n_i + 3 * j + 2) = constraints.planar[j].nz_upper_bound() - constraints.planar[j].nz_lower_bound();
-		cout << "	b(" << n_ie + n_i + 3 * j + 0 << ") = " << b(n_ie + n_i + 3 * j + 0) << " r(" << n_ie + n_i + 3 * j + 0 << ") = " << r(n_ie + n_i + 3 * j + 0) << endl;
-		cout << "	b(" << n_ie + n_i + 3 * j + 1 << ") = " << b(n_ie + n_i + 3 * j + 1) << " r(" << n_ie + n_i + 3 * j + 1 << ") = " << r(n_ie + n_i + 3 * j + 1) << endl;
-		cout << "	b(" << n_ie + n_i + 3 * j + 2 << ") = " << b(n_ie + n_i + 3 * j + 2) << " r(" << n_ie + n_i + 3 * j + 2 << ") = " << r(n_ie + n_i + 3 * j + 2) << endl;
-	}
+// 	for (int j = 0; j < n_p; j++) {
+// 		// x-component
+// 		b(n_ie + n_i + 3 * j + 0) = constraints.planar[j].nx_lower_bound();
+// 		r(n_ie + n_i + 3 * j + 0) = constraints.planar[j].nx_upper_bound() - constraints.planar[j].nx_lower_bound();
+// 		// y-component
+// 		b(n_ie + n_i + 3 * j + 1) = constraints.planar[j].ny_lower_bound();
+// 		r(n_ie + n_i + 3 * j + 1) = constraints.planar[j].ny_upper_bound() - constraints.planar[j].ny_lower_bound();
+// 		// z-component
+// 		b(n_ie + n_i + 3 * j + 2) = constraints.planar[j].nz_lower_bound();
+// 		r(n_ie + n_i + 3 * j + 2) = constraints.planar[j].nz_upper_bound() - constraints.planar[j].nz_lower_bound();
+// 		cout << "	b(" << n_ie + n_i + 3 * j + 0 << ") = " << b(n_ie + n_i + 3 * j + 0) << " r(" << n_ie + n_i + 3 * j + 0 << ") = " << r(n_ie + n_i + 3 * j + 0) << endl;
+// 		cout << "	b(" << n_ie + n_i + 3 * j + 1 << ") = " << b(n_ie + n_i + 3 * j + 1) << " r(" << n_ie + n_i + 3 * j + 1 << ") = " << r(n_ie + n_i + 3 * j + 1) << endl;
+// 		cout << "	b(" << n_ie + n_i + 3 * j + 2 << ") = " << b(n_ie + n_i + 3 * j + 2) << " r(" << n_ie + n_i + 3 * j + 2 << ") = " << r(n_ie + n_i + 3 * j + 2) << endl;
+// 	}
 
 	// tangent data
 	cout << "	For tangent data..." << endl;
@@ -1037,6 +1075,7 @@ void Single_Surface::process_input_data() {
 			constraints.tangent.push_back(tangent_pt);
 		}
 		// delete planar constraints from interpolant
+		constraints.ref_planar = constraints.planar; // copy this data
 		constraints.planar.clear();
 	}
 }

@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 // 	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/strat_normal25.vtp");
 
 	model.InitializeGRBFInterpolantObject(1);
-	model.surfe->SetRestrictedRange(true, 25, 180);
+	model.surfe->SetRestrictedRange(true, 50, 25);
 	//model.SetInequalityDataFile("C:/Development/surfe_lib/data/conic_ie10.vtp");
 	model.SetInterfaceDataFile("../data/Overturn_FieldData.vtp");
 	model.SetPlanarDataFile("../data/OverturnNormals.vtp");
@@ -84,8 +84,8 @@ int main(int argc, char* argv[]) {
 	//surfe.WriteVTKPlanarConstraints("C:/Research/SurfeOutput/a_test_planar_pts.vtp");
 // 	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/strat_r3.vtp");
 // 	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/strat_r3.vti");
-	model.WriteVTKIsoSurfaces("G:/Development/SurfeOutput/overturnAngular180.vtp");
-	model.WriteVTKEvaluationGrid("G:/Development/SurfeOutput/overturnAngulargrid180.vti");
+	model.WriteVTKIsoSurfaces("D:/Development/SurfeOutput/overturnAngular25_50.vtp");
+	model.WriteVTKEvaluationGrid("D:/Development/SurfeOutput/overturnAngulargrid25_50.vti");
 
 	model.VisualizeVTKData();
 
