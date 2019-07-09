@@ -48,8 +48,8 @@ bool Linear_LU_decomposition::solve() {
 	if (_constraint_values.rows() != _interpolation_matrix.rows()) return false;
 	weights = _interpolation_matrix.partialPivLu().solve(_constraint_values);
 #ifndef NDEBUG
-// 	EigenSolver<MatrixXd> EigenMatrix(_interpolation_matrix);
-// 	std::cout << "Eigen values for this matrix: " << std::endl << EigenMatrix.eigenvalues() << std::endl;
+ 	EigenSolver<MatrixXd> EigenMatrix(_interpolation_matrix);
+ 	std::cout << "Eigen values for this matrix: " << std::endl << EigenMatrix.eigenvalues() << std::endl;
 	double condition_num = 1.0/_interpolation_matrix.partialPivLu().rcond();
 	std::cout << "Condition number of interpolation matrix is:" << condition_num << std::endl;
 #endif

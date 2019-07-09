@@ -95,6 +95,12 @@ public:
 		const VectorXd &b,
 		const VectorXd &r,
 		VectorXd &fvalues);
+	static bool quadratic_solver_loqo2(
+		const MatrixXd &H,
+		const MatrixXd &A,
+		const VectorXd &b,
+		const VectorXd &r,
+		VectorXd &fvalues);
 };
 
 

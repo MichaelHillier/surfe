@@ -180,8 +180,11 @@ void Single_Surface::get_method_parameters() {
 	// polynomial parameters ...
 	if (intern_params.n_inequality != 0 ||
 		parameters.use_restricted_range != 0) {
-		intern_params.poly_term = false;
-		intern_params.modified_basis = true;
+		//intern_params.poly_term = false;
+		//intern_params.modified_basis = true;
+
+		intern_params.poly_term = true;
+		intern_params.modified_basis = false;
 		intern_params.problem_type = Parameter_Types::Quadratic;
 	}
 	else {
@@ -206,22 +209,44 @@ void Single_Surface::setup_system_solver() {
 	int n_c = intern_params.n_constraints;
 	if (intern_params.problem_type == Parameter_Types::Quadratic) {
 		if (intern_params.restricted_range) {
-			VectorXd b(n_c);
-			VectorXd r(n_c);
+			int n_p = intern_params.n_poly_terms;
+			VectorXd b(n_c + n_p);
+			VectorXd r(n_c + n_p);
 			get_inequality_values(b, r);
 
-			MatrixXd interpolation_matrix(n_c, n_c);
+			MatrixXd interpolation_matrix(n_c + n_p, n_c + n_p);
 			if (!get_interpolation_matrix(interpolation_matrix))
 				throw GRBF_Exceptions::error_computing_interpolation_matrix;
 
-			MatrixXd inequality_matrix(n_c, n_c);
+// 			MatrixXd poly_matrix(4, n_c);
+// 			if (!_get_polynomial_matrix_block(poly_matrix))
+// 				throw GRBF_Exceptions::error_computing_interpolation_matrix;
+
+			MatrixXd inequality_matrix(n_c + n_p, n_c + n_p);
 			inequality_matrix = interpolation_matrix;
+
+// 			MatrixXd inequality_matrix(n_c + 4, n_c);
+// 			for (int j = 0; j < n_c; j++) {
+// 				for (int k = 0; k < n_c; k++) {
+// 					inequality_matrix(j, k) = interpolation_matrix(j, k);
+// 				}
+// 			}
+// 			for (int j = 0; j < 4; j++) {
+// 				for (int k = 0; k < n_c; k++) {
+// 					inequality_matrix(n_c + j, k) = poly_matrix(j,k);
+// 				}
+// 			}
+
+			std::cout<<" Interpolation matrix:\n"<< interpolation_matrix << std::endl;
+
+			//std::cout << " inequality matrix:\n" << inequality_matrix << std::endl;
 
 			Quadratic_Predictor_Corrector_LOQO *qpc =
 				new Quadratic_Predictor_Corrector_LOQO(interpolation_matrix, inequality_matrix, b, r);
 			if (!qpc->solve())
 				throw GRBF_Exceptions::loqo_quadratic_solver_failure;
 			solver = qpc;
+			return;
 
 			bool converged = false;
 			double residual_threshold = 0.0001; //TODO change
@@ -229,48 +254,35 @@ void Single_Surface::setup_system_solver() {
 
 			long iter = 0;
 			std::vector<double> residuals;
+			std::vector<double> avgNorm;
 			std::vector<std::vector<double>> norm_variation;
 			std::vector<std::vector<double>> angle_variation;
 			std::vector<std::vector<double>> scalar_field_interface_variation;
+			std::vector<std::vector<double>> distance_interface_variation;
 			norm_variation.resize(iter + 1);
 			angle_variation.resize(iter + 1);
 			scalar_field_interface_variation.resize(iter + 1);
+			distance_interface_variation.resize(iter + 1);
 			double d = parameters.interface_uncertainty;
 			while (!converged){
 				double avg_residual = 0.0;
+				double avg_norm = 0.0;
+				double max_dist2iter = 0.0;
+				double max_angle = 0.0;
 				for (auto& interface_pt : constraints.itrface) {
 					Point pt(interface_pt.x(), interface_pt.y(), interface_pt.z());
 					eval_vector_interpolant_at_point(pt);
 					double gradient[3] = { pt.nx_interp(), pt.ny_interp(), pt.nz_interp() };
 					// normalize
 					double norm = sqrt(gradient[0] * gradient[0] + gradient[1] * gradient[1] + gradient[2] * gradient[2]);
-					double ngradient[3] = { gradient[0] / norm,gradient[1] / norm,gradient[2] / norm };
-					// generate offset points
-					Point outside(pt.x() + d * ngradient[0], pt.y() + d * ngradient[1], pt.z() + d * ngradient[2]);
-					Point inside(pt.x() - d * ngradient[0], pt.y() - d * ngradient[1], pt.z() - d * ngradient[2]);
-					double dist_o = distance_btw_pts(pt, outside);
-					double dist_i = distance_btw_pts(pt, inside);
 					eval_scalar_interpolant_at_point(pt);
 					double s = pt.scalar_field();
-					eval_scalar_interpolant_at_point(outside);
-					double s_o = outside.scalar_field();
-					eval_scalar_interpolant_at_point(inside);
-					double s_i = inside.scalar_field();
-					double d_u = s_o - s;
-					double d_l = s - s_i;
-// 					double lb = -d_l * parameters.interface_uncertainty;
-// 					double ub = d_u * parameters.interface_uncertainty;
-					double lb = -d_l;
-					double ub = d_u;
-					double avg = (d_u + d_l) / 2.0;
-					scalar_field_interface_variation[iter].push_back(avg);
-					scalar_field_interface_variation[iter].push_back(lb);
-					scalar_field_interface_variation[iter].push_back(ub);
-					interface_pt.setLowerBound(lb);
-					interface_pt.setUpperBound(ub);
-					double old_correction = parameters.interface_uncertainty * norm;
-					int stop = 0;
-					//interface_pt.setLevelBounds(parameters.interface_uncertainty / norm);
+					scalar_field_interface_variation[iter].push_back(s);
+					double dist = s / norm;
+					if (dist > max_dist2iter) max_dist2iter = dist;
+					distance_interface_variation[iter].emplace_back(dist);
+					avg_norm += norm;
+					interface_pt.setLevelBounds(parameters.interface_uncertainty*norm);
 				}
 				for (auto& tangent_pt : constraints.tangent) {
 					Point pt(tangent_pt.x(), tangent_pt.y(), tangent_pt.z());
@@ -280,17 +292,25 @@ void Single_Surface::setup_system_solver() {
 					double gradient[3] = { pt.nx_interp(), pt.ny_interp(), pt.nz_interp() };
 					double norm = sqrt(gradient[0] * gradient[0] + gradient[1] * gradient[1] + gradient[2] * gradient[2]);
 					double angle = acos((gradient[0]*vector[0] + gradient[1] * vector[1] + gradient[2] * vector[2]) / (vnorm*norm))*R2D;
+					if (angle > max_angle) max_angle = angle;
 					avg_residual += fabs(norm - tangent_pt.GradientNormEstimate());
+					avg_norm += norm;
 					norm_variation[iter].push_back(norm);
 					angle_variation[iter].push_back(angle);
 					// update gradient norm estimate, and constraints
 					tangent_pt.setLowerAngularConstraintBound(0.0, norm);
 					tangent_pt.setUpperAngularConstraintBound(parameters.angular_uncertainty, norm);
 				}
+				avg_norm /= (constraints.itrface.size() + constraints.tangent.size());
 				avg_residual /= constraints.tangent.size();
 				residuals.push_back(avg_residual);
+				avgNorm.push_back(avg_norm);
 				// check for convergence
-				if (avg_residual < residual_threshold || iter >= max_iter) {
+				if (max_dist2iter < parameters.interface_uncertainty && max_angle < parameters.angular_uncertainty) {
+					converged = true;
+					break;
+				}
+				if (/*avg_residual < residual_threshold || */iter >= max_iter) {
 					converged = true;
 					break;
 				}
@@ -309,8 +329,9 @@ void Single_Surface::setup_system_solver() {
 				norm_variation.resize(iter + 1);
 				angle_variation.resize(iter + 1);
 				scalar_field_interface_variation.resize(iter + 1);
+				distance_interface_variation.resize(iter + 1);
 			}
-			VectorXd temp(residuals.size());
+ 			VectorXd temp(residuals.size());
 			for (int j = 0; j < residuals.size(); j++)
 				temp(j) = residuals[j];
 			MatrixXd norm_matrix(norm_variation.size(), norm_variation[0].size());
@@ -948,6 +969,8 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 	int n_p = intern_params.n_planar;
 	int n_t = intern_params.n_tangent;
 
+	int n_poly = intern_params.n_poly_terms;
+
 	// REF:
 	// minimize f = 1/2 xT H x
 	// s.t. b <= Ax <= b + r
@@ -1012,6 +1035,12 @@ bool Single_Surface::get_inequality_values(VectorXd &b, VectorXd &r) {
 		r(n_ie + n_i + 3 * n_p + j) =
 			constraints.tangent[j].angular_constraint_upper_bound() - constraints.tangent[j].angular_constraint_lower_bound();
 		cout << "	b(" << n_ie + n_i + 3 * n_p + j << ") = " << b(n_ie + n_i + 3 * n_p + j) << " r(" << n_ie + n_i + 3 * n_p + j << ") = " << r(n_ie + n_i + 3 * n_p + j) << endl;
+	}
+
+	for (int j = 0; j < n_poly; j++) {
+		b(n_ie + n_i + 3 * n_p + n_t + j) = 0.0;
+		r(n_ie + n_i + 3 * n_p + n_t + j) = 0.0;
+		cout << "	b(" << n_ie + n_i + 3 * n_p + n_t + j << ") = " << b(n_ie + n_i + 3 * n_p + n_t + j) << " r(" << n_ie + n_i + 3 * n_p + n_t + j << ") = " << r(n_ie + n_i + 3 * n_p + n_t + j) << endl;
 	}
 
 	return true;

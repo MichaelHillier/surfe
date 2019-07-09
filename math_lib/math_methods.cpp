@@ -94,6 +94,13 @@ bool Math_methods::quadratic_solver_loqo(
 
 	// double max_ele = H.maxCoeff();
 
+	MatrixXd H2(n - 4, n - 4);
+	for (int j = 0; j < H2.rows(); j++) {
+		for (int k = 0; k < H2.rows(); k++) {
+			H2(j, k) = A(j, k);
+		}
+	}
+
 	MatrixXd KKT(2 * n, 2 * n);
 	VectorXd c(n);
 	c.setZero();
@@ -217,6 +224,8 @@ bool Math_methods::quadratic_solver_loqo(
 		// << std::endl;
 
 		double primal_obj = 0.5 * x.transpose() * H * x;
+		VectorXd xx = x.head(n - 4);
+		double primal_obj2 = 0.5 * xx.transpose() * H2* xx;
 		double dual_obj = b.dot(y) - 0.5 * x.transpose() * H * x - r.dot(q);
 
 		double sigfig = std::max(-std::log10(abs(primal_obj - dual_obj) / (abs(primal_obj) + 1.0)), 0.0);
@@ -225,7 +234,7 @@ bool Math_methods::quadratic_solver_loqo(
 		dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
 
 		std::cout << " Iteration[" << iter << "]" << std::endl;
-		std::cout << "	Primal_obj = " << primal_obj << std::endl;
+		std::cout << "	Primal_obj = " << primal_obj << " Primal2 obj = "<< primal_obj2<< std::endl;
 		std::cout << "	Dual_obj = " << dual_obj << std::endl;
 		std::cout << "	Significant figures = " << sigfig << std::endl;
 		std::cout << "	Primal Infeasibility = " << primal_infeasibility << std::endl;
@@ -364,8 +373,9 @@ bool Math_methods::quadratic_solver_loqo(
 		dV = dv.asDiagonal();
 		dT = dt.asDiagonal();
 		dP = dp.asDiagonal();
+
 		gamma_z = mu * G.inverse() * ev - z - G.inverse() * dG * dz;
-		gamma_w = mu * V.inverse() * ev - w - V.inverse() * dV * dw;
+		gamma_w = mu * V.inverse() * ev- w - V.inverse() * dV * dw;
 		gamma_s = mu * T.inverse() * ev - s - T.inverse() * dT * ds;
 		gamma_q = mu * P.inverse() * ev - q - P.inverse() * dP * dq;
 		tauh = tau - gamma_s;
@@ -416,6 +426,278 @@ bool Math_methods::quadratic_solver_loqo(
 		// 		DebugMatrixStepV.col(9) = dq;
 		// 		std::cout<<" Current Step Variable matrix (after corrector step)
 		// (dx,dy,dg,dz,dt,ds,dv,dw,dp,dq):\n"<< DebugMatrixStepV << std::endl;
+
+		// compute step lengths for primal and dual systems
+		alpha_p = _find_positivity_step(dg, g, dw, w, dt, t, dp, p);
+		alpha_d = _find_positivity_step(dz, z, dv, v, ds, s, dq, q);
+
+		// std::cout<<" alpha_p= "<<alpha_p<<" alpha_d= "<<alpha_d<<std::endl;
+
+		// update solution
+		x += (1 / alpha_p) * dx;
+		g += (1 / alpha_p) * dg;
+		w += (1 / alpha_p) * dw;
+		t += (1 / alpha_p) * dt;
+		p += (1 / alpha_p) * dp;
+
+		y += (1 / alpha_d) * dy;
+		z += (1 / alpha_d) * dz;
+		v += (1 / alpha_d) * dv;
+		s += (1 / alpha_d) * ds;
+		q += (1 / alpha_d) * dq;
+	}
+
+	return true;
+}
+
+bool Math_methods::quadratic_solver_loqo2(
+	const MatrixXd &H, const MatrixXd &A,
+	const VectorXd &b, const VectorXd &r,
+	VectorXd &fvalues)
+{
+	// minimize f = 1/2 xT H x
+	// s.t. b <= Ax <= b + r
+	int n = (int)H.rows();
+	int m = (int)A.rows();
+
+	MatrixXd KKT(n + m, n + m);
+	VectorXd c(n);
+	c.setZero();
+	VectorXd rhs(n + m);
+	rhs << c, b;
+
+	KKT << -(H + MatrixXd::Identity(n, n)), A.transpose(), A, MatrixXd::Identity(m, m);
+
+	VectorXd soln(n + m);
+	soln = KKT.partialPivLu().solve(rhs);
+
+	VectorXd x(n);
+	x = soln.head(n);
+	VectorXd y(m);
+	y = soln.tail(m);
+	VectorXd g(n);
+	VectorXd z(n);
+	VectorXd t(n);
+	VectorXd s(n);
+	VectorXd v(m);
+	VectorXd w(m);
+	VectorXd p(m);
+	VectorXd q(m);
+	for (int j = 0; j < n; j++) {
+		g(j) = std::max(abs(x(j)), 100.0);
+		z(j) = g(j);
+		t(j) = g(j);
+		s(j) = g(j);
+	}
+	for (int j = 0; j < m; j++) {
+		v(j) = std::max(abs(y(j)), 100.0);
+		w(j) = v(j);
+		p(j) = std::max(abs(r(j) - w(j)), 100.0);
+		q(j) = v(j);
+	}
+
+	double mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q)) / (2 * m + 2 * n);
+
+	// construct G Z, V W, S T, and P Q diagonal matrices
+	MatrixXd G(n, n);
+	MatrixXd Z(n, n);
+	MatrixXd V(m, m);
+	MatrixXd W(m, m);
+	MatrixXd S(n, n);
+	MatrixXd T(n, n);
+	MatrixXd P(m, m);
+	MatrixXd Q(m, m);
+	// below matrices are computed after predictor step
+	MatrixXd dG(n, n);
+	MatrixXd dV(m, m);
+	MatrixXd dT(n, n);
+	MatrixXd dP(m, m);
+
+	// helper variables
+	VectorXd rho(m);
+	VectorXd nu(m);
+	VectorXd alpha(m);
+	VectorXd sigma(n);
+	VectorXd tau(m);
+	VectorXd beta(m);
+	VectorXd gamma_z(n);
+	VectorXd gamma_w(m);
+	VectorXd gamma_s(n);
+	VectorXd gamma_q(m);
+	VectorXd tauh(m);
+	VectorXd betah(m);
+	VectorXd alphah(m);
+	VectorXd nuh(m);
+	VectorXd ev_n(n);
+	ev_n.setOnes();
+	VectorXd ev_m(m);
+	ev_m.setOnes();
+
+	// step directions
+	VectorXd dx(n);
+	VectorXd dy(m);
+	VectorXd dg(n);
+	VectorXd dz(n);
+	VectorXd dt(n);
+	VectorXd ds(n);
+	VectorXd dv(m);
+	VectorXd dw(m);
+	VectorXd dp(m);
+	VectorXd dq(m);
+
+	bool converged = false;
+	double last_iterations_sig_fig = 0.0;
+	double primal_infeasibility = sqrt(rho.dot(rho) + tau.dot(tau) + alpha.dot(alpha) + nu.dot(nu)) / (sqrt(b.dot(b)) + 1.0);
+	double dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
+	double last_primal_infeasibility = primal_infeasibility;
+	double last_dual_infeasibility = dual_infeasibilitiy;
+	double last_primal = 0;
+	double last_dual = 0;
+	VectorXd iter_minus_one_x = x;
+	int iter = 0;
+	while (!converged) {
+		iter++;
+
+		double primal_obj = 0.5 * x.transpose() * H * x;
+		double dual_obj = b.dot(y) - 0.5 * x.transpose() * H * x - r.dot(q);
+
+		double sigfig = std::max(-std::log10(abs(primal_obj - dual_obj) / (abs(primal_obj) + 1.0)), 0.0);
+
+		primal_infeasibility = sqrt(rho.dot(rho) + tau.dot(tau) + alpha.dot(alpha) + nu.dot(nu)) / (sqrt(b.dot(b)) + 1.0);
+		dual_infeasibilitiy = sqrt(sigma.dot(sigma) + beta.dot(beta));
+
+		std::cout << " Iteration[" << iter << "]" << std::endl;
+		std::cout << "	Primal_obj = " << primal_obj << std::endl;
+		std::cout << "	Dual_obj = " << dual_obj << std::endl;
+		std::cout << "	Significant figures = " << sigfig << std::endl;
+		std::cout << "	Primal Infeasibility = " << primal_infeasibility << std::endl;
+		std::cout << "	Dual Infeasibility = " << dual_infeasibilitiy << std::endl;
+
+		if (sigfig > 6)
+		{
+			converged = true;
+			fvalues = x; // strong duality gap
+			break;
+		}
+		if (dual_obj > primal_obj /*|| sigfig < last_iterations_sig_fig*/)
+			return false;
+
+		last_iterations_sig_fig = sigfig;
+		last_primal_infeasibility = primal_infeasibility;
+		last_dual_infeasibility = dual_infeasibilitiy;
+		last_primal = primal_obj;
+		last_dual = dual_obj;
+		iter_minus_one_x = x;
+
+		G = g.asDiagonal();
+		Z = z.asDiagonal();
+		V = v.asDiagonal();
+		W = w.asDiagonal();
+		S = s.asDiagonal();
+		T = t.asDiagonal();
+		P = p.asDiagonal();
+		Q = q.asDiagonal();
+
+		MatrixXd D(n, n);
+		D = (S.inverse() * T + G * Z.inverse()).inverse();
+		MatrixXd E(m, m);
+		E = (V * W.inverse() + P.inverse() * Q).inverse();
+
+		rho = b - A * x + w;
+		nu = -x + g - t;
+		alpha = r - w - p;
+		sigma = -A.transpose() * y - z + H * x;
+		tau = -z - s;
+		beta = y + q - v;
+		// predictor nonlinearities
+		gamma_z = -z;
+		gamma_w = -w;
+		gamma_s = -s;
+		gamma_q = -q;
+
+		tauh = tau - gamma_s;
+		betah = beta - V * W.inverse() * gamma_w;
+		alphah = alpha - P * Q.inverse() * gamma_q;
+		nuh = nu + G * Z.inverse() * gamma_z;
+
+		rhs << (sigma - D * (nuh + S.inverse() * T * tauh)), (rho - E * (betah - P.inverse() * Q * alphah));
+
+		KKT << -(H + D), A.transpose(), A, E;
+
+		soln = KKT.partialPivLu().solve(rhs);
+
+		if (!soln.allFinite())
+		{
+			std::cout << " Numerical issue with solving linear system..." << std::endl;
+			return false;
+		}
+
+		// get "delta" variables for predictor system ...
+		dx = soln.head(n);
+		dy = soln.tail(m);
+
+		dw = -E * (betah - P.inverse() * Q * alphah + dy);
+		dt = -D * S.inverse() * T * (G * Z.inverse() * tauh - nuh + dx);
+		dz = G.inverse() * Z * (nuh - dx - dt);
+		dq = P.inverse() * Q * (dw - alphah);
+		dv = V * W.inverse() * (gamma_w - dw);
+		ds = gamma_s - S * T.inverse() * dt;
+		dp = P * Q.inverse() * (gamma_q - dq);
+		dg = G * Z.inverse() * (gamma_z - dz);
+
+		// compute step lengths for primal and dual systems
+		double alpha_p = _find_positivity_step(dg, g, dw, w, dt, t, dp, p);
+		double alpha_d = _find_positivity_step(dz, z, dv, v, ds, s, dq, q);
+		// std::cout<<" predictor alpha_p = "<<alpha_p <<" alpha_d= "<<alpha_d <<
+		// std::endl;
+		// alpha_pd will be the maximum of the two above values
+		double alpha_pd = std::max(alpha_p, alpha_d);
+		// std::cout<<" alpha_pd = "<<alpha_pd << std::endl;
+		double fraction = pow(((alpha_pd - 1.0) / (alpha_pd + 10.0)), 2);
+
+		// update mu
+		mu = (z.dot(g) + v.dot(w) + s.dot(t) + p.dot(q)) * (fraction) / (4 * n);
+		std::cout << "	mu (predictor) = " << mu << " fraction = " << fraction << std::endl;
+
+		// update rhs variables rho,nu,alpha,sigma,tau,beta,gamma's
+		// first compute dG,dV,dT,and dP matrices from dg,dv,dt, and dp vectors
+		// above
+		dG = dg.asDiagonal();
+		dV = dv.asDiagonal();
+		dT = dt.asDiagonal();
+		dP = dp.asDiagonal();
+
+		gamma_z = mu * G.inverse() * ev_n - z - G.inverse() * dG * dz;
+		gamma_w = mu * V.inverse() * ev_m - w - V.inverse() * dV * dw;
+		gamma_s = mu * T.inverse() * ev_n - s - T.inverse() * dT * ds;
+		gamma_q = mu * P.inverse() * ev_m - q - P.inverse() * dP * dq;
+		tauh = tau - gamma_s;
+		betah = beta - V * W.inverse() * gamma_w;
+		alphah = alpha - P * Q.inverse() * gamma_q;
+		nuh = nu + G * Z.inverse() * gamma_z;
+
+		rhs << (sigma - D * (nuh + S.inverse() * T * tauh)),
+			(rho - E * (betah - P.inverse() * Q * alphah));
+
+		soln = KKT.partialPivLu().solve(rhs);
+
+		if (!soln.allFinite()) {
+			std::cout << " Numerical issue with solving linear system..." << std::endl;
+			return false;
+		}
+
+		// get "delta" variables for corrector system ...
+		dx = soln.head(n);
+		dy = soln.tail(m);
+
+		dw = -E * (betah - P.inverse() * Q * alphah + dy);
+		dt = -D * S.inverse() * T * (G * Z.inverse() * tauh - nuh + dx);
+		dz = G.inverse() * Z * (nuh - dx - dt);
+		dq = P.inverse() * Q * (dw - alphah);
+		dv = V * W.inverse() * (gamma_w - dw);
+		ds = gamma_s - S * T.inverse() * dt;
+		dp = P * Q.inverse() * (gamma_q - dq);
+		dg = G * Z.inverse() * (gamma_z - dz);
 
 		// compute step lengths for primal and dual systems
 		alpha_p = _find_positivity_step(dg, g, dw, w, dt, t, dp, p);
