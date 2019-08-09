@@ -418,7 +418,7 @@ void Surfe_API::SetGlobalAnisotropy(const bool &g_anisotropy)
 
 void Surfe_API::SetRestrictedRange(const bool &use_restricted_range, const double &interface_uncertainty /*= 0*/, const double &angular_uncertainty /*= 0*/)
 {
-	method_->parameters.use_regression_smoothing = use_restricted_range;
+	method_->parameters.use_restricted_range = use_restricted_range;
 	method_->parameters.interface_uncertainty = interface_uncertainty;
 	method_->parameters.angular_uncertainty = angular_uncertainty;
 
