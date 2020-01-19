@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 // 	surfe.SetPlanarDataFile("C:/Development/surfe_lib/data/strat_normal25.vtp");
 
 	model.InitializeGRBFInterpolantObject(1);
-	model.surfe->SetRestrictedRange(true, 50, 45);
+	model.surfe->SetRestrictedRange(true, 50, 10);
 //   	model.surfe->SetRBFKernel("MaternC4");
 //   	model.surfe->SetRBFShapeParameter(0.005);
 //  	model.surfe->SetPolynomialOrder(1);
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
 	//surfe.WriteVTKPlanarConstraints("C:/Research/SurfeOutput/a_test_planar_pts.vtp");
 // 	surfe.WriteVTKIsoSurfaces("C:/Research/SurfeOutput/strat_r3.vtp");
 // 	surfe.WriteVTKEvaluationGrid("C:/Research/SurfeOutput/strat_r3.vti");
-	model.WriteVTKIsoSurfaces("D:/Development/SurfeOutput/overturnR3_50_45_no_normcorr.vtp");
+	model.WriteVTKIsoSurfaces("D:/Development/SurfeOutput/overturnR3_50_10.vtp");
 	//model.WriteVTKEvaluationGrid("D:/Development/SurfeOutput/overturnAngulargrid25_50.vti");
 
 	model.VisualizeVTKData();

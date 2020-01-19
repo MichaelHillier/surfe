@@ -246,11 +246,10 @@ void Single_Surface::setup_system_solver() {
 			if (!qpc->solve())
 				throw GRBF_Exceptions::loqo_quadratic_solver_failure;
 			solver = qpc;
-			return;
 
 			bool converged = false;
 			double residual_threshold = 0.0001; //TODO change
-			long max_iter = 300;
+			long max_iter = 75;
 
 			long iter = 0;
 			std::vector<double> residuals;
@@ -278,11 +277,13 @@ void Single_Surface::setup_system_solver() {
 					eval_scalar_interpolant_at_point(pt);
 					double s = pt.scalar_field();
 					scalar_field_interface_variation[iter].push_back(s);
-					double dist = s / norm;
+					double dist = fabs(s / norm);
+					// double dist = fabs(s * norm);
 					if (dist > max_dist2iter) max_dist2iter = dist;
 					distance_interface_variation[iter].emplace_back(dist);
 					avg_norm += norm;
 					interface_pt.setLevelBounds(parameters.interface_uncertainty*norm);
+					//interface_pt.setLevelBounds(parameters.interface_uncertainty/norm);
 				}
 				for (auto& tangent_pt : constraints.tangent) {
 					Point pt(tangent_pt.x(), tangent_pt.y(), tangent_pt.z());
@@ -306,11 +307,11 @@ void Single_Surface::setup_system_solver() {
 				residuals.push_back(avg_residual);
 				avgNorm.push_back(avg_norm);
 				// check for convergence
-				if (max_dist2iter < parameters.interface_uncertainty && max_angle < parameters.angular_uncertainty) {
-					converged = true;
-					break;
-				}
-				if (/*avg_residual < residual_threshold || */iter >= max_iter) {
+// 				if (max_dist2iter < parameters.interface_uncertainty && max_angle < parameters.angular_uncertainty) {
+// 					converged = true;
+// 					break;
+// 				}
+				if (avg_residual < residual_threshold || iter >= max_iter) {
 					converged = true;
 					break;
 				}
