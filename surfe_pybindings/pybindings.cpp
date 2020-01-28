@@ -47,7 +47,7 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("GetDataBoundsAndResolution", &Surfe_API::GetDataBoundsAndResolution)
 		.def("GetInterfaceReferencePoints", &Surfe_API::GetInterfaceReferencePoints)
 		.def("GetInterfaceConstraints", &Surfe_API::GetInterfaceConstraints)
-		.def("SetInterfaceConstraints", &Surfe_API::SetInequalityConstraints)
+		.def("SetInterfaceConstraints", &Surfe_API::GetInterfaceConstraints)
 		.def("GetPlanarConstraints", &Surfe_API::GetPlanarConstraints)
 		.def("SetPlanarConstraints", &Surfe_API::SetPlanarConstraints)
 		.def("GetTangentConstraints", &Surfe_API::GetTangentConstraints)
