@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <time.h>
-
+#include <vector>
 GRBF_Modelling_Methods* Surfe_API::get_method_from_parameters(const Parameters& params)
 {
 	if (params.model_type == Parameter_Types::Single_surface)
@@ -441,7 +441,37 @@ double Surfe_API::EvaluateInterpolantAtPoint(const double &x, const double &y, c
 	else
 		throw GRBF_Exceptions::missing_interpolant;
 }
+std::vector<double> Surfe_API::EvaluateInterpolantAtPoints(const MatrixXd &locations)
+{
+	// if so, erase
+	if (have_interpolant_)
+	{
+		int n = locations.rows();
+		std::vector<double> interpolant;
+		if (n != 0 && locations.cols() == 3)
+		{
+			for (int j = 0; j < n; j++)
+			{
+				// convert x,y,z to Point
+				Point pt(locations(j,0),locations(j,1),locations(j,2));
+				method_->eval_scalar_interpolant_at_point(pt);
 
+				// evaluate scalar field at point
+				interpolant.push_back(pt.scalar_field());
+			}
+		
+			return interpolant;
+		}
+		else
+			throw GRBF_Exceptions::array_has_incorrect_dimensions;
+		
+		
+	}
+	else
+		throw GRBF_Exceptions::missing_interpolant;
+
+	
+}
 Vector3d Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const double &y, const double &z)
 {
 	if (have_interpolant_)

@@ -45,6 +45,15 @@
 #include <algorithm>
 #include <functional>
 
+// DBL_MAX/DBL_MIN didn't work with gcc 7 on ubuntu so manually defining
+// if it doesnt exist
+#ifndef DBL_MAX
+#define DBL_MAX     __DBL_MAX__
+#endif
+#ifndef DBL_MIN
+#define DBL_MIN     __DBL_MIN__
+#endif
+
 double Constraints::compute_inequality_avg_nn_distance()
 {
 	std::vector<Point> pts(inequality.begin(), inequality.end());
