@@ -12,10 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build CMake
-      uses: ashutoshvarma/action-cmake-build@v1
-      with:
-        # Build directory where build files will be generated
-        build-dir: ${{ runner.workspace }}/build
+      - name: print
+        run: ls -l
+#     - uses: actions/checkout@v2
+#     - name: Build CMake
+#       uses: ashutoshvarma/action-cmake-build@v1
+#       with:
+#         # Build directory where build files will be generated
+#         build-dir: ${{ runner.workspace }}/build
 
