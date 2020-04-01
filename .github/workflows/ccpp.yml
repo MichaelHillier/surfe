@@ -1,0 +1,21 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build CMake
+      uses: ashutoshvarma/action-cmake-build@v1
+      with:
+        # Build directory where build files will be generated
+        build-dir: ${{ runner.workspace }}/build
+
