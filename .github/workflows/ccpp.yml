@@ -1,24 +1,17 @@
 name: C/C++ CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push]
 
 jobs:
-  build:
-
+  ubuntu-build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-
-      - name: print
-        run: ls -l
-#     - name: Build CMake
-#       uses: ashutoshvarma/action-cmake-build@v1
-#       with:
-#         # Build directory where build files will be generated
-#         build-dir: ${{ runner.workspace }}/build
+    - name: Checkout
+      uses: actions/checkout@v2.0.0
+    - name: Build project
+      uses: nicledomaS/cmake_build_action@v1
+      with:
+        submodule_update: ON
+        run_tests: ON
+        unit_test_build: -Dtest=ON
 
