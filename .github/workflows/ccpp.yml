@@ -12,9 +12,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
+
       - name: print
         run: ls -l
-#     - uses: actions/checkout@v2
 #     - name: Build CMake
 #       uses: ashutoshvarma/action-cmake-build@v1
 #       with:
