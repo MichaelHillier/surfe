@@ -20,14 +20,13 @@ jobs:
   build-windows:
       runs-on: windows-latest
       steps:
-        - name: Checkout surfe
-          uses: actions/checkout@v2.0.0
-#         - name: Checkout eigen
-#           uses: actions/checkout#v2.0.0
-#           with:
-#             repository: eigenteam/eigen-git-mirror
-#             ref: 3.3.7
-#             path: eigen
+#         - name: Checkout surfe
+#           uses: actions/checkout@v2.0.0
+        - name: Checkout eigen
+          uses: actions/checkout#v2.0.0
+          with:
+            repository: eigenteam/eigen-git-mirror
+            path: eigen
       
 # #       - name: Compile & Test
 #         run: |
