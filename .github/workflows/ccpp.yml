@@ -22,7 +22,7 @@ jobs:
       steps:
         - name: Checkout surfe
           uses: actions/checkout@v2.0.0
-        - Name: Checkout eigen
+        - name: Checkout eigen
           uses: actions/checkout#v2.0.0
           with:
             repository: eigenteam/eigen-git-mirror
