@@ -25,7 +25,7 @@ jobs:
         - name: Checkout eigen
           uses: actions/checkout#v2.0.0
           with:
-            repository: eigenteam/eigen-git-mirror
+            repository: https://github.com/eigenteam/eigen-git-mirror.git
             path: eigen
       
 # #       - name: Compile & Test
