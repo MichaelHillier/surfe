@@ -21,11 +21,11 @@ jobs:
       runs-on: windows-latest
       steps:
       - uses: actions/checkout@v2.0.0
-      - name: Download eigen 
-        run: |
-          github:
-            - path: eigenteam/eigen-git-mirror
-              ref: 3.3.7
+      - uses: actions/checkout#v2.0.0
+        with:
+          repository:  eigenteam/eigen-git-mirror
+          ref: 3.3.7
+      
 #       - name: Compile & Test
 #         run: |
 #           mkdir -p build
