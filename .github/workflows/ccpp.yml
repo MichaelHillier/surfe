@@ -14,7 +14,7 @@ jobs:
         submodule_update: ON
         run_tests: ON
         unit_test_build: -Dtest=ON
-        cmake_args: -DEigen3_DIR=eigen-git-mirror/cmake/  
+        cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror/Eigen
 
 #   build-windows:
 #       runs-on: windows-latest
