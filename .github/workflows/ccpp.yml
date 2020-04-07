@@ -15,6 +15,19 @@ jobs:
         run_tests: ON
         unit_test_build: -Dtest=ON
         cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout surfe
+        uses: actions/checkout@v2.0.0
+      - name: Build project
+        uses: nicledomaS/cmake_build_action@v1
+        with:
+          submodule_update: ON
+          run_tests: ON
+          unit_test_build: -Dtest=ON
+          cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
+
 
 #   build-windows:
 #       runs-on: windows-latest
