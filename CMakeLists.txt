@@ -15,6 +15,7 @@ endif()
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
+#include_directories(${PROJECT_SOURCE_DIR}/eigen-git-mirror/Eigen)#add_subdirectory(eigen-git-mirror)
 
 # Setup math_lib
 FILE(GLOB MATH_LIB_HEADERS "math_lib/*.h")
