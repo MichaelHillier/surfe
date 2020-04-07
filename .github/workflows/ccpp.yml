@@ -3,32 +3,30 @@ name: C/C++ CI
 on: [push]
 
 jobs:
-#   ubuntu-build:
-#     runs-on: ubuntu-latest
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@v2.0.0
-#     - name: Eigen install
-#       run: sudo apt-get install libeigen3-dev
-#     - name: Build project
-#       uses: nicledomaS/cmake_build_action@v1
-#       with:
-#         submodule_update: ON
-#         run_tests: ON
-#         unit_test_build: -Dtest=ON
+  ubuntu-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.0.0
+    - name: Build project
+      uses: nicledomaS/cmake_build_action@v1
+      with:
+        submodule_update: ON
+        run_tests: ON
+        unit_test_build: -Dtest=ON
 
-  build-windows:
-      runs-on: windows-latest
-      steps:
-#         - name: Checkout surfe
-#           uses: actions/checkout@v2.0.0
-        - name: Checkout eigen
-          uses: actions/checkout#v2.0.0
-          with:
-            repository: https://github.com/eigenteam/eigen-git-mirror.git
-            path: eigen
+#   build-windows:
+#       runs-on: windows-latest
+#       steps:
+# #         - name: Checkout surfe
+# #           uses: actions/checkout@v2.0.0
+#         - name: Checkout eigen
+#           uses: actions/checkout#v2.0.0
+#           with:
+#             repository: https://github.com/eigenteam/eigen-git-mirror.git
+#             path: eigen
       
-# #       - name: Compile & Test
+# # #       - name: Compile & Test
 #         run: |
 #           mkdir -p build
 #           cd build
