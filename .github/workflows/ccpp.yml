@@ -58,7 +58,6 @@ jobs:
           unzip -f 3.6/build.zip
           unzip -f 3.7/build.zip
           unzip -f 3.8/build.zip
-          cd build
           ls
       - name: debugging
         run: |
