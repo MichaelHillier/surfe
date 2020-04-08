@@ -58,7 +58,9 @@ jobs:
           cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
       - name: compress build
         run: | 
+          ls
           Compress-Archive build/*.dll build.zip
+          ls
         shell: pwsh
       - name: upload artifacts
         uses: actions/upload-artifact@v1
