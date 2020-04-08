@@ -55,14 +55,9 @@ jobs:
           name: "3.8"
       - name: Unzip
         run: |
-          unzip -f 3.6/build.zip
-          unzip -f 3.7/build.zip
-          unzip -f 3.8/build.zip
-          ls
-      - name: debugging
-        run: |
-          cd 3.6
-          ls
+          unzip -o 3.6/build.zip
+          unzip -o 3.7/build.zip
+          unzip -o 3.8/build.zip
       - name: Development build pre-release
         uses: "marvinpinto/action-automatic-releases@latest"
         with: 
