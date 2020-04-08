@@ -84,9 +84,9 @@ jobs:
           name: "win_3.8"
       - name: Unzip
         run: |
-          unzip -o 3.6/build.zip
-          unzip -o 3.7/build.zip
-          unzip -o 3.8/build.zip
+          unzip -o win_3.6/build.zip
+          unzip -o win_3.7/build.zip
+          unzip -o win_3.8/build.zip
       - name: Development build pre-release
         uses: "marvinpinto/action-automatic-releases@latest"
         with: 
@@ -95,7 +95,7 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            build/*.so
+            build/*
           id: "automatic_releases"  
 
 
