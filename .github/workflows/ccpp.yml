@@ -3,82 +3,99 @@ name: C/C++ CI
 on: [push]
 
 jobs:
-  ubuntu-build:
-    runs-on: ubuntu-latest
+#   ubuntu-build:
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         python: ['3.6', '3.7', '3.8']
+#     steps:
+#     - name: Checkout
+#       uses: actions/checkout@v2.0.0
+#     - name: setup python
+#       uses: actions/setup-python@v1
+#       with:
+#         python-version: ${{ matrix.python }}
+# #         activate-environment: loop
+ 
+#     - name: Build project
+#       uses: nicledomaS/cmake_build_action@v1
+#       with:
+#         submodule_update: ON
+#         run_tests: ON
+#         unit_test_build: -Dtest=ON
+#         cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
+#     - name: print
+#       run: |
+#         cd build
+#         ls -l
+#     - name: compress build
+#       run: | 
+#         zip -r build.zip build/*.so
+#     - name: upload artifacts
+#       uses: actions/upload-artifact@v1
+#       with:
+#         name: ${{ matrix.python }}
+#         path: build.zip
+    
+  build-windows:
+    runs-on: windows-latest
     strategy:
       matrix:
         python: ['3.6', '3.7', '3.8']
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2.0.0
-    - name: setup python
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python }}
-#         activate-environment: loop
- 
-    - name: Build project
-      uses: nicledomaS/cmake_build_action@v1
-      with:
-        submodule_update: ON
-        run_tests: ON
-        unit_test_build: -Dtest=ON
-        cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
-    - name: print
-      run: |
-        cd build
-        ls -l
-    - name: compress build
-      run: | 
-        zip -r build.zip build/*.so
-    - name: upload artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: ${{ matrix.python }}
-        path: build.zip
-
-  uploadrelease:
-    needs: ubuntu-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifact 3.6
-        uses: actions/download-artifact@v1
+      - name: Checkout surfe
+        uses: actions/checkout@v2.0.0
+      - name: setup python
+        uses: actions/setup-python@v1
         with:
-          name: "3.6"
-      - name: Download artifact 3.7
-        uses: actions/download-artifact@v1
+          python-version: ${{ matrix.python }}
+      - name: Build project
+        uses: nicledomaS/cmake_build_action@v1
         with:
-          name: "3.7"
-      - name: Download artifact 3.8
-        uses: actions/download-artifact@v1
+          submodule_update: ON
+          run_tests: ON
+          unit_test_build: -Dtest=ON
+          cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
+      - name: compress build
+        run: | 
+          Compress-Archive build/*.dll build.zip
+        shell: pwsh
+      - name: upload artifacts
+        uses: actions/upload-artifact@v1
         with:
-          name: "3.8"
-      - name: Unzip
-        run: |
-          unzip -o 3.6/build.zip
-          unzip -o 3.7/build.zip
-          unzip -o 3.8/build.zip
-      - name: Development build pre-release
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with: 
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
-          files: |
-            build/*.so
-          id: "automatic_releases"  
-#   build-windows:
-#     runs-on: windows-latest
+          name: 'win://${{ matrix.python }}'
+          path: build.zip
+#   uploadrelease:
+#     needs: ubuntu-build
+#     runs-on: ubuntu-latest
 #     steps:
-#       - name: Checkout surfe
-#         uses: actions/checkout@v2.0.0
-#       - name: Build project
-#         uses: nicledomaS/cmake_build_action@v1
+#       - name: Download artifact 3.6
+#         uses: actions/download-artifact@v1
 #         with:
-#           submodule_update: ON
-#           run_tests: ON
-#           unit_test_build: -Dtest=ON
-#           cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
+#           name: "3.6"
+#       - name: Download artifact 3.7
+#         uses: actions/download-artifact@v1
+#         with:
+#           name: "3.7"
+#       - name: Download artifact 3.8
+#         uses: actions/download-artifact@v1
+#         with:
+#           name: "3.8"
+#       - name: Unzip
+#         run: |
+#           unzip -o 3.6/build.zip
+#           unzip -o 3.7/build.zip
+#           unzip -o 3.8/build.zip
+#       - name: Development build pre-release
+#         uses: "marvinpinto/action-automatic-releases@latest"
+#         with: 
+#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#           automatic_release_tag: "latest"
+#           prerelease: true
+#           title: "Development Build"
+#           files: |
+#             build/*.so
+#           id: "automatic_releases"  
+
 
 
