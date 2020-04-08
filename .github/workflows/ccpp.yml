@@ -16,30 +16,28 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 #         activate-environment: loop
-    - name: print python
+ 
+    - name: Build project
+      uses: nicledomaS/cmake_build_action@v1
+      with:
+        submodule_update: ON
+        run_tests: ON
+        unit_test_build: -Dtest=ON
+        cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
+    - name: print
       run: |
-        python --version 
-#     - name: Build project
-#       uses: nicledomaS/cmake_build_action@v1
-#       with:
-#         submodule_update: ON
-#         run_tests: ON
-#         unit_test_build: -Dtest=ON
-#         cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
-#     - name: print
-#       run: |
-#         cd build
-#         ls -l
-#     - name: Development build pre-release
-#       uses: "marvinpinto/action-automatic-releases@latest"
-#       with: 
-#         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#         automatic_release_tag: "latest"
-#         prerelease: true
-#         title: "Development Build"
-#         files: |
-#           build/*.so
-#         id: "automatic_releases"  
+        cd build
+        ls -l
+    - name: Development build pre-release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with: 
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: true
+        title: "Development Build"
+        files: |
+          build/*.so
+        id: "automatic_releases"  
 #   build-windows:
 #     runs-on: windows-latest
 #     steps:
