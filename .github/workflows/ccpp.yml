@@ -32,7 +32,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.python }}
-        path: build/surfepy.*.so
+        path: build/surfepy*.so
 #     - name: Development build pre-release
 #       uses: "marvinpinto/action-automatic-releases@latest"
 #       with: 
