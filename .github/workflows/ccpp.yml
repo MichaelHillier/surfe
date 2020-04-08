@@ -11,14 +11,14 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2.0.0
-    - name: setup miniconda
-      uses: goanpeca/action-setup-conda@v1
+    - name: setup python
+      uses: actions/setup-python
       with:
         python-version: ${{ matrix.python }}
 #         activate-environment: loop
     - name: print python
       run: |
-        conda info 
+        python --version 
 #     - name: Build project
 #       uses: nicledomaS/cmake_build_action@v1
 #       with:
