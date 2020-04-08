@@ -55,18 +55,20 @@ jobs:
           name: "3.8"
       - name: Unzip
         run: |
-              ls -l 
-    
-#     - name: Development build pre-release
-#       uses: "marvinpinto/action-automatic-releases@latest"
-#       with: 
-#         repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#         automatic_release_tag: "latest"
-#         prerelease: true
-#         title: "Development Build"
-#         files: |
-#           build/*.so
-#         id: "automatic_releases"  
+          unzip 3.6/build.zip
+          unzip 3.7/build.zip
+          unzip 3.8/build.zip
+          
+      - name: Development build pre-release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with: 
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            build/*.so
+          id: "automatic_releases"  
 #   build-windows:
 #     runs-on: windows-latest
 #     steps:
