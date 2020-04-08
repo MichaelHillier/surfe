@@ -38,6 +38,7 @@ jobs:
         path: build.zip
 
   uploadrelease:
+    needs: ubuntu-build
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact 3.6
