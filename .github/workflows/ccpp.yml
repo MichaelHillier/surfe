@@ -17,7 +17,7 @@ jobs:
         python-version: ${{ matrix.python }}
     - name: print python
       run: |
-        python --version 
+        python3 --version 
 #     - name: Build project
 #       uses: nicledomaS/cmake_build_action@v1
 #       with:
