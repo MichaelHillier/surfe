@@ -19,20 +19,16 @@ jobs:
       run: |
         cd build
         ls -l
-    - name: Create release
-      uses: actions/create-release@latest
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Development build pre-release
+      uses: "marvinpinto/action-automatic-releases@latest"
       with: 
-        tag_name: ${{ github.ref }} 
-        release_name: Release ${{ github.ref }}
-        draft: true
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
         prerelease: true
-    - name: Upload wheel
-      uses: AButler/upload-release-assets@v2.0
-      with:
-            files: 'build/*.so'
-            repo-token: ${{ secrets.GITHUB_TOKEN }}
+        title: "Development Build"
+        files: |
+          build/*.so
+        id: "automatic_releases"  
 #   build-windows:
 #     runs-on: windows-latest
 #     steps:
