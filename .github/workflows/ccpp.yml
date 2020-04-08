@@ -55,9 +55,9 @@ jobs:
           name: "3.8"
       - name: Unzip
         run: |
-          unzip 3.6/build.zip
-          unzip 3.7/build.zip
-          unzip 3.8/build.zip
+          unzip -f 3.6/build.zip
+          unzip -f 3.7/build.zip
+          unzip -f 3.8/build.zip
           cd build
           ls
       - name: debugging
