@@ -63,7 +63,7 @@ public:
 	double EvaluateInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	);
-	std::vector<double> EvaluateInterpolantAtPoints(
+	VectorXd EvaluateInterpolantAtPoints(
 		const MatrixXd &locations
 	);
 	Vector3d EvaluateVectorInterpolantAtPoint(

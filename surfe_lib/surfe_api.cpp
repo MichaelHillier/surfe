@@ -441,23 +441,26 @@ double Surfe_API::EvaluateInterpolantAtPoint(const double &x, const double &y, c
 	else
 		throw GRBF_Exceptions::missing_interpolant;
 }
-std::vector<double> Surfe_API::EvaluateInterpolantAtPoints(const MatrixXd &locations)
+VectorXd Surfe_API::EvaluateInterpolantAtPoints(const MatrixXd &locations)
 {
 	// if so, erase
 	if (have_interpolant_)
 	{
 		int n = locations.rows();
-		std::vector<double> interpolant;
+		VectorXd interpolant(n);
 		if (n != 0 && locations.cols() == 3)
 		{
+#pragma omp parallel for
 			for (int j = 0; j < n; j++)
 			{
 				// convert x,y,z to Point
 				Point pt(locations(j,0),locations(j,1),locations(j,2));
+
+				// evaluate scalar field at this point
 				method_->eval_scalar_interpolant_at_point(pt);
 
-				// evaluate scalar field at point
-				interpolant.push_back(pt.scalar_field());
+				// set scalar field value for this point in vector
+				interpolant(j) = pt.scalar_field();
 			}
 		
 			return interpolant;
