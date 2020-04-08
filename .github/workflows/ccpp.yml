@@ -19,6 +19,20 @@ jobs:
       run: |
         cd build
         ls -l
+    - name: Create release
+      uses: actions/create-release@latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with: 
+        tag_name: ${{ github.ref }} 
+        release_name: Release ${{ github.ref }}
+        draft: true
+        prerelease: true
+    - name: Upload wheel
+      uses: AButler/upload-release-assets@v2.0
+      with:
+            files: 'build/*.so'
+            repo-token: ${{ secrets.GITHUB_TOKEN }}
 #   build-windows:
 #     runs-on: windows-latest
 #     steps:
