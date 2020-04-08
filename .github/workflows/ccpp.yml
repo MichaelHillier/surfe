@@ -30,7 +30,7 @@ jobs:
         ls -l
     - name: compress build
       run: | 
-        zip build.zip build
+        zip -r build.zip build
     - name: upload artifacts
       uses: actions/upload-artifact@v1
       with:
