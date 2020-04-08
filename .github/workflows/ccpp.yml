@@ -28,11 +28,14 @@ jobs:
       run: |
         cd build
         ls -l
+    - name: compress build
+      run: | 
+        zip build.zip build
     - name: upload artifacts
       uses: actions/upload-artifact@v1
       with:
         name: ${{ matrix.python }}
-        path: build/surfepy*.so
+        path: build.zip
 #     - name: Development build pre-release
 #       uses: "marvinpinto/action-automatic-releases@latest"
 #       with: 
