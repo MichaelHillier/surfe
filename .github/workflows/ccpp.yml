@@ -15,10 +15,10 @@ jobs:
       uses: goanpeca/action-setup-conda@v1
       with:
         python-version: ${{ matrix.python }}
-        activate-environment: loop
+#         activate-environment: loop
     - name: print python
       run: |
-        python --version 
+        conda info 
 #     - name: Build project
 #       uses: nicledomaS/cmake_build_action@v1
 #       with:
