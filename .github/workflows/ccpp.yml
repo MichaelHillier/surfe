@@ -56,17 +56,10 @@ jobs:
           run_tests: ON
           unit_test_build: -Dtest=ON
           cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
-      - name: debug
-        run: | 
-         cd build/x64/Release
-         ls
-        shell: pwsh
 
       - name: compress build
         run: | 
-          ls
-          Compress-Archive build/*.dll build.zip
-          ls
+          Compress-Archive build\Release* build.zip
         shell: pwsh
       - name: upload artifacts
         uses: actions/upload-artifact@v1
