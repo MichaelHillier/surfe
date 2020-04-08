@@ -58,7 +58,8 @@ jobs:
           unzip 3.6/build.zip
           unzip 3.7/build.zip
           unzip 3.8/build.zip
-          
+          cd build
+          ls
       - name: Development build pre-release
         uses: "marvinpinto/action-automatic-releases@latest"
         with: 
