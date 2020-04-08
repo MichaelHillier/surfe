@@ -58,7 +58,7 @@ jobs:
           cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
       - name: debug
         run: | 
-         cd build/x64
+         cd build/x64/Release
          ls
         shell: pwsh
 
