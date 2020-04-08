@@ -63,39 +63,39 @@ jobs:
       - name: upload artifacts
         uses: actions/upload-artifact@v1
         with:
-          name: 'win://${{ matrix.python }}'
+          name: 'win_${{ matrix.python }}'
           path: build.zip
-#   uploadrelease:
-#     needs: ubuntu-build
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Download artifact 3.6
-#         uses: actions/download-artifact@v1
-#         with:
-#           name: "3.6"
-#       - name: Download artifact 3.7
-#         uses: actions/download-artifact@v1
-#         with:
-#           name: "3.7"
-#       - name: Download artifact 3.8
-#         uses: actions/download-artifact@v1
-#         with:
-#           name: "3.8"
-#       - name: Unzip
-#         run: |
-#           unzip -o 3.6/build.zip
-#           unzip -o 3.7/build.zip
-#           unzip -o 3.8/build.zip
-#       - name: Development build pre-release
-#         uses: "marvinpinto/action-automatic-releases@latest"
-#         with: 
-#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#           automatic_release_tag: "latest"
-#           prerelease: true
-#           title: "Development Build"
-#           files: |
-#             build/*.so
-#           id: "automatic_releases"  
+  uploadrelease:
+    needs: build-windows #ubuntu-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact 3.6
+        uses: actions/download-artifact@v1
+        with:
+          name: "win_3.6"
+      - name: Download artifact 3.7
+        uses: actions/download-artifact@v1
+        with:
+          name: "win_3.7"
+      - name: Download artifact 3.8
+        uses: actions/download-artifact@v1
+        with:
+          name: "win_3.8"
+      - name: Unzip
+        run: |
+          unzip -o 3.6/build.zip
+          unzip -o 3.7/build.zip
+          unzip -o 3.8/build.zip
+      - name: Development build pre-release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with: 
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            build/*.so
+          id: "automatic_releases"  
 
 
 
