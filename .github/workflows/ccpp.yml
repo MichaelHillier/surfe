@@ -18,7 +18,7 @@ jobs:
         activate-environment: loop
     - name: print python
       run: |
-        python3 --version 
+        python --version 
 #     - name: Build project
 #       uses: nicledomaS/cmake_build_action@v1
 #       with:
