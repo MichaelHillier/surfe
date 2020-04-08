@@ -15,6 +15,7 @@ jobs:
       uses: goanpeca/action-setup-conda@v1
       with:
         python-version: ${{ matrix.python }}
+        activate-environment: loop
     - name: print python
       run: |
         python3 --version 
