@@ -17,6 +17,7 @@ jobs:
         cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
     - name: print
       run: |
+        cd build
         ls -l
 #   build-windows:
 #     runs-on: windows-latest
