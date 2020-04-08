@@ -60,6 +60,10 @@ jobs:
           unzip 3.8/build.zip
           cd build
           ls
+      - name: debugging
+        run: |
+          cd 3.6
+          ls
       - name: Development build pre-release
         uses: "marvinpinto/action-automatic-releases@latest"
         with: 
