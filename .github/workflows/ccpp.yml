@@ -56,6 +56,12 @@ jobs:
           run_tests: ON
           unit_test_build: -Dtest=ON
           cmake_args: -DEIGEN3_INCLUDE_DIR=eigen-git-mirror
+      - name: debug
+        run: | 
+         cd build
+         ls
+        shell: pwsh
+
       - name: compress build
         run: | 
           ls
