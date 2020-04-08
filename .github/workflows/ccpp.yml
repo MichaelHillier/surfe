@@ -59,7 +59,7 @@ jobs:
 
       - name: compress build
         run: | 
-          Compress-Archive build\Release* build.zip
+          Compress-Archive build\Release\* build.zip
         shell: pwsh
       - name: upload artifacts
         uses: actions/upload-artifact@v1
