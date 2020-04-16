@@ -45,6 +45,8 @@ PYBIND11_MODULE(surfepy, m) {
 		.def("EvaluateInterpolantAtPoint", &Surfe_API::EvaluateInterpolantAtPoint)
 		.def("EvaluateInterpolantAtPoints", &Surfe_API::EvaluateInterpolantAtPoints)
 		.def("EvaluateVectorInterpolantAtPoint", &Surfe_API::EvaluateVectorInterpolantAtPoint)
+		.def("EvaluateVectorInterpolantAtPoints", &Surfe_API::EvaluateVectorInterpolantAtPoints)
+
 		.def("GetDataBoundsAndResolution", &Surfe_API::GetDataBoundsAndResolution)
 		.def("GetInterfaceReferencePoints", &Surfe_API::GetInterfaceReferencePoints)
 		.def("GetInterfaceConstraints", &Surfe_API::GetInterfaceConstraints)

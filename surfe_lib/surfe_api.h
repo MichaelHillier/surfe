@@ -69,7 +69,9 @@ public:
 	Vector3d EvaluateVectorInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	);
-
+	MatrixXd EvaluateVectorInterpolantAtPoints(
+		const MatrixXd &locations
+	);
 	SpatialParameters GetDataBoundsAndResolution();
 
 	// Array of interface reference points: 1 per interface. 
