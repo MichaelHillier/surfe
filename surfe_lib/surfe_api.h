@@ -9,7 +9,7 @@
 #include <single_surface.h>
 #include <stratigraphic_surfaces.h>
 #include <vector_field.h>
-
+#include <vector>
 class SURFE_LIB_EXPORT Surfe_API {
 private:
 	// members
@@ -63,10 +63,15 @@ public:
 	double EvaluateInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	);
+	VectorXd EvaluateInterpolantAtPoints(
+		const MatrixXd &locations
+	);
 	Vector3d EvaluateVectorInterpolantAtPoint(
 		const double &x, const double &y, const double &z
 	);
-
+	MatrixXd EvaluateVectorInterpolantAtPoints(
+		const MatrixXd &locations
+	);
 	SpatialParameters GetDataBoundsAndResolution();
 
 	// Array of interface reference points: 1 per interface. 

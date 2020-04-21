@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <time.h>
-
+#include <vector>
 GRBF_Modelling_Methods* Surfe_API::get_method_from_parameters(const Parameters& params)
 {
 	if (params.model_type == Parameter_Types::Single_surface)
@@ -441,7 +441,40 @@ double Surfe_API::EvaluateInterpolantAtPoint(const double &x, const double &y, c
 	else
 		throw GRBF_Exceptions::missing_interpolant;
 }
+VectorXd Surfe_API::EvaluateInterpolantAtPoints(const MatrixXd &locations)
+{
+	// if so, erase
+	if (have_interpolant_)
+	{
+		int n = locations.rows();
+		VectorXd interpolant(n);
+		if (n != 0 && locations.cols() == 3)
+		{
+#pragma omp parallel for
+			for (int j = 0; j < n; j++)
+			{
+				// convert x,y,z to Point
+				Point pt(locations(j,0),locations(j,1),locations(j,2));
 
+				// evaluate scalar field at this point
+				method_->eval_scalar_interpolant_at_point(pt);
+
+				// set scalar field value for this point in vector
+				interpolant(j) = pt.scalar_field();
+			}
+		
+			return interpolant;
+		}
+		else
+			throw GRBF_Exceptions::array_has_incorrect_dimensions;
+		
+		
+	}
+	else
+		throw GRBF_Exceptions::missing_interpolant;
+
+	
+}
 Vector3d Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const double &y, const double &z)
 {
 	if (have_interpolant_)
@@ -462,4 +495,42 @@ Vector3d Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const doub
 	}
 	else
 		throw GRBF_Exceptions::missing_interpolant;
+}
+
+MatrixXd Surfe_API::EvaluateVectorInterpolantAtPoints(const MatrixXd &locations)
+{
+	// if so, erase
+	if (have_interpolant_)
+	{
+		int n = locations.rows();
+		MatrixXd interpolant(n,3);
+		if (n != 0 && locations.cols() == 3)
+		{
+#pragma omp parallel for
+			for (int j = 0; j < n; j++)
+			{
+				double gradient[3];
+				// convert x,y,z to Point
+				Point pt(locations(j,0),locations(j,1),locations(j,2));
+
+				// evaluate scalar field at this point
+				method_->eval_vector_interpolant_at_point(pt);
+
+				// set vector components field value for this point in vector
+				interpolant(j,0) = pt.nx_interp();
+				interpolant(j,1) = pt.ny_interp();
+				interpolant(j,2) = pt.nz_interp();
+			}
+		
+			return interpolant;
+		}
+		else
+			throw GRBF_Exceptions::array_has_incorrect_dimensions;
+		
+		
+	}
+	else
+		throw GRBF_Exceptions::missing_interpolant;
+
+	
 }

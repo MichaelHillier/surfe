@@ -39,6 +39,14 @@
 
 #include <cstdlib>
 #include <math_methods.h>
+// DBL_MAX/DBL_MIN didn't work with gcc 7 on ubuntu so manually defining
+// if it doesnt exist
+#ifndef DBL_MAX
+#define DBL_MAX     __DBL_MAX__
+#endif
+#ifndef DBL_MIN
+#define DBL_MIN     __DBL_MIN__
+#endif
 
 double Math_methods::_find_step(const VectorXd &da, const VectorXd &a) {
 	int n = (int)da.rows();

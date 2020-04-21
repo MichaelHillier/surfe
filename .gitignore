@@ -5,3 +5,8 @@ _buildv16
 *.orig
 .scannerwork/*
 bw-output/*
+*.so
+*.cmake
+CMakeFiles
+Makefile
+CMakeCache.txt
