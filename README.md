@@ -9,7 +9,8 @@ This code was development at Natural Resources Canada (Geological Survey of Cana
 ### How do I get set up? ###
 
 * Summary of set up
-To setup a visual studio project to compile you must get cmake (https://cmake.org/). In cmake you will setup the compiler and dependences.
+	* To setup a visual studio project to compile you must get cmake (https://cmake.org/). In cmake you will setup the compiler and dependences.
+
 * Dependencies
 	* [Eigen3](http://eigen.tuxfamily.org)
 	* [pybind11](https://github.com/pybind/pybind11)
@@ -17,11 +18,11 @@ To setup a visual studio project to compile you must get cmake (https://cmake.or
 	* To enable these features check the GEO_BUILDER variable in cmake options
 	* [VTK](https://vtk.org/)
 	* [Qt5](https://www.qt.io/download)
-* CMake Instructions on Windows (GUI-based):
-Fill in required fields for
+* CMake Instructions on Windows:
+	* Fill in required fields for:
 	* EIGEN3_INCLUDE_DIR
 	* PYTHON_EXECUTABLE
-For optional visualization and data loading features
+	* For optional visualization and data loading features:
 	* Qt5_DIR
 	* VTK_DIR
  
