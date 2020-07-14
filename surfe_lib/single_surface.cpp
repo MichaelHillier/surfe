@@ -1079,5 +1079,15 @@ bool Single_Surface::get_interpolation_matrix(MatrixXd &interpolation_matrix) {
 			return false;
 	}
 
+	if (parameters.use_regression_smoothing){
+		Point ref_pt1(0, 0, 0);
+		Point ref_pt2(0, 0, parameters.smoothing_amount);
+		kernel->set_points(ref_pt1, ref_pt2);
+		double smoothing_value = kernel->basis_pt_pt();
+		for (int j = 0; j < (n_ie + n_i); j++) {
+			interpolation_matrix(j, j) = smoothing_value;
+		}
+	}
+
 	return true;
 }
