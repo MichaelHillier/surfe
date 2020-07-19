@@ -3,6 +3,13 @@
 #include <algorithm>
 #include <time.h>
 #include <vector>
+
+void Surfe_API::progress(const float& precent_value)
+{
+	std::cout << int(precent_value * 100.0) << " %\r";
+	std::cout.flush();
+}
+
 GRBF_Modelling_Methods* Surfe_API::get_method_from_parameters(const Parameters& params)
 {
 	if (params.model_type == Parameter_Types::Single_surface)
@@ -443,10 +450,12 @@ double Surfe_API::EvaluateInterpolantAtPoint(const double &x, const double &y, c
 }
 VectorXd Surfe_API::EvaluateInterpolantAtPoints(const MatrixXd &locations)
 {
-	// if so, erase
+	std::cout << " Evaluating interpolant at list of points..." << std::endl;
 	if (have_interpolant_)
 	{
 		int n = locations.rows();
+		int evaluations_completed = 0;
+		int percent_increment = 0;
 		VectorXd interpolant(n);
 		if (n != 0 && locations.cols() == 3)
 		{
@@ -461,7 +470,21 @@ VectorXd Surfe_API::EvaluateInterpolantAtPoints(const MatrixXd &locations)
 
 				// set scalar field value for this point in vector
 				interpolant(j) = pt.scalar_field();
+
+				evaluations_completed++;
+				float percent_completed = ((float)evaluations_completed / (float)n);
+				int percent_integer = std::round(percent_completed * 100.0);
+
+				if (percent_integer > percent_increment)
+				{
+					percent_increment = percent_integer;
+					progress(percent_completed);
+				}
+
 			}
+
+			progress(1.0);
+			std::cout << "" << std::endl;
 		
 			return interpolant;
 		}
@@ -499,10 +522,13 @@ Vector3d Surfe_API::EvaluateVectorInterpolantAtPoint(const double &x, const doub
 
 MatrixXd Surfe_API::EvaluateVectorInterpolantAtPoints(const MatrixXd &locations)
 {
-	// if so, erase
+	std::cout << " Evaluating vector interpolant at list of points..." << std::endl;
 	if (have_interpolant_)
 	{
 		int n = locations.rows();
+		int evaluations_completed = 0;
+		int percent_increment = 0;
+
 		MatrixXd interpolant(n,3);
 		if (n != 0 && locations.cols() == 3)
 		{
@@ -520,7 +546,20 @@ MatrixXd Surfe_API::EvaluateVectorInterpolantAtPoints(const MatrixXd &locations)
 				interpolant(j,0) = pt.nx_interp();
 				interpolant(j,1) = pt.ny_interp();
 				interpolant(j,2) = pt.nz_interp();
+
+				evaluations_completed++;
+				float percent_completed = ((float)evaluations_completed / (float)n);
+				int percent_integer = std::round(percent_completed * 100.0);
+
+				if (percent_integer > percent_increment)
+				{
+					percent_increment = percent_integer;
+					progress(percent_completed);
+				}
 			}
+
+			progress(1.0);
+			std::cout << "" << std::endl;
 		
 			return interpolant;
 		}

@@ -19,6 +19,8 @@ private:
 	bool parameters_changed_;
 	bool constraints_changed_;
 
+	void progress(const float& precent_value);
+
 	// methods
 	GRBF_Modelling_Methods* get_method_from_parameters(const Parameters& params);
 
