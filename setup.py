@@ -9,6 +9,7 @@ from distutils.version import LooseVersion
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
+# this setup.py has been coppied extensively from https://www.benjack.io/2018/02/02/python-cpp-revisited.html
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
@@ -60,25 +61,22 @@ class CMakeBuild(build_ext):
             self.distribution.get_version())
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args,
-                              cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args,
-                              cwd=self.build_temp)
+        try:
+            rslt = subprocess.run(['cmake', ext.sourcedir] + cmake_args,
+                              cwd=self.build_temp, env=env,check=True)
+        except:
+            return
+        try:
+            rslt = subprocess.run(['cmake', '--build', '.'] + build_args,
+                              cwd=self.build_temp,check=True)
+        except:
+            return               
         print()  # Add an empty line for cleaner output
 
 setup(
     name='surfepy',
     version='0.1',
-    author='Lachlan',
-    author_email='lachlan.grose@monash.edu',
-    description='A hybrid Python/C++ test project',
-    # tell setuptools to look for any packages under 'src'
-    # packages=find_packages('src'),
-    # # tell setuptools that all packages will be under the 'src' directory
-    # # and nowhere else
-    # package_dir={'':'src'},
-    # add an extension module named 'python_cpp_example' to the package 
-    # 'python_cpp_example'
+    author='Michael Hillier',
     ext_modules=[CMakeExtension('.')],
     # add custom build_ext command
     cmdclass=dict(build_ext=CMakeBuild),
