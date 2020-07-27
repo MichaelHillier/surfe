@@ -10,3 +10,6 @@ bw-output/*
 CMakeFiles
 Makefile
 CMakeCache.txt
+_skbuild
+dist
+*.egg*

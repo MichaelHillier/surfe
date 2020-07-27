@@ -37,7 +37,7 @@ add_subdirectory(pybind11)
 #setup python
 pybind11_add_module(surfepy surfe_pybindings/pybindings.cpp)
 target_link_libraries(surfepy surfe_lib math_lib)
-
+install(TARGETS surfepy surfe_lib math_lib DESTINATION surfepy)
 option(GEO_BUILDER FALSE)
 if (GEO_BUILDER)
 	find_package(VTK REQUIRED)
