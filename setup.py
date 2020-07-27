@@ -113,5 +113,5 @@ setup(
     # packages=["MeshTools", "MeshTools.io"],
     # # FIXME: it might be more robust to use git
     # #        to copy tracked files to default _skbuild directory
-    cmake_install_dir='surfepy',
+    # cmake_install_dir='\',
 )
