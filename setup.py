@@ -97,21 +97,12 @@ import os
 from pathlib import Path
 import platform
 
-sys.path.insert(0, Path("maintenance").as_posix())
-# from PackageInfo import PackageInfo
-
-# package = PackageInfo("surfepy")
-
 setup(
     name="surfepy",
-    version=0.01,
+    version=0.1,
     author="Michael Hillier",
     description="python bindings for surfe - geological interpolator using rbf",
     long_description="",
     license="MIT",
-    cmake_args=['-DEIGEN3_INCLUDE_DIR=eigen-git-mirror'],
-    # packages=["MeshTools", "MeshTools.io"],
-    # # FIXME: it might be more robust to use git
-    # #        to copy tracked files to default _skbuild directory
-    # cmake_install_dir='\',
+    cmake_args=['-DEIGEN3_INCLUDE_DIR=eigen-git-mirror','-DCMAKE_INSTALL_RPATH=$ORIGIN'],
 )

@@ -39,7 +39,7 @@ pybind11_add_module(surfepy surfe_pybindings/pybindings.cpp)
 target_link_libraries(surfepy surfe_lib math_lib)
 # not sure if this is the right way of setting the install destination. 
 # also this is forcing the install destination for python setup... so perhaps we need multiple options
-install(TARGETS surfepy surfe_lib math_lib DESTINATION ..)
+install(TARGETS surfepy surfe_lib math_lib DESTINATION .)
 option(GEO_BUILDER FALSE)
 if (GEO_BUILDER)
 	find_package(VTK REQUIRED)
