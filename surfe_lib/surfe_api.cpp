@@ -532,10 +532,8 @@ MatrixXd Surfe_API::EvaluateVectorInterpolantAtPoints(const MatrixXd &locations)
 		MatrixXd interpolant(n,3);
 		if (n != 0 && locations.cols() == 3)
 		{
-#pragma omp parallel for
 			for (int j = 0; j < n; j++)
 			{
-				double gradient[3];
 				// convert x,y,z to Point
 				Point pt(locations(j,0),locations(j,1),locations(j,2));
 
@@ -543,6 +541,7 @@ MatrixXd Surfe_API::EvaluateVectorInterpolantAtPoints(const MatrixXd &locations)
 				method_->eval_vector_interpolant_at_point(pt);
 
 				// set vector components field value for this point in vector
+
 				interpolant(j,0) = pt.nx_interp();
 				interpolant(j,1) = pt.ny_interp();
 				interpolant(j,2) = pt.nz_interp();
