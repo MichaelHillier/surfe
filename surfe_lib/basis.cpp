@@ -3206,3 +3206,102 @@ double MaternC4::dzz()
 	double dz = _p1->z() - _p2->z();
 	return exp(-a)*(_s*_s + _radius * _s*_s*_s - _s * _s*_s*_s*dz*dz);
 }
+
+double MQ3::basis()
+{
+	radius();
+	return pow(_shape_parameter + _radius * _radius, 1.5);
+}
+
+double MQ3::dx_p1()
+{
+	radius();
+	return 3.0 *_x_delta * pow(_shape_parameter + _radius * _radius, 0.5);
+}
+
+double MQ3::dx_p2()
+{
+	radius();
+	return -3.0 * _x_delta * pow(_shape_parameter + _radius * _radius, 0.5);
+}
+
+double MQ3::dy_p1()
+{
+	radius();
+	return 3.0 *_y_delta * pow(_shape_parameter + _radius * _radius, 0.5);
+}
+
+double MQ3::dy_p2()
+{
+	radius();
+	return -3.0 * _y_delta * pow(_shape_parameter + _radius * _radius, 0.5);
+}
+
+double MQ3::dz_p1()
+{
+	radius();
+	return 3.0 *_z_delta * pow(_shape_parameter + _radius * _radius, 0.5);
+}
+
+double MQ3::dz_p2()
+{
+	radius();
+	return -3.0 *_z_delta * pow(_shape_parameter + _radius * _radius, 0.5);
+}
+
+double MQ3::dxx()
+{
+	radius();
+	return ((-3.0 *_x_delta * _x_delta * pow(_shape_parameter + _radius * _radius, -0.5)) - 
+		(3.0 * pow(_shape_parameter + _radius * _radius, 0.5)));
+}
+
+double MQ3::dxy()
+{
+	radius();
+	return (-3.0 * _x_delta * _y_delta * pow(_shape_parameter + _radius * _radius, -0.5));
+}
+
+double MQ3::dxz()
+{
+	radius();
+	return (-3.0 * _x_delta * _z_delta * pow(_shape_parameter + _radius * _radius, -0.5));
+}
+
+double MQ3::dyx()
+{
+	radius();
+	return (-3.0 * _x_delta * _y_delta * pow(_shape_parameter + _radius * _radius, -0.5));
+}
+
+double MQ3::dyy()
+{
+	radius();
+	return ((-3.0 *_y_delta * _y_delta * pow(_shape_parameter + _radius * _radius, -0.5)) -
+		(3.0 * pow(_shape_parameter + _radius * _radius, 0.5)));
+}
+
+double MQ3::dyz()
+{
+	radius();
+	return (-3.0 * _y_delta * _z_delta * pow(_shape_parameter + _radius * _radius, -0.5));
+}
+
+double MQ3::dzx()
+{
+	radius();
+	return (-3.0 * _x_delta * _z_delta * pow(_shape_parameter + _radius * _radius, -0.5));
+}
+
+double MQ3::dzy()
+{
+	radius();
+	return (-3.0 * _y_delta * _z_delta * pow(_shape_parameter + _radius * _radius, -0.5));
+}
+
+double MQ3::dzz()
+{
+	radius();
+	return ((-3.0 *_z_delta * _z_delta * pow(_shape_parameter + _radius * _radius, -0.5)) -
+		(3.0 * pow(_shape_parameter + _radius * _radius, 0.5)));
+}

@@ -71,6 +71,7 @@ struct Parameter_Types {
 		Cubic,
 		Gaussian,
 		MQ,
+		MQ3,
 		IMQ,
 		TPS,
 		R,

@@ -283,6 +283,32 @@ public:
 	MQ *clone() override { return new MQ(*this); }
 };
 
+class MQ3 : public RBFKernel {
+private:
+	double _shape_parameter;
+
+public:
+	MQ3(const double &shape_parameter) { _shape_parameter = shape_parameter; }
+	~MQ3() {}
+	double basis() override;
+	double dx_p1() override;  // derivative w.r.t. p1's x-coordinate variable
+	double dx_p2() override;  // derivative w.r.t. p2's x-coordinate variable
+	double dy_p1() override;  // derivative w.r.t. p1's y-coordinate variable ...
+	double dy_p2() override;
+	double dz_p1() override;
+	double dz_p2() override;
+	double dxx() override;
+	double dxy() override;
+	double dxz() override;
+	double dyx() override;
+	double dyy() override;
+	double dyz() override;
+	double dzx() override;
+	double dzy() override;
+	double dzz() override;
+	MQ3 *clone() override { return new MQ3(*this); }
+};
+
 class AMQ : public RBFKernel {
 private:
 	double _shape_parameter;

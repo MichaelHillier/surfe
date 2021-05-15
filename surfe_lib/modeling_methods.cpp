@@ -349,6 +349,8 @@ RBFKernel *GRBF_Modelling_Methods::create_rbf_kernel(const Parameter_Types::RBF 
 			return new IMQ(parameters.shape_parameter);
 		else if (rbf_type == Parameter_Types::MQ)
 			return new MQ(parameters.shape_parameter);
+		else if (rbf_type == Parameter_Types::MQ3)
+			return new MQ3(parameters.shape_parameter);
 		else if (rbf_type == Parameter_Types::R)
 			return new R;
 		else if (rbf_type == Parameter_Types::TPS)

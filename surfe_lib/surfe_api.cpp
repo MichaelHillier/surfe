@@ -389,6 +389,8 @@ void Surfe_API::SetRBFKernel(const char *rbf_name)
 		method_->parameters.basis_type = Parameter_Types::RBF::Gaussian;
 	else if (strcmp(rbf_name, "Multiquadratics") == 0)
 		method_->parameters.basis_type = Parameter_Types::RBF::MQ;
+	else if (strcmp(rbf_name, "Multiquadratics3") == 0)
+		method_->parameters.basis_type = Parameter_Types::RBF::MQ3;
 	else if (strcmp(rbf_name, "Thin Plate Spline") == 0)
 		method_->parameters.basis_type = Parameter_Types::RBF::TPS;
 	else if (strcmp(rbf_name, "Inverse Multiquadratics") == 0)
