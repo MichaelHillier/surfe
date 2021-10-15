@@ -2,7 +2,7 @@
 
 This code was development at Natural Resources Canada (Geological Survey of Canada) by Michael Hillier, Eric de Kemp, and Ernst Schetselaar for the purposes of 3D structural geological modelling particularly in sparse data environments.  
 
-Our paper associated with this work is:
+Our [paper](https://link.springer.com/article/10.1007/s11004-014-9540-3) associated with this work is:
 Hillier MJ, Schetselaar EM, de Kemp EA, Perron G (2014) Three-dimensional modelling of geological surfaces using generalized interpolation with radial basis functions. Math Geosci 46(8):931–953
 
 ### What is this repository for? ###
